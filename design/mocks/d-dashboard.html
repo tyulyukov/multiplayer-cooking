@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mock D — Приладова панель</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #0f2f31;
+  --bg-2: #0a2224;
+  --panel: #14383a;
+  --teal: #3ec1be;
+  --teal-strong: #7ff0ec;
+  --magenta: #ff3fb8;
+  --magenta-glow: #ff7ad1;
+  --yellow: #ffc61a;
+  --yellow-ink: #3d2f00;
+  --blue: #4f9bff;
+  --chrome-a: #eef1f4; --chrome-b: #9ba5b0; --chrome-c: #5d6873;
+  --fg: #f2f7f7;
+  --fg-muted: #8fb3b2;
+  --font-num: "Rubik Mono One", monospace;
+  --font-body: "Manrope", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #071617; color: var(--fg); font-family: var(--font-body); display: block; padding: 40px 24px; }
+.stage { display: flex; gap: 36px; align-items: flex-start; width: max-content; margin: 0 auto; }
+.wrap { position: relative; }
+.label { position: absolute; top: -34px; left: 0; color: #6b8a89; font: 600 12px var(--font-body); letter-spacing: .04em; }
+.phone { width: 390px; min-height: 844px; border-radius: 44px; overflow: hidden; position: relative; background: radial-gradient(120% 60% at 50% -10%, #1a5153 0%, var(--bg) 45%, var(--bg-2) 100%); box-shadow: 0 0 0 1px #24494a, 0 30px 80px -30px rgb(0 0 0 / .9); padding: 22px 20px 28px; }
+/* pink neon loop, like the ceiling tubes */
+.loop { position: absolute; top: -20px; right: -30px; width: 240px; height: 140px; pointer-events: none; }
+.loop path { fill: none; stroke: var(--magenta); stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 6px var(--magenta-glow)) drop-shadow(0 0 18px color-mix(in oklch, var(--magenta) 55%, transparent)); }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; position: relative; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 14px; letter-spacing: .01em; }
+.brand i { width: 28px; height: 28px; border-radius: 50%; background: conic-gradient(var(--teal) 0 25%, #fff 0 50%, var(--teal) 0 75%, #fff 0); box-shadow: 0 0 0 2px #0b2a2b, 0 0 0 4px var(--chrome-b); }
+.cooks { display: flex; }
+.cooks b { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--bg); display: grid; place-items: center; font-size: 11px; font-weight: 700; margin-left: -8px; }
+.cooks b:nth-child(1) { background: var(--teal); color: #05302f; } .cooks b:nth-child(2) { background: var(--magenta); color: #3a0a29; } .cooks b:nth-child(3) { background: var(--yellow); color: var(--yellow-ink); }
+
+/* the hero: a pump-dial gauge that is the app's status indicator */
+.hero { margin-top: 34px; display: flex; gap: 18px; align-items: center; }
+.dial { width: 124px; height: 124px; flex: none; border-radius: 50%; position: relative; background: radial-gradient(circle at 50% 40%, #ff62c4, var(--magenta) 60%, #c31d86); box-shadow: 0 0 0 4px var(--teal), 0 0 0 7px #0b2a2b, 0 0 0 9px var(--chrome-b), 0 0 40px -6px color-mix(in oklch, var(--magenta) 70%, transparent); }
+.dial .tick { position: absolute; inset: 10px; border-radius: 50%; border: 2px dashed rgb(255 255 255 / .35); }
+.dial .val { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-num); font-size: 40px; color: #fff; text-shadow: 0 2px 0 #8a0f5c; }
+.dial .val small { display: block; font: 700 11px var(--font-body); letter-spacing: .12em; text-transform: uppercase; text-shadow: none; text-align: center; opacity: .9; }
+.hero h1 { margin: 0; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.hero p { margin: 8px 0 0; color: var(--fg-muted); font-size: 14px; line-height: 1.45; }
+
+.console { margin-top: 26px; padding: 3px; border-radius: 24px; background: linear-gradient(160deg, var(--chrome-a), var(--chrome-b) 40%, var(--chrome-c) 70%, var(--chrome-a)); }
+.console-inner { border-radius: 21px; background: linear-gradient(180deg, #1a4446, var(--panel)); padding: 16px; box-shadow: inset 0 1px 0 rgb(255 255 255 / .12); }
+.screen { background: #06191a; border-radius: 14px; padding: 14px; min-height: 96px; color: var(--teal-strong); font-size: 16px; line-height: 1.5; box-shadow: inset 0 0 0 1px #1d5a5b, inset 0 0 24px rgb(62 193 190 / .12); }
+.screen .ph { color: #4d8d8b; }
+.screen .caret { display: inline-block; width: 9px; height: 18px; background: var(--teal-strong); vertical-align: -3px; margin-left: 2px; box-shadow: 0 0 8px var(--teal); }
+.row { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; gap: 12px; }
+.odo { font-family: var(--font-num); font-size: 13px; color: var(--fg-muted); display: flex; gap: 2px; }
+.odo b { background: #06191a; color: var(--teal-strong); padding: 4px 5px; border-radius: 4px; font-weight: 400; box-shadow: inset 0 0 0 1px #1d5a5b; }
+.cta { border: 0; height: 50px; padding: 0 22px; border-radius: 999px; font: 800 16px var(--font-body); color: var(--yellow-ink); background: linear-gradient(180deg, #ffd44d, var(--yellow)); display: inline-flex; align-items: center; gap: 8px; box-shadow: inset 0 -3px 0 rgb(0 0 0 / .2), 0 0 0 2px #0b2a2b, 0 0 0 4px var(--chrome-b); }
+.cta svg { width: 20px; height: 20px; }
+
+.switches { margin-top: 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.sw { border: 0; border-radius: 14px; background: #10393b; color: var(--fg); padding: 10px 6px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; font: 600 11.5px/1.2 var(--font-body); text-align: center; box-shadow: inset 0 0 0 1px #1f5b5c; }
+.sw i { width: 36px; height: 36px; border-radius: 50%; background: var(--teal); display: grid; place-items: center; color: #05302f; box-shadow: inset 0 -3px 0 rgb(0 0 0 / .18), 0 0 0 2px #0b2a2b, 0 0 0 3px var(--chrome-b); }
+.sw i svg { width: 18px; height: 18px; }
+.sw.is-on { box-shadow: inset 0 0 0 1px var(--magenta); background: #2a1a2a; }
+.sw.is-on i { background: var(--magenta); color: #3a0a29; box-shadow: inset 0 -3px 0 rgb(0 0 0 / .18), 0 0 0 2px #0b2a2b, 0 0 0 3px var(--chrome-b), 0 0 14px var(--magenta-glow); }
+
+.strip { margin: 26px -20px 0; height: 3px; background: var(--blue); box-shadow: 0 0 10px var(--blue); }
+.idea { margin-top: 18px; color: var(--fg-muted); font-size: 14px; display: flex; gap: 8px; align-items: center; }
+.idea svg { width: 16px; height: 16px; color: var(--teal); }
+
+/* session */
+.sess { margin-top: 28px; }
+.sess .k { font-family: var(--font-num); font-size: 12px; color: var(--teal-strong); letter-spacing: .04em; }
+.sess h2 { margin: 8px 0 0; font-size: 22px; font-weight: 800; line-height: 1.15; }
+.gauges { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.g { padding: 3px; border-radius: 22px; background: linear-gradient(160deg, var(--chrome-a), var(--chrome-b) 40%, var(--chrome-c) 70%, var(--chrome-a)); }
+.g-in { border-radius: 19px; background: linear-gradient(180deg, #1a4446, var(--panel)); padding: 14px 12px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.g .face { width: 92px; height: 92px; border-radius: 50%; position: relative; }
+.g .face svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(135deg); }
+.g .track { fill: none; stroke: #06191a; stroke-width: 9; stroke-dasharray: 205 273; stroke-linecap: round; }
+.g .fill { fill: none; stroke: var(--magenta); stroke-width: 9; stroke-linecap: round; stroke-dasharray: 130 273; filter: drop-shadow(0 0 6px var(--magenta-glow)); }
+.g.two .fill { stroke: var(--teal); stroke-dasharray: 70 273; filter: drop-shadow(0 0 6px var(--teal)); }
+.g .face .v { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-num); font-size: 18px; color: #fff; }
+.g .cap { font-size: 12px; font-weight: 700; color: var(--fg-muted); text-align: center; line-height: 1.3; }
+.g .cap b { display: block; color: var(--fg); font-size: 13px; }
+.steps { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.step { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 16px; background: #10393b; box-shadow: inset 0 0 0 1px #1f5b5c; }
+.step .who { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+.who.me { background: var(--teal); color: #05302f; } .who.them { background: var(--magenta); color: #3a0a29; } .who.all { background: var(--yellow); color: var(--yellow-ink); }
+.step .txt { font-size: 15px; line-height: 1.4; }
+.step .txt em { display: block; font-style: normal; color: var(--fg-muted); font-size: 12px; margin-top: 2px; }
+.step.now { box-shadow: inset 0 0 0 2px var(--teal); }
+.step.done { opacity: .5; } .step.done .txt { text-decoration: line-through; }
+.bar { position: absolute; left: 20px; right: 20px; bottom: 22px; display: flex; gap: 10px; }
+.bar .ghost { flex: 1; height: 50px; border-radius: 999px; border: 0; background: #10393b; color: var(--fg); font: 700 15px var(--font-body); box-shadow: inset 0 0 0 1px #1f5b5c; }
+.bar .cta { flex: 1.4; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="wrap">
+    <div class="label">D · Приладова панель · головний екран</div>
+    <section class="phone">
+      <svg class="loop" viewBox="0 0 240 140"><path d="M0 70 C 60 20, 120 20, 150 60 S 200 120, 230 60 C 250 20, 190 10, 170 40"/></svg>
+      <div class="topbar">
+        <div class="brand"><i></i>Multiplayer Cooking</div>
+        <div class="cooks"><b>М</b><b>А</b><b>+1</b></div>
+      </div>
+      <div class="hero">
+        <div class="dial"><div class="tick"></div><div class="val">2<small>кухарі</small></div></div>
+        <div>
+          <h1>Що готуємо сьогодні?</h1>
+          <p>Опиши страву або що є вдома. Кошик, план і таймери зберемо за тебе.</p>
+        </div>
+      </div>
+
+      <div class="console"><div class="console-inner">
+        <div class="screen">Паста з креветками на двох, <span class="ph">є вершки й часник</span><span class="caret"></span></div>
+        <div class="row">
+          <div class="odo"><b>0</b><b>4</b><b>6</b><span style="align-self:center;margin-left:6px;font-family:var(--font-body);font-weight:600">/ 500</span></div>
+          <button class="cta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Поїхали</button>
+        </div>
+      </div></div>
+
+      <div class="switches">
+        <button class="sw"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6c6 3 10 3 16 0M4 12c6 3 10 3 16 0M4 18c6 3 10 3 16 0"/></svg></i>Паста на двох</button>
+        <button class="sw"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 14c-2-5 1-9 5-9s7 4 5 9c-1 3-3 4-5 4s-4-1-5-4Z"/><path d="M12 18v3"/></svg></i>Щось із куркою</button>
+        <button class="sw is-on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></i>Вечеря за 30 хв</button>
+        <button class="sw"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/></svg></i>Здивуй мене</button>
+      </div>
+
+      <div class="strip"></div>
+      <div class="idea"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 14a6 6 0 1 1 12 0v6H6z"/><path d="M9 20v2M15 20v2"/></svg>Тут з'явиться ідея вечері</div>
+    </section>
+  </div>
+
+  <div class="wrap">
+    <div class="label">D · Приладова панель · спільне готування</div>
+    <section class="phone">
+      <svg class="loop" viewBox="0 0 240 140"><path d="M0 70 C 60 20, 120 20, 150 60 S 200 120, 230 60 C 250 20, 190 10, 170 40"/></svg>
+      <div class="topbar">
+        <div class="brand"><i></i>Кухня 2</div>
+        <div class="cooks"><b>М</b><b>А</b><b>+1</b></div>
+      </div>
+      <div class="sess">
+        <div class="k">КРОК 3 / 7</div>
+        <h2>Паста з креветками у вершковому соусі</h2>
+      </div>
+      <div class="gauges">
+        <div class="g"><div class="g-in"><div class="face"><svg viewBox="0 0 92 92"><circle class="track" cx="46" cy="46" r="38"/><circle class="fill" cx="46" cy="46" r="38"/></svg><div class="v">6:42</div></div><div class="cap"><b>Паста</b>Макс</div></div></div>
+        <div class="g two"><div class="g-in"><div class="face"><svg viewBox="0 0 92 92"><circle class="track" cx="46" cy="46" r="38"/><circle class="fill" cx="46" cy="46" r="38"/></svg><div class="v">2:10</div></div><div class="cap"><b>Креветки</b>Аня</div></div></div>
+      </div>
+      <div class="steps">
+        <div class="step done"><span class="who all">Усі</span><div class="txt">Дістати продукти, поставити воду<em>готово · 2 хв</em></div></div>
+        <div class="step done"><span class="who them">А</span><div class="txt">Почистити й нарізати часник<em>готово · Аня</em></div></div>
+        <div class="step now"><span class="who me">М</span><div class="txt">Кинути пасту у воду, засікти 7 хвилин<em>твій крок · зараз</em></div></div>
+        <div class="step"><span class="who them">А</span><div class="txt">Обсмажити креветки з часником 3 хв<em>Аня · паралельно</em></div></div>
+        <div class="step"><span class="who all">Усі</span><div class="txt">Змішати з вершками й пастою<em>через 7 хв</em></div></div>
+      </div>
+      <div class="bar"><button class="ghost">Помінятися</button><button class="cta">Готово, далі</button></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

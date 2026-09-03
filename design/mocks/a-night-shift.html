@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mock A — Нічна зміна</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #14171c;
+  --bg-2: #1c2027;
+  --surface: #0f3538;
+  --surface-2: #124346;
+  --teal: #3ec1be;
+  --teal-strong: #6fe3df;
+  --magenta: #ff3fb8;
+  --magenta-glow: #ff7ad1;
+  --blue: #4f9bff;
+  --chrome-a: #e6eaef;
+  --chrome-b: #8f99a5;
+  --fg: #f4f6f8;
+  --fg-muted: #9aa5b1;
+  --radius: 22px;
+  --font-display: "Unbounded", sans-serif;
+  --font-body: "Manrope", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: #0b0d10; color: var(--fg); font-family: var(--font-body);
+  display: flex; justify-content: center; padding: 40px 24px;
+}
+.stage { display: flex; gap: 36px; align-items: flex-start; width: max-content; margin: 0 auto; }
+.phone {
+  width: 390px; min-height: 844px; border-radius: 44px; overflow: hidden; position: relative;
+  background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 40%);
+  box-shadow: 0 0 0 1px #2a2f37, 0 30px 80px -30px rgb(0 0 0 / .9);
+  padding: 22px 20px 28px;
+}
+/* neon ceiling strip: blue tube with soft glow, like the store fascia */
+.phone::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+  background: var(--blue);
+  box-shadow: 0 0 10px var(--blue), 0 0 28px color-mix(in oklch, var(--blue) 60%, transparent);
+}
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 13px; letter-spacing: .02em; }
+.brand-dot {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--teal); position: relative;
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / .18), 0 0 0 3px #1f2a2b, 0 0 0 4px #3a4449;
+}
+.brand-dot::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--magenta); box-shadow: 0 0 8px var(--magenta-glow); }
+.cooks { display: flex; }
+.cooks span {
+  width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--bg);
+  display: grid; place-items: center; font-size: 11px; font-weight: 700; margin-left: -8px;
+}
+.cooks span:nth-child(1) { background: var(--teal); color: #05302f; }
+.cooks span:nth-child(2) { background: var(--magenta); color: #3a0a29; }
+.cooks span:nth-child(3) { background: #ffc61a; color: #3d2f00; }
+
+h1 {
+  font-family: var(--font-display); font-weight: 800; font-size: 30px; line-height: 1.12;
+  letter-spacing: -.01em; margin: 44px 0 0; text-wrap: balance;
+}
+.tube { display: block; margin-top: 10px; overflow: visible; }
+.tube path { fill: none; stroke: var(--magenta); stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 6px var(--magenta-glow)) drop-shadow(0 0 16px color-mix(in oklch, var(--magenta) 55%, transparent)); }
+.lede { margin: 12px 0 0; color: var(--fg-muted); font-size: 15px; line-height: 1.45; }
+
+.composer {
+  margin-top: 26px; border-radius: var(--radius); padding: 2px;
+  background: linear-gradient(160deg, var(--chrome-a), var(--chrome-b) 45%, #59636e 70%, var(--chrome-a));
+}
+.composer-inner {
+  border-radius: 20px; background: linear-gradient(180deg, var(--surface-2), var(--surface)); padding: 16px 16px 14px;
+  min-height: 176px; display: flex; flex-direction: column; justify-content: space-between;
+}
+.field { color: #b7d8d6; font-size: 17px; line-height: 1.5; min-height: 78px; }
+.field .caret { display: inline-block; width: 2px; height: 20px; background: var(--magenta); vertical-align: -4px; margin-left: 2px; box-shadow: 0 0 8px var(--magenta-glow); }
+.composer-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hint { color: #6fa4a2; font-size: 12px; }
+.cta {
+  border: 0; border-radius: 999px; height: 50px; padding: 0 22px; font: 700 16px var(--font-body);
+  color: #2a0619; background: var(--magenta); display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: 0 0 0 1px #ff8fd6 inset, 0 0 18px color-mix(in oklch, var(--magenta) 65%, transparent), 0 8px 24px -10px var(--magenta);
+}
+.cta svg { width: 20px; height: 20px; }
+
+.pumps { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pump {
+  border-radius: 18px; background: #1d2229; border: 1px solid #2c333c; padding: 12px 12px 12px 10px;
+  display: flex; gap: 10px; align-items: center; font-weight: 600; font-size: 14px; line-height: 1.25; color: #dfe5eb; text-align: left;
+}
+.pump .dial {
+  flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--teal); display: grid; place-items: center; color: #05302f;
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / .18), 0 0 0 2px #0f4a49;
+}
+.pump .dial svg { width: 18px; height: 18px; }
+.pump.is-on { border-color: var(--magenta); background: #2a1b27; box-shadow: 0 0 0 1px var(--magenta) inset, 0 0 14px color-mix(in oklch, var(--magenta) 40%, transparent); }
+.pump.is-on .dial { background: var(--magenta); color: #3a0a29; box-shadow: inset 0 -3px 0 rgb(0 0 0 / .18), 0 0 0 2px #6b1f52; }
+
+.divider { margin: 26px 0 0; height: 2px; background: var(--blue); opacity: .9; box-shadow: 0 0 8px var(--blue); border-radius: 2px; }
+.idea { margin-top: 18px; color: var(--fg-muted); font-size: 14px; display: flex; gap: 8px; align-items: center; }
+.idea svg { width: 16px; height: 16px; color: var(--teal); }
+
+/* ---- session screen ---- */
+.session-head { margin-top: 26px; }
+.eyebrow-plate {
+  display: inline-block; background: var(--teal); color: #05302f; font-family: var(--font-display); font-weight: 700; font-size: 11px;
+  padding: 6px 10px; border-radius: 8px; box-shadow: inset 0 -2px 0 rgb(0 0 0 / .15);
+}
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.2; margin: 12px 0 0; }
+.gauge-card {
+  margin-top: 20px; border-radius: var(--radius); padding: 2px;
+  background: linear-gradient(160deg, var(--chrome-a), var(--chrome-b) 45%, #59636e 70%, var(--chrome-a));
+}
+.gauge-inner { border-radius: 20px; background: linear-gradient(180deg, var(--surface-2), var(--surface)); padding: 18px; display: flex; gap: 18px; align-items: center; }
+.gauge { width: 118px; height: 118px; flex: none; position: relative; }
+.gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.gauge .track { fill: none; stroke: #0a2a2c; stroke-width: 10; }
+.gauge .fill { fill: none; stroke: var(--magenta); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 314; stroke-dashoffset: 105; filter: drop-shadow(0 0 6px var(--magenta-glow)); }
+.gauge .num { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--teal-strong); }
+.gauge .num small { display: block; font: 600 11px var(--font-body); color: #7fb5b3; text-align: center; margin-top: 2px; }
+.gauge-copy strong { display: block; font-size: 17px; font-weight: 700; }
+.gauge-copy p { margin: 6px 0 0; color: #a9cdcb; font-size: 14px; line-height: 1.4; }
+.steps { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.step { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 16px; background: #1d2229; border: 1px solid #2c333c; }
+.step .who { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+.step .who.me { background: var(--teal); color: #05302f; }
+.step .who.them { background: var(--magenta); color: #3a0a29; }
+.step .who.all { background: #ffc61a; color: #3d2f00; }
+.step .txt { font-size: 15px; line-height: 1.4; }
+.step .txt em { display: block; font-style: normal; color: var(--fg-muted); font-size: 12px; margin-top: 2px; }
+.step.now { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal) inset; }
+.step.done { opacity: .5; }
+.step.done .txt { text-decoration: line-through; text-decoration-color: var(--fg-muted); }
+.bar { position: absolute; left: 20px; right: 20px; bottom: 22px; display: flex; gap: 10px; }
+.bar .ghost { flex: 1; height: 50px; border-radius: 999px; border: 1px solid #3a424c; background: #1d2229; color: var(--fg); font: 600 15px var(--font-body); display: grid; place-items: center; }
+.bar .cta { flex: 1.4; justify-content: center; }
+.label { position: absolute; top: -34px; left: 0; color: #6b7480; font: 600 12px var(--font-body); letter-spacing: .04em; }
+.wrap { position: relative; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="wrap">
+    <div class="label">A · Нічна зміна · головний екран</div>
+    <section class="phone">
+      <div class="topbar">
+        <div class="brand"><span class="brand-dot"></span>Multiplayer Cooking</div>
+        <div class="cooks"><span>М</span><span>А</span><span>+1</span></div>
+      </div>
+      <h1>Що готуємо сьогодні?</h1>
+      <svg class="tube" width="200" height="22" viewBox="0 0 200 22"><path d="M2 12 C 40 -4, 90 26, 130 10 S 190 2, 198 14"/></svg>
+      <p class="lede">Опиши страву або напиши, що є вдома. Далі зберемо кошик у Сільпо і розділимо кроки між усіма.</p>
+
+      <div class="composer"><div class="composer-inner">
+        <div class="field">Паста з креветками на двох, є вершки й часник<span class="caret"></span></div>
+        <div class="composer-row">
+          <span class="hint">46 / 500</span>
+          <button class="cta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16M6 10v7a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-7M9 10V7a3 3 0 0 1 6 0v3M2 10h2M20 10h2"/></svg>Згенерувати</button>
+        </div>
+      </div></div>
+
+      <div class="pumps">
+        <button class="pump"><span class="dial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6c6 3 10 3 16 0M4 12c6 3 10 3 16 0M4 18c6 3 10 3 16 0"/></svg></span>Паста на двох</button>
+        <button class="pump"><span class="dial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 14c-2-5 1-9 5-9s7 4 5 9c-1 3-3 4-5 4s-4-1-5-4Z"/><path d="M12 18v3"/></svg></span>Щось із куркою</button>
+        <button class="pump is-on"><span class="dial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span>Вечеря за 30 хв</button>
+        <button class="pump"><span class="dial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg></span>Не знаю, здивуй мене</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="idea"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 14a6 6 0 1 1 12 0v6H6z"/><path d="M9 20v2M15 20v2"/></svg>Тут з'явиться ідея вечері</div>
+    </section>
+  </div>
+
+  <div class="wrap">
+    <div class="label">A · Нічна зміна · спільне готування</div>
+    <section class="phone">
+      <div class="topbar">
+        <div class="brand"><span class="brand-dot"></span>Кухня 2</div>
+        <div class="cooks"><span>М</span><span>А</span><span>+1</span></div>
+      </div>
+      <div class="session-head">
+        <span class="eyebrow-plate">КРОК 3 З 7</span>
+        <h2>Паста з креветками у вершковому соусі</h2>
+      </div>
+      <div class="gauge-card"><div class="gauge-inner">
+        <div class="gauge">
+          <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="50"/><circle class="fill" cx="60" cy="60" r="50"/></svg>
+          <div class="num">6:42<small>паста</small></div>
+        </div>
+        <div class="gauge-copy">
+          <strong>Вода вже кипить</strong>
+          <p>Макс солить і кидає пасту. Аня в цей час чистить креветки.</p>
+        </div>
+      </div></div>
+      <div class="steps">
+        <div class="step done"><span class="who all">Усі</span><div class="txt">Дістати продукти, поставити воду<em>готово · 2 хв</em></div></div>
+        <div class="step done"><span class="who them">А</span><div class="txt">Почистити й нарізати часник<em>готово · Аня</em></div></div>
+        <div class="step now"><span class="who me">М</span><div class="txt">Кинути пасту у воду, засікти 7 хвилин<em>твій крок · зараз</em></div></div>
+        <div class="step"><span class="who them">А</span><div class="txt">Обсмажити креветки з часником 3 хв<em>Аня · паралельно</em></div></div>
+        <div class="step"><span class="who all">Усі</span><div class="txt">Змішати з вершками й пастою<em>через 7 хв</em></div></div>
+      </div>
+      <div class="bar"><button class="ghost">Помінятися</button><button class="cta">Готово, далі</button></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

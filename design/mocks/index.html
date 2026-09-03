@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Multiplayer Cooking — дизайн-напрямки</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet" />
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Manrope, sans-serif; background: #f6f1e8; color: #1f2428; padding: 40px 24px 80px; }
+  main { max-width: 1120px; margin: 0 auto; }
+  h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+  .lede { color: #5d5750; max-width: 64ch; line-height: 1.5; margin: 10px 0 0; }
+  .ref { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+  .sw { width: 92px; padding: 8px; border-radius: 12px; background: #fff; border: 1px solid #e4ddd0; font-size: 11px; line-height: 1.3; }
+  .sw i { display: block; height: 36px; border-radius: 8px; margin-bottom: 6px; }
+  .sw code { font-size: 10px; color: #6a7178; }
+  section { margin-top: 44px; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  h2 { font-size: 20px; font-weight: 800; margin: 0; }
+  h2 a { color: inherit; text-decoration: none; border-bottom: 2px solid #3ec1be; }
+  .meta { color: #5d5750; font-size: 14px; }
+  p.note { max-width: 70ch; line-height: 1.5; margin: 8px 0 0; }
+  img { display: block; width: 100%; height: auto; margin-top: 16px; border-radius: 16px; border: 1px solid #ddd6c9; background: #fff; }
+  .chips { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .chips span { font-size: 12px; padding: 4px 8px; border-radius: 999px; background: #fff; border: 1px solid #e4ddd0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Чотири напрямки для Multiplayer Cooking</h1>
+  <p class="lede">Усі беруть кольори з одеського Сільпо на Семафорному: бірюзові колонки, рожевий і синій неон, жовтий скрипт на шахівниці, хром, гофрований червоний фасад, лаймова «Гастрономія». Кожен напрямок ставить на одну головну річ і тримає решту спокійною. Скріншоти зроблено з HTML-макетів у цій папці, їх можна відкрити й покрутити.</p>
+
+  <div class="ref">
+    <div class="sw"><i style="background:#3ec1be"></i>Колонка<br><code>#3EC1BE</code></div>
+    <div class="sw"><i style="background:#ff3fb8"></i>Рожевий неон<br><code>#FF3FB8</code></div>
+    <div class="sw"><i style="background:#4f9bff"></i>Синій неон<br><code>#4F9BFF</code></div>
+    <div class="sw"><i style="background:#ffc61a"></i>Жовтий скрипт<br><code>#FFC61A</code></div>
+    <div class="sw"><i style="background:#c8e63c"></i>Лайм<br><code>#C8E63C</code></div>
+    <div class="sw"><i style="background:#b5223b"></i>Гофрований фасад<br><code>#B5223B</code></div>
+    <div class="sw"><i style="background:linear-gradient(160deg,#eef1f4,#9ba5b0 45%,#5d6873 70%,#eef1f4)"></i>Хром<br><code>gradient</code></div>
+    <div class="sw"><i style="background:#14171c"></i>Графіт<br><code>#14171C</code></div>
+    <div class="sw"><i style="background:#f6f1e8;border:1px solid #ddd"></i>Крем<br><code>#F6F1E8</code></div>
+  </div>
+
+  <section>
+    <div class="head"><h2><a href="a-night-shift.html">A · Нічна зміна</a></h2><span class="meta">Unbounded + Manrope · темна тема</span></div>
+    <p class="note">Стеля магазину: графіт, синя неонова смуга зверху, рожева трубка під заголовком замість підкреслення. Композер у хромованій рамці з бірюзовим склом. Швидкі запити як номери колонок. Найближче до фото, яке ти надіслав.</p>
+    <div class="chips"><span>Головне: неонова трубка під заголовком</span><span>Ризик: темна тема вдень на кухні гірше читається</span></div>
+    <img src="a-night-shift.png" alt="Макет A" />
+  </section>
+
+  <section>
+    <div class="head"><h2><a href="b-day-shift.html">B · Денна зміна</a></h2><span class="meta">Lobster + Golos Text · світла тема</span></div>
+    <p class="note">Кремовий фон, гофрований червоний фасад із синьою неонкою зверху, логотип-табличка «Cooking» жовтим скриптом на шахівниці як вивіска Сільпо. Композер це сама колонка: бірюзовий корпус, біле віконце, жовта кнопка-пістолет. Лише одна смуга шахівниці внизу.</p>
+    <div class="chips"><span>Головне: композер-колонка</span><span>Найлегше зробити з поточних токенів</span></div>
+    <img src="b-day-shift.png" alt="Макет B" />
+  </section>
+
+  <section>
+    <div class="head"><h2><a href="c-checker-signage.html">C · Шахівниця і вивіски</a> ✓ обрано, застосовано в апці</h2><span class="meta">Oswald + Golos Text · світла тема</span></div>
+    <p class="note">Шахівниця як шапка екрана, заголовок у рожевій табличці з хромованою рамкою як «Овочі та фрукти», лаймова кнопка як стіна «Гастрономії». Таймер у чорному боксі з лаймовими цифрами. Найграфічніший і найгучніший варіант.</p>
+    <div class="chips"><span>Головне: вивіска-заголовок</span><span>Ризик: багато кольорів на одному екрані</span></div>
+    <img src="c-checker-signage.png" alt="Макет C" />
+    <p class="note">Реальна апка після застосування: <a href="app-c-home.png">телефон</a>, <a href="app-c-desktop.png">десктоп</a>. Правила і токени описано в <code>DESIGN.md</code>.</p>
+  </section>
+
+  <section>
+    <div class="head"><h2><a href="d-dashboard.html">D · Приладова панель</a></h2><span class="meta">Rubik Mono One + Manrope · темна тема</span></div>
+    <p class="note">Бірюзово-графітова панель авто. Круглий рожевий диск колонки як індикатор стану, одометр замість лічильника знаків, таймери як стрілочні прилади. Кнопки жовті з хромованим кільцем. Рожева трубка петлею у кутку як на стелі.</p>
+    <div class="chips"><span>Головне: диск і прилади</span><span>Ризик: найдалі від стандартних shadcn компонентів</span></div>
+    <img src="d-dashboard.png" alt="Макет D" />
+  </section>
+</main>
+</body>
+</html>

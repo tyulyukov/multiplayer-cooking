@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mock B — Денна зміна</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Lobster&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #f6f1e8;
+  --paper: #ffffff;
+  --ink: #1f2428;
+  --ink-muted: #6a7178;
+  --teal: #3ec1be;
+  --teal-deep: #1f8f8c;
+  --teal-ink: #0b3f3e;
+  --yellow: #ffc61a;
+  --yellow-ink: #3d2f00;
+  --pink: #f04e98;
+  --cherry: #b5223b;
+  --blue: #3f7dff;
+  --line: #e4ddd0;
+  --font-script: "Lobster", cursive;
+  --font-body: "Golos Text", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #d9d2c6; color: var(--ink); font-family: var(--font-body); display: block; padding: 40px 24px; }
+.stage { display: flex; gap: 36px; align-items: flex-start; width: max-content; margin: 0 auto; }
+.wrap { position: relative; }
+.label { position: absolute; top: -34px; left: 0; color: #5d5750; font: 600 12px var(--font-body); letter-spacing: .04em; }
+.phone {
+  width: 390px; min-height: 844px; border-radius: 44px; overflow: hidden; position: relative;
+  background: var(--bg); box-shadow: 0 0 0 1px #bfb7aa, 0 30px 80px -30px rgb(0 0 0 / .5);
+  padding: 0 20px 28px;
+}
+/* corrugated cherry fascia with a blue neon edge, like the "Кулінарія" counter */
+.fascia {
+  margin: 0 -20px; height: 58px; position: relative;
+  background: repeating-linear-gradient(90deg, #c22a45 0 3px, #9e1a32 3px 6px, #d84a63 6px 8px);
+}
+.fascia::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 3px; background: var(--blue); box-shadow: 0 0 8px var(--blue), 0 2px 14px color-mix(in oklch, var(--blue) 50%, transparent); }
+.plate {
+  position: absolute; left: 20px; top: 14px; height: 40px; padding: 0 16px 0 14px; border-radius: 999px; display: flex; align-items: center; gap: 8px;
+  background: repeating-conic-gradient(#1f2428 0 25%, #fff 0 50%) 0 0 / 12px 12px; box-shadow: 0 0 0 3px #1f2428, 0 0 0 5px #f2d98a;
+}
+.plate span { font-family: var(--font-script); font-size: 22px; color: var(--yellow); -webkit-text-stroke: 4px #1f2428; paint-order: stroke fill; letter-spacing: .01em; }
+.cooks { position: absolute; right: 20px; top: 15px; display: flex; }
+.cooks b { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; display: grid; place-items: center; font-size: 11px; font-weight: 700; margin-left: -8px; }
+.cooks b:nth-child(1) { background: var(--teal); color: var(--teal-ink); }
+.cooks b:nth-child(2) { background: var(--pink); color: #fff; }
+.cooks b:nth-child(3) { background: var(--yellow); color: var(--yellow-ink); }
+
+h1 { font-family: var(--font-script); font-weight: 400; font-size: 44px; line-height: 1.05; color: var(--teal-deep); margin: 40px 0 0; letter-spacing: .005em; }
+.lede { margin: 10px 0 0; color: var(--ink-muted); font-size: 15px; line-height: 1.45; }
+
+/* the composer is the pump body: teal shell, white display window, yellow nozzle button */
+.pump {
+  margin-top: 24px; border-radius: 28px 28px 22px 22px; background: linear-gradient(180deg, #55d0cd, var(--teal) 30%, #2fb0ad); padding: 14px 14px 14px;
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / .45), inset 0 -4px 0 rgb(0 0 0 / .12), 0 14px 30px -18px rgb(11 63 62 / .6);
+  position: relative;
+}
+.pump .badge {
+  position: absolute; top: -22px; right: 16px; width: 54px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding-bottom: 6px;
+  background: #fff; color: var(--ink); font: 700 9px/1 var(--font-body); text-align: center; letter-spacing: .04em;
+  clip-path: polygon(50% 0, 100% 12%, 100% 62%, 50% 100%, 0 62%, 0 12%); box-shadow: 0 0 0 3px #1f2428;
+}
+.pump .badge i { display: block; font-style: normal; font-size: 15px; }
+.window { margin-top: 14px; background: var(--paper); border-radius: 16px; padding: 16px; min-height: 130px; box-shadow: inset 0 0 0 3px #0f6462, inset 0 0 0 5px #fff; }
+.window .field { font-size: 17px; line-height: 1.5; color: var(--ink); }
+.window .field .ph { color: #9aa1a8; }
+.pump-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; gap: 12px; }
+.pump-row .hint { color: var(--teal-ink); font-size: 12px; font-weight: 600; opacity: .8; }
+.nozzle {
+  border: 0; height: 50px; padding: 0 22px; border-radius: 14px; font: 700 16px var(--font-body); color: var(--yellow-ink);
+  background: linear-gradient(180deg, #ffd44d, var(--yellow)); display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / .18), 0 0 0 2px #1f2428;
+}
+.nozzle svg { width: 20px; height: 20px; }
+
+.chips { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.chip {
+  border: 1.5px solid var(--line); background: var(--paper); border-radius: 16px; padding: 12px; text-align: left;
+  font: 500 14px/1.3 var(--font-body); color: var(--ink); display: flex; gap: 10px; align-items: center;
+}
+.chip svg { width: 20px; height: 20px; color: var(--teal-deep); flex: none; }
+.chip.is-on { border-color: var(--pink); background: #fff0f7; color: #a5175e; box-shadow: inset 0 0 0 1px var(--pink); }
+.chip.is-on svg { color: var(--pink); }
+
+.floor { margin: 28px -20px 0; height: 14px; background: repeating-conic-gradient(#1f2428 0 25%, #fff 0 50%) 0 0 / 28px 28px; opacity: .9; }
+.idea { margin-top: 16px; display: flex; gap: 8px; align-items: center; color: var(--ink-muted); font-size: 14px; }
+.idea svg { width: 16px; height: 16px; color: var(--teal-deep); }
+
+/* session */
+.sess-h { margin-top: 30px; display: flex; align-items: baseline; gap: 12px; }
+.sess-h .k { font: 700 12px var(--font-body); color: var(--teal-ink); background: #d5f3f2; padding: 5px 9px; border-radius: 8px; }
+h2 { font-family: var(--font-script); font-size: 32px; line-height: 1.1; color: var(--teal-deep); margin: 8px 0 0; }
+.timer {
+  margin-top: 18px; display: flex; gap: 16px; align-items: center; background: var(--paper); border-radius: 22px; padding: 16px; border: 1.5px solid var(--line);
+}
+.dial { width: 104px; height: 104px; border-radius: 50%; background: var(--teal); position: relative; flex: none; box-shadow: inset 0 -4px 0 rgb(0 0 0 / .15), 0 0 0 3px #1f2428, 0 0 0 6px #fff, 0 0 0 7px var(--line); }
+.dial svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.dial .track { fill: none; stroke: rgb(255 255 255 / .35); stroke-width: 8; }
+.dial .fill { fill: none; stroke: var(--pink); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 264; stroke-dashoffset: 88; }
+.dial .num { position: absolute; inset: 0; display: grid; place-items: center; font: 700 22px var(--font-body); color: var(--teal-ink); }
+.dial .num small { display: block; font-size: 11px; font-weight: 600; text-align: center; opacity: .8; }
+.timer strong { font-size: 17px; }
+.timer p { margin: 4px 0 0; color: var(--ink-muted); font-size: 14px; line-height: 1.4; }
+.steps { margin-top: 16px; background: var(--paper); border-radius: 22px; border: 1.5px solid var(--line); overflow: hidden; }
+.step { display: flex; gap: 12px; padding: 12px 14px; border-top: 1px dashed var(--line); align-items: flex-start; }
+.step:first-child { border-top: 0; }
+.step .who { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+.who.me { background: var(--teal); color: var(--teal-ink); } .who.them { background: var(--pink); color: #fff; } .who.all { background: var(--yellow); color: var(--yellow-ink); }
+.step .txt { font-size: 15px; line-height: 1.4; }
+.step .txt em { display: block; font-style: normal; color: var(--ink-muted); font-size: 12px; margin-top: 2px; }
+.step.now { background: #eefbfa; }
+.step.done { opacity: .5; } .step.done .txt { text-decoration: line-through; }
+.bar { position: absolute; left: 20px; right: 20px; bottom: 22px; display: flex; gap: 10px; }
+.bar .ghost { flex: 1; height: 50px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--paper); font: 600 15px var(--font-body); color: var(--ink); }
+.bar .nozzle { flex: 1.4; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="wrap">
+    <div class="label">B · Денна зміна · головний екран</div>
+    <section class="phone">
+      <div class="fascia">
+        <div class="plate"><span>Cooking</span></div>
+        <div class="cooks"><b>М</b><b>А</b><b>+1</b></div>
+      </div>
+      <h1>Що готуємо сьогодні?</h1>
+      <p class="lede">Опиши страву або напиши, що є вдома. Далі зберемо кошик у Сільпо і розділимо кроки між усіма.</p>
+
+      <div class="pump">
+        <div class="badge"><i>№1</i>ІДЕЯ</div>
+        <div class="window"><div class="field">Паста з креветками на двох, <span class="ph">є вершки й часник…</span></div></div>
+        <div class="pump-row">
+          <span class="hint">Бак повний: 3 ідеї на хвилину</span>
+          <button class="nozzle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16M6 10v7a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-7M9 10V7a3 3 0 0 1 6 0v3"/></svg>Згенерувати</button>
+        </div>
+      </div>
+
+      <div class="chips">
+        <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6c6 3 10 3 16 0M4 12c6 3 10 3 16 0M4 18c6 3 10 3 16 0"/></svg>Паста на двох</button>
+        <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 14c-2-5 1-9 5-9s7 4 5 9c-1 3-3 4-5 4s-4-1-5-4Z"/><path d="M12 18v3"/></svg>Щось із куркою</button>
+        <button class="chip is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>Вечеря за 30 хв</button>
+        <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg>Не знаю, здивуй мене</button>
+      </div>
+
+      <div class="floor"></div>
+      <div class="idea"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 14a6 6 0 1 1 12 0v6H6z"/><path d="M9 20v2M15 20v2"/></svg>Тут з'явиться ідея вечері</div>
+    </section>
+  </div>
+
+  <div class="wrap">
+    <div class="label">B · Денна зміна · спільне готування</div>
+    <section class="phone">
+      <div class="fascia">
+        <div class="plate"><span>Cooking</span></div>
+        <div class="cooks"><b>М</b><b>А</b><b>+1</b></div>
+      </div>
+      <div class="sess-h"><span class="k">КРОК 3 З 7</span></div>
+      <h2>Паста з креветками у вершковому соусі</h2>
+      <div class="timer">
+        <div class="dial"><svg viewBox="0 0 104 104"><circle class="track" cx="52" cy="52" r="42"/><circle class="fill" cx="52" cy="52" r="42"/></svg><div class="num">6:42<small>паста</small></div></div>
+        <div><strong>Вода вже кипить</strong><p>Макс солить і кидає пасту. Аня в цей час чистить креветки.</p></div>
+      </div>
+      <div class="steps">
+        <div class="step done"><span class="who all">Усі</span><div class="txt">Дістати продукти, поставити воду<em>готово · 2 хв</em></div></div>
+        <div class="step done"><span class="who them">А</span><div class="txt">Почистити й нарізати часник<em>готово · Аня</em></div></div>
+        <div class="step now"><span class="who me">М</span><div class="txt">Кинути пасту у воду, засікти 7 хвилин<em>твій крок · зараз</em></div></div>
+        <div class="step"><span class="who them">А</span><div class="txt">Обсмажити креветки з часником 3 хв<em>Аня · паралельно</em></div></div>
+        <div class="step"><span class="who all">Усі</span><div class="txt">Змішати з вершками й пастою<em>через 7 хв</em></div></div>
+      </div>
+      <div class="bar"><button class="ghost">Помінятися</button><button class="nozzle">Готово, далі</button></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

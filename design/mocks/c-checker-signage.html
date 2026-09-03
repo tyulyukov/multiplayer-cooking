@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mock C — Шахівниця і вивіски</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #f3eee4;
+  --paper: #fff;
+  --ink: #16191d;
+  --ink-muted: #666d74;
+  --teal: #3ec1be;
+  --teal-deep: #147d7b;
+  --magenta: #e5127f;
+  --magenta-deep: #b40d63;
+  --lime: #c8e63c;
+  --lime-ink: #1f2a00;
+  --blue: #3f7dff;
+  --chrome-a: #f2f4f6; --chrome-b: #a7b0ba; --chrome-c: #6d7883;
+  --line: #ddd6c9;
+  --font-sign: "Oswald", sans-serif;
+  --font-body: "Golos Text", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #cfc8bb; color: var(--ink); font-family: var(--font-body); display: block; padding: 40px 24px; }
+.stage { display: flex; gap: 36px; align-items: flex-start; width: max-content; margin: 0 auto; }
+.wrap { position: relative; }
+.label { position: absolute; top: -34px; left: 0; color: #5d5750; font: 600 12px var(--font-body); letter-spacing: .04em; }
+.phone { width: 390px; min-height: 844px; border-radius: 44px; overflow: hidden; position: relative; background: var(--bg); box-shadow: 0 0 0 1px #aaa295, 0 30px 80px -30px rgb(0 0 0 / .5); padding: 0 20px 28px; }
+.checker { margin: 0 -20px; height: 48px; background: repeating-conic-gradient(var(--ink) 0 25%, #fff 0 50%) 0 0 / 48px 48px; position: relative; }
+.checker::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 3px; background: var(--blue); box-shadow: 0 0 8px var(--blue), 0 2px 14px color-mix(in oklch, var(--blue) 50%, transparent); }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+.brand { font-family: var(--font-sign); font-weight: 600; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+.brand i { width: 14px; height: 14px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 2px var(--ink); }
+.cooks { display: flex; }
+.cooks b { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--bg); display: grid; place-items: center; font-size: 11px; font-weight: 700; margin-left: -8px; }
+.cooks b:nth-child(1) { background: var(--teal); color: #05302f; } .cooks b:nth-child(2) { background: var(--magenta); color: #fff; } .cooks b:nth-child(3) { background: var(--lime); color: var(--lime-ink); }
+
+/* the sign: magenta plate with a chrome frame, condensed uppercase letters */
+.sign { margin-top: 30px; padding: 3px; border-radius: 18px; background: linear-gradient(160deg, var(--chrome-a), var(--chrome-b) 40%, var(--chrome-c) 70%, var(--chrome-a)); display: inline-block; }
+.sign h1 { margin: 0; background: var(--magenta); color: #fff; border-radius: 15px; padding: 10px 18px 12px; font-family: var(--font-sign); font-weight: 700; font-size: 34px; line-height: 1; letter-spacing: .03em; text-transform: uppercase; box-shadow: inset 0 0 0 2px #ff8fcb, inset 0 -6px 0 var(--magenta-deep); }
+.lede { margin: 14px 0 0; color: var(--ink-muted); font-size: 15px; line-height: 1.45; }
+
+.composer { margin-top: 22px; padding: 3px; border-radius: 22px; background: linear-gradient(160deg, var(--chrome-a), var(--chrome-b) 40%, var(--chrome-c) 70%, var(--chrome-a)); }
+.composer-inner { background: var(--paper); border-radius: 19px; padding: 16px; min-height: 172px; display: flex; flex-direction: column; justify-content: space-between; }
+.field { font-size: 17px; line-height: 1.5; }
+.field .ph { color: #9aa1a8; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.hint { font-family: var(--font-sign); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); }
+.cta { border: 0; height: 50px; padding: 0 22px; border-radius: 12px; background: var(--lime); color: var(--lime-ink); font: 700 16px var(--font-body); display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 0 2px var(--ink), inset 0 -3px 0 rgb(0 0 0 / .15); }
+.cta svg { width: 20px; height: 20px; }
+
+.tags { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { border: 2px solid var(--ink); background: var(--paper); border-radius: 10px; padding: 10px 12px; font: 600 14px/1 var(--font-body); color: var(--ink); display: inline-flex; align-items: center; gap: 8px; }
+.tag svg { width: 18px; height: 18px; }
+.tag.is-on { background: var(--ink); color: #fff; }
+.tag.is-on svg { color: var(--lime); }
+
+.rail { margin-top: 26px; display: flex; align-items: center; gap: 10px; color: var(--ink-muted); font-family: var(--font-sign); text-transform: uppercase; letter-spacing: .1em; font-size: 13px; }
+.rail::before, .rail::after { content: ""; flex: 1; height: 2px; background: var(--ink); opacity: .15; }
+
+/* session */
+.sess-sign { margin-top: 26px; display: flex; gap: 10px; align-items: stretch; }
+.sess-sign .num { padding: 3px; border-radius: 14px; background: linear-gradient(160deg, var(--chrome-a), var(--chrome-b) 40%, var(--chrome-c) 70%, var(--chrome-a)); }
+.sess-sign .num b { display: grid; place-items: center; width: 64px; height: 100%; background: var(--teal); color: #05302f; border-radius: 11px; font-family: var(--font-sign); font-weight: 700; font-size: 34px; line-height: 1; box-shadow: inset 0 -5px 0 rgb(0 0 0 / .15); }
+.sess-sign .num b small { font-size: 11px; letter-spacing: .1em; font-weight: 600; margin-top: -4px; }
+.sess-sign h2 { margin: 0; align-self: center; font-family: var(--font-sign); font-weight: 600; font-size: 24px; line-height: 1.05; text-transform: uppercase; letter-spacing: .02em; }
+.timer { margin-top: 16px; padding: 3px; border-radius: 22px; background: linear-gradient(160deg, var(--chrome-a), var(--chrome-b) 40%, var(--chrome-c) 70%, var(--chrome-a)); }
+.timer-inner { background: var(--ink); color: #fff; border-radius: 19px; padding: 16px; display: flex; gap: 16px; align-items: center; }
+.big { font-family: var(--font-sign); font-weight: 700; font-size: 56px; line-height: 1; color: var(--lime); letter-spacing: .02em; text-shadow: 0 0 12px color-mix(in oklch, var(--lime) 60%, transparent); }
+.big small { display: block; font: 600 12px var(--font-body); color: #aab3bc; letter-spacing: 0; text-shadow: none; margin-top: 4px; }
+.timer p { margin: 0; font-size: 14px; line-height: 1.45; color: #d4dae0; }
+.timer p strong { color: #fff; display: block; font-size: 16px; margin-bottom: 4px; }
+.steps { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.step { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: var(--paper); border: 2px solid var(--line); }
+.step .n { flex: none; width: 30px; font-family: var(--font-sign); font-weight: 700; font-size: 22px; line-height: 1; color: var(--ink-muted); }
+.step .txt { font-size: 15px; line-height: 1.4; }
+.step .txt em { display: block; font-style: normal; color: var(--ink-muted); font-size: 12px; margin-top: 2px; }
+.step.now { border-color: var(--ink); background: #fff; } .step.now .n { color: var(--magenta); }
+.step.done { opacity: .5; } .step.done .txt { text-decoration: line-through; }
+.who { display: inline-block; padding: 1px 6px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-right: 4px; }
+.who.me { background: var(--teal); color: #05302f; } .who.them { background: var(--magenta); color: #fff; } .who.all { background: var(--lime); color: var(--lime-ink); }
+.bar { position: absolute; left: 20px; right: 20px; bottom: 22px; display: flex; gap: 10px; }
+.bar .ghost { flex: 1; height: 50px; border-radius: 12px; border: 2px solid var(--ink); background: var(--paper); font: 600 15px var(--font-body); color: var(--ink); }
+.bar .cta { flex: 1.4; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="wrap">
+    <div class="label">C · Шахівниця і вивіски · головний екран</div>
+    <section class="phone">
+      <div class="checker"></div>
+      <div class="topbar">
+        <div class="brand"><i></i>Multiplayer Cooking</div>
+        <div class="cooks"><b>М</b><b>А</b><b>+1</b></div>
+      </div>
+      <div class="sign"><h1>Що готуємо<br>сьогодні?</h1></div>
+      <p class="lede">Опиши страву або напиши, що є вдома. Далі зберемо кошик у Сільпо і розділимо кроки між усіма.</p>
+
+      <div class="composer"><div class="composer-inner">
+        <div class="field">Паста з креветками на двох, <span class="ph">є вершки й часник…</span></div>
+        <div class="row">
+          <span class="hint">до 500 знаків</span>
+          <button class="cta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16M6 10v7a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-7M9 10V7a3 3 0 0 1 6 0v3"/></svg>Згенерувати</button>
+        </div>
+      </div></div>
+
+      <div class="tags">
+        <button class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6c6 3 10 3 16 0M4 12c6 3 10 3 16 0M4 18c6 3 10 3 16 0"/></svg>Паста на двох</button>
+        <button class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 14c-2-5 1-9 5-9s7 4 5 9c-1 3-3 4-5 4s-4-1-5-4Z"/><path d="M12 18v3"/></svg>Щось із куркою</button>
+        <button class="tag is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>Вечеря за 30 хв</button>
+        <button class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/></svg>Здивуй мене</button>
+      </div>
+
+      <div class="rail">Ідея з'явиться тут</div>
+    </section>
+  </div>
+
+  <div class="wrap">
+    <div class="label">C · Шахівниця і вивіски · спільне готування</div>
+    <section class="phone">
+      <div class="checker"></div>
+      <div class="topbar">
+        <div class="brand"><i></i>Кухня 2</div>
+        <div class="cooks"><b>М</b><b>А</b><b>+1</b></div>
+      </div>
+      <div class="sess-sign">
+        <div class="num"><b>3<small>з 7</small></b></div>
+        <h2>Паста з креветками у вершковому соусі</h2>
+      </div>
+      <div class="timer"><div class="timer-inner">
+        <div class="big">6:42<small>паста у воді</small></div>
+        <p><strong>Вода вже кипить</strong>Макс солить і кидає пасту. Аня чистить креветки.</p>
+      </div></div>
+      <div class="steps">
+        <div class="step done"><span class="n">1</span><div class="txt"><span class="who all">Усі</span>Дістати продукти, поставити воду<em>готово · 2 хв</em></div></div>
+        <div class="step done"><span class="n">2</span><div class="txt"><span class="who them">Аня</span>Почистити й нарізати часник<em>готово</em></div></div>
+        <div class="step now"><span class="n">3</span><div class="txt"><span class="who me">Макс</span>Кинути пасту у воду, засікти 7 хвилин<em>твій крок · зараз</em></div></div>
+        <div class="step"><span class="n">4</span><div class="txt"><span class="who them">Аня</span>Обсмажити креветки з часником 3 хв<em>паралельно</em></div></div>
+        <div class="step"><span class="n">5</span><div class="txt"><span class="who all">Усі</span>Змішати з вершками й пастою<em>через 7 хв</em></div></div>
+      </div>
+      <div class="bar"><button class="ghost">Помінятися</button><button class="cta">Готово, далі</button></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

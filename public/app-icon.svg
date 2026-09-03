@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Multiplayer Cooking">
+  <rect width="512" height="512" rx="116" fill="#f6f1e8"/>
+  <rect x="52" y="52" width="408" height="408" rx="94" fill="#0e7c77"/>
+  <path d="M147 281h218a109 109 0 0 1-218 0Z" fill="#f6f1e8"/>
+  <path d="M172 266c11-83 157-83 168 0" fill="none" stroke="#f6f1e8" stroke-linecap="round" stroke-width="26"/>
+  <path d="M232 169c-22-22 22-39 0-61M285 169c-22-22 22-39 0-61" fill="none" stroke="#e6337f" stroke-linecap="round" stroke-width="19"/>
+  <circle cx="256" cy="204" r="14" fill="#c8202b"/>
+</svg>
