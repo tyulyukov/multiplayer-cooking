@@ -129,7 +129,7 @@ export const saveAddress = mutation({
     }
 
     if (found.cartPending) {
-      return { ok: true as const };
+      return { ok: false as const, message: "Кошик уже готується. Зачекай кілька секунд." };
     }
 
     await ctx.db.patch(found._id, {
