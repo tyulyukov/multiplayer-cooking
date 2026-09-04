@@ -81,13 +81,6 @@ function AssistantMessage({
 
   return (
     <div className="msg msg-agent">
-      {activity.length > 0 && (
-        <ul className="activity" aria-label="Що робить агент">
-          {activity.map((part, index) => (
-            <li key={`${message.key}-${index}`}>{toolLabel(part.type)}</li>
-          ))}
-        </ul>
-      )}
       {questions.map((part) => {
         const input = readQuestionInput(part.input);
 
@@ -112,6 +105,13 @@ function AssistantMessage({
           />
         );
       })}
+      {activity.length > 0 && (
+        <ul className="activity" aria-label="Що робить агент">
+          {activity.map((part, index) => (
+            <li key={`${message.key}-${index}`}>{toolLabel(part.type)}</li>
+          ))}
+        </ul>
+      )}
       {text && <AssistantText text={text} streaming={streaming} />}
       {message.status === "failed" && (
         <p className="msg-error">Відповідь не вдалася. Спробуй надіслати ще раз.</p>
