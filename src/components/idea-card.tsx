@@ -28,6 +28,21 @@ function formatPrice(value: number) {
   return hryvnia.format(value);
 }
 
+function itemsLabel(count: number) {
+  const tens = count % 100;
+  const ones = count % 10;
+
+  if (ones === 1 && tens !== 11) {
+    return `${count} товар`;
+  }
+
+  if (ones >= 2 && ones <= 4 && (tens < 12 || tens > 14)) {
+    return `${count} товари`;
+  }
+
+  return `${count} товарів`;
+}
+
 function servingsLabel(count: number) {
   if (count === 1) {
     return "1 порція";
@@ -111,7 +126,7 @@ function IdeaProducts({
   if (idea.cart) {
     action = (
       <div className="cart-done">
-        <span>Додано {idea.cart.itemCount} товарів у кошик</span>
+        <span>Додано {itemsLabel(idea.cart.itemCount)} у кошик</span>
         {idea.cart.checkoutWebLink && (
           <Button asChild variant="outline" size="chip">
             <a href={idea.cart.checkoutWebLink} target="_blank" rel="noreferrer">

@@ -1,6 +1,7 @@
 import {
   createThread,
   getThreadMetadata,
+  listMessages as listThreadMessages,
   listUIMessages,
   saveMessage,
   syncStreams,
@@ -189,6 +190,35 @@ export const followUp = internalMutation({
   },
 });
 
+// An answer is accepted only for an ask_user call in this thread that has no result yet.
+async function hasPendingQuestion(ctx: QueryCtx, threadId: string, toolCallId: string) {
+  const recent = await listThreadMessages(ctx, components.agent, {
+    threadId,
+    paginationOpts: { cursor: null, numItems: 40 },
+  });
+  let called = false;
+
+  for (const doc of recent.page) {
+    const content = doc.message?.content;
+
+    if (!Array.isArray(content)) {
+      continue;
+    }
+
+    for (const part of content) {
+      if (part.type === "tool-call" && part.toolCallId === toolCallId) {
+        called = part.toolName === "ask_user";
+      }
+
+      if (part.type === "tool-result" && part.toolCallId === toolCallId) {
+        return false;
+      }
+    }
+  }
+
+  return called;
+}
+
 export const answerQuestion = mutation({
   args: {
     ...SessionIdArg,
@@ -209,6 +239,18 @@ export const answerQuestion = mutation({
 
     if (!user || !(await ownsThread(ctx, user, threadId))) {
       return { ok: false as const, message: "Ця розмова недоступна. Почни нову." };
+    }
+
+    if (!(await hasPendingQuestion(ctx, threadId, toolCallId))) {
+      return { ok: false as const, message: "Це питання вже закрите." };
+    }
+
+    const admitted = await admitAiGeneration({
+      limit: (name, options) => rateLimiter.limit(ctx, name, { ...options, key: user._id }),
+    });
+
+    if (!admitted) {
+      return { ok: false as const, message: "Забагато запитів. Спробуй трохи пізніше." };
     }
 
     const custom = answer.custom?.trim().slice(0, 200);
@@ -344,13 +386,15 @@ export const deleteThread = mutation({
       .query("ideas")
       .withIndex("by_thread", (q) => q.eq("threadId", threadId))
       .collect();
+    // Versions share a photo when the model reuses "img_previous"; delete each file once.
+    const storageIds = new Set(ideas.flatMap((idea) => (idea.image ? [idea.image.storageId] : [])));
 
     for (const idea of ideas) {
-      if (idea.image) {
-        await ctx.storage.delete(idea.image.storageId);
-      }
-
       await ctx.db.delete(idea._id);
+    }
+
+    for (const storageId of storageIds) {
+      await ctx.storage.delete(storageId);
     }
 
     if (user.activeThreadId === threadId) {

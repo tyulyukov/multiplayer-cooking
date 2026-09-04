@@ -140,7 +140,7 @@ async function ensureThreadTitle(
     model: openrouter.chat(modelId, { reasoning: { effort: "low" } }),
     system: titleInstructions,
     prompt: basis.slice(0, 600),
-    maxOutputTokens: 60,
+    maxOutputTokens: 200,
     abortSignal: AbortSignal.timeout(20_000),
   });
   const title = text

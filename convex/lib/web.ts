@@ -68,6 +68,8 @@ function isPrivateIpv4(host: string) {
   );
 }
 
+// Numeric hosts are normalised by the URL parser before this check. A public name that
+// resolves to a private address (DNS rebinding) is not caught here; that risk is accepted.
 export function isPublicHttpUrl(value: string) {
   let url: URL;
 

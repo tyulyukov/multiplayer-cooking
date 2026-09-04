@@ -128,6 +128,10 @@ export const saveAddress = mutation({
       return { ok: false as const, message: "Спочатку підключи Сільпо." };
     }
 
+    if (found.cartPending) {
+      return { ok: true as const };
+    }
+
     await ctx.db.patch(found._id, {
       address: text,
       cart: undefined,
