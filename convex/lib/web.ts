@@ -2,6 +2,7 @@ export const WEB_TIMEOUT_MS = 8_000;
 export const WEB_SEARCH_MAX_RESULTS = 6;
 export const READ_PAGE_MAX_CHARACTERS = 6_000;
 export const IMAGE_MAX_BYTES = 4 * 1024 * 1024;
+export const PAGE_MAX_BYTES = 1024 * 1024;
 
 // Free-licence sources first; the order is the ranking.
 export const IMAGE_ENGINES = ["unsplash", "openverse", "wikicommons.images", "pexels"] as const;

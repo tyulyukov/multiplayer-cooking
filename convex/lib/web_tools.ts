@@ -6,6 +6,7 @@ import {
   htmlToText,
   IMAGE_MAX_BYTES,
   isPublicHttpUrl,
+  PAGE_MAX_BYTES,
   parseWebResults,
   rankImageCandidates,
   WEB_TIMEOUT_MS,
@@ -18,6 +19,66 @@ export type ImageRegistry = Map<string, IdeaImage>;
 
 const userAgent = "MultiplayerCooking/1.0 (+https://cooking.tyulyukov.com)";
 const imageBangs = "!us !opv !wci !pe";
+const maxRedirects = 3;
+
+// Follows redirects by hand so every hop is checked against private hosts before it is fetched.
+async function fetchPublic(url: string, accept: string): Promise<Response | null> {
+  let target = url;
+
+  for (let hop = 0; hop <= maxRedirects; hop += 1) {
+    if (!isPublicHttpUrl(target)) {
+      return null;
+    }
+
+    const response = await fetch(target, {
+      headers: { accept, "user-agent": userAgent },
+      redirect: "manual",
+      signal: AbortSignal.timeout(WEB_TIMEOUT_MS),
+    });
+    const location = response.headers.get("location");
+
+    if (response.status < 300 || response.status >= 400 || !location) {
+      return response;
+    }
+
+    await response.body?.cancel();
+    target = new URL(location, target).toString();
+  }
+
+  return null;
+}
+
+async function readBounded(response: Response, maxBytes: number) {
+  const declared = Number(response.headers.get("content-length"));
+
+  if (declared > maxBytes || !response.body) {
+    await response.body?.cancel();
+    return null;
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+
+  for (;;) {
+    const { done, value } = await reader.read();
+
+    if (done) {
+      break;
+    }
+
+    received += value.byteLength;
+
+    if (received > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+
+    chunks.push(value);
+  }
+
+  return Buffer.concat(chunks);
+}
 
 function searxBaseUrl() {
   return process.env.SEARXNG_URL?.replace(/\/+$/, "") ?? null;
@@ -46,24 +107,22 @@ async function searx(base: string, query: string, categories?: string) {
 }
 
 async function downloadImage(imageUrl: string) {
-  const response = await fetch(imageUrl, {
-    headers: { accept: "image/*", "user-agent": userAgent },
-    signal: AbortSignal.timeout(WEB_TIMEOUT_MS),
-  });
+  const response = await fetchPublic(imageUrl, "image/*");
+
+  if (!response) {
+    return null;
+  }
+
   const type = response.headers.get("content-type")?.split(";")[0].trim() ?? "";
-  const declaredSize = Number(response.headers.get("content-length"));
 
   if (!response.ok || !type.startsWith("image/") || type === "image/svg+xml") {
+    await response.body?.cancel();
     return null;
   }
 
-  if (declaredSize > IMAGE_MAX_BYTES || !isPublicHttpUrl(response.url)) {
-    return null;
-  }
+  const bytes = await readBounded(response, IMAGE_MAX_BYTES);
 
-  const bytes = await response.arrayBuffer();
-
-  return bytes.byteLength > IMAGE_MAX_BYTES ? null : new Blob([bytes], { type });
+  return bytes ? new Blob([bytes], { type }) : null;
 }
 
 function describeError(error: unknown) {
@@ -99,26 +158,32 @@ export function createWebTools(images: ImageRegistry) {
       "Читає текст публічної веб-сторінки за адресою з результатів пошуку. Повертає до 6000 знаків.",
     inputSchema: z.object({ url: z.string().url() }),
     execute: async (_ctx, { url }) => {
-      if (!isPublicHttpUrl(url)) {
-        return { url, text: "", note: "Ця адреса недоступна" };
-      }
-
       try {
-        const response = await fetch(url, {
-          headers: { accept: "text/html,text/plain;q=0.9", "user-agent": userAgent },
-          signal: AbortSignal.timeout(WEB_TIMEOUT_MS),
-        });
+        const response = await fetchPublic(url, "text/html,text/plain;q=0.9");
+
+        if (!response) {
+          return { url, text: "", note: "Ця адреса недоступна" };
+        }
+
         const type = response.headers.get("content-type") ?? "";
 
-        if (!response.ok || !isPublicHttpUrl(response.url)) {
+        if (!response.ok) {
+          await response.body?.cancel();
           return { url, text: "", note: "Сторінка не відкрилась" };
         }
 
         if (!type.includes("text/html") && !type.includes("text/plain")) {
+          await response.body?.cancel();
           return { url, text: "", note: "Це не текстова сторінка" };
         }
 
-        return { url: response.url, text: htmlToText(await response.text()) };
+        const bytes = await readBounded(response, PAGE_MAX_BYTES);
+
+        if (!bytes) {
+          return { url, text: "", note: "Сторінка надто велика" };
+        }
+
+        return { url: response.url || url, text: htmlToText(bytes.toString("utf8")) };
       } catch (error) {
         return { url, text: "", note: describeError(error) };
       }
