@@ -8,3 +8,6 @@ export const AI_RATE_LIMITS = {
   chatBurst: { kind: "token bucket", rate: 5, period: 60_000, capacity: 5 },
   chatDaily: { kind: "fixed window", rate: 40, period: 86_400_000 },
 } as const;
+
+// Delivery address length accepted by the secure address form.
+export const ADDRESS_MAX_CHARACTERS = 200;

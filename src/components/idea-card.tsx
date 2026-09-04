@@ -1,6 +1,8 @@
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
 import FullScreenIcon from "@hugeicons/core-free-icons/FullScreenIcon";
+import LinkSquare01Icon from "@hugeicons/core-free-icons/LinkSquare01Icon";
+import ShoppingBasketAdd01Icon from "@hugeicons/core-free-icons/ShoppingBasketAdd01Icon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { FunctionReturnType } from "convex/server";
@@ -11,6 +13,16 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export type Idea = NonNullable<FunctionReturnType<typeof api.ideas.latest>>;
+
+const hryvnia = new Intl.NumberFormat("uk-UA", {
+  style: "currency",
+  currency: "UAH",
+  maximumFractionDigits: 2,
+});
+
+function formatPrice(value: number) {
+  return hryvnia.format(value);
+}
 
 function servingsLabel(count: number) {
   if (count === 1) {
@@ -72,14 +84,102 @@ export function IdeaCompact({ idea, onOpen }: { idea: Idea; onOpen: () => void }
   );
 }
 
+function IdeaProducts({
+  idea,
+  canAddToCart,
+  onAddToCart,
+}: {
+  idea: Idea;
+  canAddToCart: boolean;
+  onAddToCart: () => void;
+}) {
+  const products = idea.products ?? [];
+
+  if (products.length === 0) {
+    return null;
+  }
+
+  const matched = products.filter((product) => product.productId);
+  const total = matched.reduce((sum, product) => sum + (product.price ?? 0) * product.quantity, 0);
+
+  let action = null;
+
+  if (idea.cart) {
+    action = (
+      <div className="cart-done">
+        <span>Додано {idea.cart.itemCount} товарів у кошик</span>
+        {idea.cart.checkoutWebLink && (
+          <Button asChild variant="outline" size="chip">
+            <a href={idea.cart.checkoutWebLink} target="_blank" rel="noreferrer">
+              <HugeiconsIcon icon={LinkSquare01Icon} strokeWidth={1.5} aria-hidden />
+              Відкрити кошик у Сільпо
+            </a>
+          </Button>
+        )}
+      </div>
+    );
+  } else if (matched.length > 0) {
+    action = (
+      <Button
+        type="button"
+        className="cart-button"
+        disabled={!canAddToCart || idea.cartPending === true}
+        aria-busy={idea.cartPending === true}
+        onClick={onAddToCart}
+      >
+        <HugeiconsIcon icon={ShoppingBasketAdd01Icon} strokeWidth={1.5} aria-hidden />
+        {idea.cartPending ? "Додаємо…" : "Додати в кошик"}
+      </Button>
+    );
+  }
+
+  return (
+    <section className="idea-products" aria-label="Продукти в Сільпо">
+      <h3 className="idea-section">Продукти в Сільпо</h3>
+      <ul className="products">
+        {products.map((product, index) => (
+          <li key={`${product.ingredient}-${index}`} data-missing={!product.productId}>
+            <span className="product-ingredient">{product.ingredient}</span>
+            {product.productId ? (
+              <>
+                <span className="product-title">
+                  {product.title ?? "Товар"}
+                  {product.quantity > 1 && ` × ${product.quantity}`}
+                </span>
+                <span className="product-price">
+                  {product.price !== undefined ? formatPrice(product.price * product.quantity) : ""}
+                </span>
+              </>
+            ) : (
+              <span className="product-title">не знайдено</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {matched.length > 0 && (
+        <p className="products-total">
+          <span>Разом</span>
+          <strong>{formatPrice(total)}</strong>
+        </p>
+      )}
+      {idea.cartError && <p className="address-error">{idea.cartError}</p>}
+      {action}
+    </section>
+  );
+}
+
 export function IdeaPane({
   idea,
   fullscreen,
+  canAddToCart,
   onToggleFullscreen,
+  onAddToCart,
 }: {
   idea: Idea;
   fullscreen: boolean;
+  canAddToCart: boolean;
   onToggleFullscreen: () => void;
+  onAddToCart: () => void;
 }) {
   return (
     <article className="idea-pane chrome" aria-label={idea.title}>
@@ -116,6 +216,7 @@ export function IdeaPane({
           </li>
         ))}
       </ul>
+      <IdeaProducts idea={idea} canAddToCart={canAddToCart} onAddToCart={onAddToCart} />
     </article>
   );
 }

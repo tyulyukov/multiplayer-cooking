@@ -9,6 +9,7 @@ const toolLabels: Record<string, string> = {
   web_search: "Шукаю в інтернеті",
   read_page: "Читаю сторінку",
   find_dish_image: "Підбираю фото страви",
+  silpo_find_products: "Підбираю продукти в Сільпо",
   save_idea: "Зберігаю ідею",
 };
 

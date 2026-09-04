@@ -11,6 +11,7 @@ import { internalAction } from "./_generated/server";
 import { AGENT_MAX_STEPS, AGENT_RUN_TIMEOUT_MS, AI_MAX_OUTPUT_TOKENS } from "./lib/ai_config";
 import { classifyFailure } from "./lib/errors";
 import { recordAiEvent } from "./lib/telemetry";
+import { createSilpoTools } from "./lib/silpo_tools";
 import { createWebTools, type ImageRegistry } from "./lib/web_tools";
 
 const instructions = `Ти кухонний агент Multiplayer Cooking. Допомагаєш людині вибрати одну страву, яку вона приготує сьогодні, і робиш це українською, звертаючись на "ти".
@@ -22,6 +23,8 @@ const instructions = `Ти кухонний агент Multiplayer Cooking. До
 4. Перед save_idea виклич find_dish_image з назвою страви англійською. Якщо фото не знайдено, зберігай ідею без нього.
 5. Збережи ідею інструментом save_idea. Це обов'язково для кожної нової або зміненої ідеї: поле body пиши в Markdown (GFM) на 150–300 слів з розділами "Чому це смачно", "Що потрібно", "Як готувати" у 4–6 коротких кроків. Заголовок до 60 знаків, без крапки в кінці. Передай imageId з find_dish_image. Для уточнень тієї ж страви повторно шукати фото не треба: передай imageId "img_previous", щоб залишити фото попередньої версії.
 6. Після save_idea напиши в чаті одне-два речення: що це за страва і одне питання або уточнення, якщо чогось не вистачає.
+
+Продукти Сільпо. Коли людина просить продукти, ціни або кошик, або просить підібрати продукти в Сільпо: виклич silpo_find_products з одним елементом на інгредієнт (query українською, 1–3 слова, quantity в упаковках). Потім збережи ту ж ідею через save_idea з полем products і тим самим imageId. Ціни бери лише з результату інструмента, нічого не вигадуй. Якщо інструмент повернув needsAddress, поясни, що для цін потрібна адреса доставки, і попроси ввести її у формі під повідомленням.
 
 Якщо людина каже, що чогось немає або хоче інакше, або запропонуй заміну і збережи оновлену ідею через save_idea, або постав одне коротке уточнювальне питання.
 
@@ -57,6 +60,21 @@ function createSaveIdeaTool(run: RunContext, images: ImageRegistry) {
         .describe(
           'imageId з find_dish_image або "img_previous", щоб залишити фото попередньої версії',
         ),
+      products: z
+        .array(
+          z.object({
+            ingredient: z.string().min(1).max(80),
+            quantity: z.number().int().min(1).max(20),
+            productId: z.string().optional(),
+            companyId: z.string().optional(),
+            title: z.string().max(200).optional(),
+            price: z.number().min(0).optional(),
+            unit: z.string().max(20).optional(),
+          }),
+        )
+        .max(30)
+        .optional()
+        .describe("Збіги з silpo_find_products, як повернув інструмент"),
     }),
     execute: async (ctx, { imageId, ...input }) => {
       const image = imageId ? images.get(imageId) : undefined;
@@ -111,7 +129,10 @@ export const respond = internalAction({
     }
 
     const images: ImageRegistry = new Map();
-    const previousImage = await ctx.runQuery(internal.ideas.latestImage, { threadId });
+    const [previousImage, connection] = await Promise.all([
+      ctx.runQuery(internal.ideas.latestImage, { threadId }),
+      ctx.runQuery(internal.silpo.connectionByUser, { userId }),
+    ]);
 
     if (previousImage) {
       images.set("img_previous", previousImage);
@@ -123,6 +144,7 @@ export const respond = internalAction({
       instructions,
       tools: {
         ...createWebTools(images),
+        ...(connection ? createSilpoTools(userId, connection.cart) : {}),
         save_idea: createSaveIdeaTool({ threadId, userId, promptMessageId }, images),
       },
       stopWhen: stepCountIs(AGENT_MAX_STEPS),

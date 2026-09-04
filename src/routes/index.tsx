@@ -3,16 +3,18 @@ import { useUIMessages } from "@convex-dev/agent/react";
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
-import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { api } from "../../convex/_generated/api";
+import { AddressPrompt } from "@/components/address-prompt";
 import { ChatThread } from "@/components/chat-thread";
 import { Composer } from "@/components/composer";
 import { IdeaCompact, IdeaPane, IdeaWaiting, type Idea } from "@/components/idea-card";
+import { ConnectCard, ProfileMenu, type SilpoConnection } from "@/components/silpo-connect";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { isConvexConfigured } from "@/lib/convex";
@@ -80,14 +82,47 @@ function SendError({ message }: { message: string }) {
   );
 }
 
+function ConnectScreen({
+  backendReady,
+  busy,
+  error,
+  onConnect,
+}: {
+  backendReady: boolean;
+  busy: boolean;
+  error: string | null;
+  onConnect: () => void;
+}) {
+  return (
+    <main className="app-shell">
+      <div className="checker-band" aria-hidden />
+      <div className="home-layout">
+        <header className="topbar">
+          <Brand ready={backendReady} />
+        </header>
+
+        <div className="sign">
+          <h1>Підключи Сільпо, щоб почати</h1>
+        </div>
+
+        <ConnectCard busy={busy} onConnect={onConnect} />
+
+        {error && <SendError message={error} />}
+      </div>
+    </main>
+  );
+}
+
 function HomeScreen({
   backendReady,
+  menu,
   draft,
   busy,
   error,
   onSubmit,
 }: {
   backendReady: boolean;
+  menu?: ReactNode;
   draft: ReturnType<typeof useComposerDraft>;
   busy: boolean;
   error: string | null;
@@ -99,6 +134,7 @@ function HomeScreen({
       <div className="home-layout">
         <header className="topbar">
           <Brand ready={backendReady} />
+          {menu}
         </header>
 
         <div className="sign">
@@ -140,25 +176,38 @@ function HomeScreen({
 
 function ChatScreen({
   backendReady,
+  menu,
+  connection,
   messages,
   idea,
   working,
   draft,
   error,
+  addressError,
   onSubmit,
   onNew,
+  onSaveAddress,
+  onAddToCart,
 }: {
   backendReady: boolean;
+  menu?: ReactNode;
+  connection: SilpoConnection;
   messages: readonly UIMessage[];
   idea: Idea | null | undefined;
   working: boolean;
   draft: ReturnType<typeof useComposerDraft>;
   error: string | null;
+  addressError: string | null;
   onSubmit: (text: string) => void;
   onNew: () => void;
+  onSaveAddress: (address: string) => void;
+  onAddToCart: () => void;
 }) {
   const [fullscreen, setFullscreen] = useState(false);
   const showFullscreen = fullscreen && idea != null;
+  const showAddressPrompt =
+    !connection.hasCart &&
+    (connection.cartPending || connection.cartError !== undefined || wantsAddress(messages));
 
   let pane: ReactNode = null;
 
@@ -167,7 +216,9 @@ function ChatScreen({
       <IdeaPane
         idea={idea}
         fullscreen={showFullscreen}
+        canAddToCart={connection.hasCart}
         onToggleFullscreen={() => setFullscreen((value) => !value)}
+        onAddToCart={onAddToCart}
       />
     );
   } else if (working || idea === undefined) {
@@ -185,6 +236,7 @@ function ChatScreen({
               <HugeiconsIcon icon={PlusSignIcon} strokeWidth={1.5} aria-hidden />
               Нова
             </Button>
+            {menu}
           </div>
         </header>
 
@@ -192,6 +244,13 @@ function ChatScreen({
           <section className="chat-column" aria-label="Розмова">
             <ChatThread messages={messages} working={working}>
               {idea && <IdeaCompact idea={idea} onOpen={() => setFullscreen(true)} />}
+              {showAddressPrompt && (
+                <AddressPrompt
+                  pending={connection.cartPending}
+                  error={addressError ?? connection.cartError ?? null}
+                  onSubmit={onSaveAddress}
+                />
+              )}
             </ChatThread>
             {error && <SendError message={error} />}
             <Composer
@@ -212,6 +271,30 @@ function ChatScreen({
   );
 }
 
+// The model asks for the address through a tool result flag; the address itself never reaches it.
+function wantsAddress(messages: readonly UIMessage[]) {
+  const last = messages.at(-1);
+
+  if (!last || last.role !== "assistant") {
+    return false;
+  }
+
+  return last.parts.some((part) => {
+    if (part.type !== "tool-silpo_find_products" || !("output" in part)) {
+      return false;
+    }
+
+    const output: unknown = part.output;
+
+    return (
+      typeof output === "object" &&
+      output !== null &&
+      "needsAddress" in output &&
+      output.needsAddress === true
+    );
+  });
+}
+
 function sortMessages(messages: readonly UIMessage[]) {
   return [...messages].sort((a, b) => a.order - b.order || a.stepOrder - b.stepOrder);
 }
@@ -229,10 +312,57 @@ function isAgentWorking(messages: readonly UIMessage[]) {
   );
 }
 
+function useSilpoConnection(sessionId: ReturnType<typeof useSessionId>[0]) {
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const connection = useQuery(api.silpo.connection, sessionId ? { sessionId } : "skip");
+  const startConnect = useAction(api.silpoAuth.startConnect);
+  const disconnect = useMutation(api.silpo.disconnect);
+  const forgetAddress = useMutation(api.silpo.forgetAddress);
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(() =>
+    search.silpo === "error" ? "Не вдалося підключити Сільпо. Спробуй ще раз." : null,
+  );
+
+  useEffect(() => {
+    if (search.silpo) {
+      void navigate({ to: "/", search: {}, replace: true });
+    }
+  }, [search.silpo, navigate]);
+
+  async function connect() {
+    if (!sessionId) {
+      return;
+    }
+
+    setConnecting(true);
+    setError(null);
+
+    try {
+      const { url } = await startConnect({ sessionId });
+      window.location.assign(url);
+    } catch {
+      setError("Не вдалося відкрити Сільпо. Спробуй ще раз.");
+      setConnecting(false);
+    }
+  }
+
+  return {
+    connection,
+    connecting,
+    error,
+    connect,
+    disconnect: () => (sessionId ? disconnect({ sessionId }) : Promise.resolve(null)),
+    forgetAddress: () => (sessionId ? forgetAddress({ sessionId }) : Promise.resolve(null)),
+  };
+}
+
 function ConnectedHome() {
   const [sessionId] = useSessionId();
   const status = useQuery(api.status.current);
-  const active = useQuery(api.chat.activeThread, sessionId ? { sessionId } : "skip");
+  const silpo = useSilpoConnection(sessionId);
+  const connected = silpo.connection != null;
+  const active = useQuery(api.chat.activeThread, sessionId && connected ? { sessionId } : "skip");
   const threadId = active?.threadId ?? null;
   const threadArgs = sessionId && threadId ? { sessionId, threadId } : ("skip" as const);
   const { results } = useUIMessages(api.chat.listMessages, threadArgs, {
@@ -242,9 +372,12 @@ function ConnectedHome() {
   const idea = useQuery(api.ideas.latest, threadArgs);
   const sendMessage = useMutation(api.chat.sendMessage);
   const newThread = useMutation(api.chat.newThread);
+  const saveAddress = useMutation(api.silpo.saveAddress);
+  const addToCart = useMutation(api.ideas.addToCart);
   const draft = useComposerDraft();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [addressError, setAddressError] = useState<string | null>(null);
 
   const messages = sortMessages(results);
   const working = sending || isAgentWorking(messages);
@@ -276,6 +409,40 @@ function ConnectedHome() {
     }
   }
 
+  async function submitAddress(address: string) {
+    if (!sessionId) {
+      return;
+    }
+
+    setAddressError(null);
+
+    try {
+      const result = await saveAddress({ sessionId, address });
+
+      if (!result.ok) {
+        setAddressError(result.message);
+      }
+    } catch {
+      setAddressError("Не вдалося зберегти адресу. Спробуй ще раз.");
+    }
+  }
+
+  async function submitCart() {
+    if (!sessionId || !idea) {
+      return;
+    }
+
+    try {
+      const result = await addToCart({ sessionId, ideaId: idea._id });
+
+      if (!result.ok) {
+        setError(result.message);
+      }
+    } catch {
+      setError("Не вдалося додати в кошик. Спробуй ще раз.");
+    }
+  }
+
   async function startNew() {
     if (!sessionId) {
       return;
@@ -286,10 +453,35 @@ function ConnectedHome() {
     setError(null);
   }
 
+  if (silpo.connection === undefined) {
+    return null;
+  }
+
+  if (silpo.connection === null) {
+    return (
+      <ConnectScreen
+        backendReady={status?.ready === true}
+        busy={silpo.connecting}
+        error={silpo.error}
+        onConnect={() => void silpo.connect()}
+      />
+    );
+  }
+
+  const menu = (
+    <ProfileMenu
+      connection={silpo.connection}
+      onReconnect={() => void silpo.connect()}
+      onForgetAddress={() => void silpo.forgetAddress()}
+      onDisconnect={() => void silpo.disconnect()}
+    />
+  );
+
   if (!threadId) {
     return (
       <HomeScreen
         backendReady={status?.ready === true}
+        menu={menu}
         draft={draft}
         busy={sending}
         error={error}
@@ -301,13 +493,18 @@ function ConnectedHome() {
   return (
     <ChatScreen
       backendReady={status?.ready === true}
+      menu={menu}
+      connection={silpo.connection}
       messages={messages}
       idea={idea}
       working={working}
       draft={draft}
       error={error}
+      addressError={addressError}
       onSubmit={submit}
       onNew={startNew}
+      onSaveAddress={submitAddress}
+      onAddToCart={submitCart}
     />
   );
 }
@@ -331,6 +528,11 @@ function HomeRoute() {
   return isConvexConfigured ? <ConnectedHome /> : <MissingConvexHome />;
 }
 
+type HomeSearch = { silpo?: "connected" | "error" };
+
 export const Route = createFileRoute("/")({
   component: HomeRoute,
+  validateSearch: (search: Record<string, unknown>): HomeSearch => ({
+    silpo: search.silpo === "connected" || search.silpo === "error" ? search.silpo : undefined,
+  }),
 });

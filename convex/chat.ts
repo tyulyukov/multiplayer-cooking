@@ -14,7 +14,7 @@ import { v } from "convex/values";
 
 import { components, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
-import { mutation, query, type QueryCtx } from "./_generated/server";
+import { internalMutation, mutation, query, type QueryCtx } from "./_generated/server";
 import { admitAiGeneration } from "./lib/ai_admission";
 import { AI_RATE_LIMITS, AI_REQUEST_MAX_CHARACTERS } from "./lib/ai_config";
 import { findUser, getOrCreateUser } from "./lib/users";
@@ -129,6 +129,27 @@ export const newThread = mutation({
       });
       await ctx.db.patch(user._id, { activeThreadId: undefined });
     }
+
+    return null;
+  },
+});
+
+// Continues a thread after a server-side step (for example the cart is ready).
+export const followUp = internalMutation({
+  args: { userId: v.id("users"), threadId: v.string(), text: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { userId, threadId, text }) => {
+    const { messageId } = await saveMessage(ctx, components.agent, {
+      threadId,
+      userId,
+      prompt: text,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.cookingAgent.respond, {
+      threadId,
+      promptMessageId: messageId,
+      userId,
+    });
 
     return null;
   },

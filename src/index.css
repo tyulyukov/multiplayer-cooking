@@ -180,6 +180,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
   font-family: var(--font-sign);
   font-weight: 600;
   font-size: 1rem;
@@ -405,6 +406,91 @@
   flex: none;
 }
 
+.connect-card {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+  padding: 20px;
+  border-radius: 22px;
+}
+
+.connect-card p {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.connect-card .connect-note {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.connect-card .generate-button {
+  justify-self: start;
+}
+
+.profile-trigger {
+  max-width: 200px;
+}
+
+.profile-trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Two chips and the brand do not fit at 390px: the name shows from 640px. */
+@media (max-width: 639px) {
+  .profile-trigger span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+.profile-menu {
+  min-width: 240px;
+  border: 2px solid var(--foreground);
+  border-radius: 14px;
+  padding: 6px;
+}
+
+.profile-menu [role="menuitem"] {
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.profile-menu [role="menuitem"] svg {
+  color: var(--teal-deep);
+}
+
+.profile-menu [role="menuitem"][data-variant="destructive"] svg {
+  color: inherit;
+}
+
+.profile-label {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+}
+
+.profile-label strong {
+  font-family: var(--font-sign);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.profile-label span {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
 .topbar-actions {
   display: flex;
   gap: 8px;
@@ -625,6 +711,127 @@
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.address-prompt {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  margin: 0 2px;
+  padding: 14px;
+  border-radius: 18px;
+}
+
+.address-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--teal-deep);
+}
+
+.address-head h3 {
+  margin: 0;
+  color: var(--foreground);
+  font-family: var(--font-sign);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.address-prompt p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.address-field {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.address-field input {
+  flex: 1;
+  height: 44px;
+  border: 2px solid var(--foreground);
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+.address-error {
+  margin: 0;
+  color: var(--destructive);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.products {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.products li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
+.product-ingredient {
+  grid-column: 1 / -1;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.product-title {
+  font-weight: 600;
+}
+
+.products li[data-missing="true"] .product-title {
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+.product-price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.products-total {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.products-total strong {
+  font-family: var(--font-sign);
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+
+.idea-products {
+  display: grid;
+  gap: 10px;
+}
+
+.cart-button {
+  justify-self: start;
+}
+
+.cart-done {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
 }
 
 .idea-head {

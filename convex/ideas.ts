@@ -1,9 +1,10 @@
 import { SessionIdArg } from "convex-helpers/server/sessions";
 import { v } from "convex/values";
 
-import { internalMutation, internalQuery, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { findUser } from "./lib/users";
-import { ideaDocValidator, ideaFields, ideaImageValidator } from "./schema";
+import { ideaCartValidator, ideaDocValidator, ideaFields, ideaImageValidator } from "./schema";
 
 export const save = internalMutation({
   args: ideaFields,
@@ -53,5 +54,64 @@ export const latest = query({
     const imageUrl = idea.image ? await ctx.storage.getUrl(idea.image.storageId) : null;
 
     return { ...idea, imageUrl: imageUrl ?? undefined };
+  },
+});
+
+export const get = internalQuery({
+  args: { ideaId: v.id("ideas") },
+  returns: v.union(v.null(), ideaDocValidator),
+  handler: async (ctx, { ideaId }) => ctx.db.get(ideaId),
+});
+
+// Cart writes happen only from this explicit action, never from the model.
+export const addToCart = mutation({
+  args: { ...SessionIdArg, ideaId: v.id("ideas") },
+  returns: v.union(
+    v.object({ ok: v.literal(true) }),
+    v.object({ ok: v.literal(false), message: v.string() }),
+  ),
+  handler: async (ctx, { sessionId, ideaId }) => {
+    const user = await findUser(ctx, sessionId);
+    const idea = await ctx.db.get(ideaId);
+
+    if (!user || !idea || idea.userId !== user._id) {
+      return { ok: false as const, message: "Ця ідея недоступна." };
+    }
+
+    if (!idea.products?.some((product) => product.productId)) {
+      return { ok: false as const, message: "Спочатку підбери продукти в Сільпо." };
+    }
+
+    if (idea.cartPending) {
+      return { ok: true as const };
+    }
+
+    await ctx.db.patch(ideaId, { cartPending: true, cartError: undefined });
+    await ctx.scheduler.runAfter(0, internal.silpoCart.addIdeaToCart, {
+      ideaId,
+      userId: user._id,
+    });
+
+    return { ok: true as const };
+  },
+});
+
+export const saveCart = internalMutation({
+  args: { ideaId: v.id("ideas"), cart: ideaCartValidator },
+  returns: v.null(),
+  handler: async (ctx, { ideaId, cart }) => {
+    await ctx.db.patch(ideaId, { cart, cartError: undefined, cartPending: false });
+
+    return null;
+  },
+});
+
+export const saveCartError = internalMutation({
+  args: { ideaId: v.id("ideas"), message: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { ideaId, message }) => {
+    await ctx.db.patch(ideaId, { cartError: message, cartPending: false });
+
+    return null;
   },
 });
