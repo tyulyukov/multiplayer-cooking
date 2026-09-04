@@ -83,10 +83,23 @@ export const finishConnect = internalAction({
   },
 });
 
+// Diagnostics for development: call one read-only tool and return the raw JSON.
+export const callTool = internalAction({
+  args: { userId: v.id("users"), name: v.string(), args: v.any() },
+  returns: v.string(),
+  handler: async (ctx, { userId, name, args }) =>
+    JSON.stringify(
+      await withSilpoClient(ctx, userId, (client) =>
+        client.callTool(name, args as Record<string, unknown>),
+      ),
+    ),
+});
+
 // Diagnostics for development: dump the live tool list of a connected user.
 export const listTools = internalAction({
   args: { userId: v.id("users") },
-  returns: v.any(),
+  // Serialized: JSON Schema keys such as $schema are not valid Convex field names.
+  returns: v.string(),
   handler: async (ctx, { userId }) =>
-    withSilpoClient(ctx, userId, async (client) => client.listTools()),
+    JSON.stringify(await withSilpoClient(ctx, userId, async (client) => client.listTools())),
 });

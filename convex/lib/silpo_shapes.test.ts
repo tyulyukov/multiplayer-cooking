@@ -6,9 +6,10 @@ import {
   chooseTimeslot,
   findObjectArray,
   readCartId,
+  readCartSummary,
   readCheckoutLink,
   shapeAddress,
-  shapeProductMatches,
+  shapeProductCandidates,
 } from "./silpo_shapes";
 
 describe("findObjectArray", () => {
@@ -85,6 +86,28 @@ describe("chooseTimeslot", () => {
 });
 
 describe("cart readers", () => {
+  test("reads the total and keeps only warning or error validations", () => {
+    const payload = {
+      cart: {
+        calculation: {
+          total: 826.32,
+          productsTotal: 727.32,
+          validations: [
+            { level: "info", type: "order", message: "order.payment_types.disabled" },
+            { level: "error", type: "product", message: "product.offer.stock.max" },
+            { level: "error", type: "product", message: "product.offer.stock.max" },
+          ],
+        },
+      },
+    };
+
+    expect(readCartSummary(payload)).toEqual({
+      total: 826.32,
+      warnings: ["Деяких товарів на складі менше, ніж додано; кількість зменшено."],
+    });
+    expect(readCartSummary({})).toEqual({ total: undefined, warnings: [] });
+  });
+
   test("reads the cart id and the checkout link", () => {
     expect(readCartId({ success: true, shoppingCartId: "cart-1" })).toBe("cart-1");
     expect(readCheckoutLink({ cart: { checkoutWebLink: "https://silpo.ua/checkout/1" } })).toBe(
@@ -94,45 +117,70 @@ describe("cart readers", () => {
   });
 });
 
-describe("shapeProductMatches", () => {
+describe("shapeProductCandidates", () => {
   const requests = [
     { ingredient: "Кабачки", query: "кабачок", quantity: 2 },
     { ingredient: "Пармезан", query: "пармезан", quantity: 1 },
   ];
 
-  test("maps products back by query and keeps unmatched ingredients", () => {
+  test("maps candidates back by query, skips unavailable, keeps unmatched ingredients", () => {
     const payload = {
-      results: [
+      success: true,
+      queries: [
         {
           query: "пармезан",
-          products: [{ productId: "p2", companyId: "c", title: "Пармезан 200 г", price: 189.9 }],
+          totalFound: 2,
+          products: [
+            {
+              id: "p2",
+              name: "Пармезан 200 г",
+              price: 189.9,
+              companyId: "c",
+              branchId: "b",
+              displayRatio: "200г",
+              stock: 5,
+            },
+            { id: "p3", name: "Пармезан тертий", price: 99, available: false },
+          ],
         },
-        { query: "кабачок", products: [] },
+        { query: "кабачок", totalFound: 0, products: [] },
       ],
     };
 
-    expect(shapeProductMatches(requests, payload)).toEqual([
-      { ingredient: "Кабачки", quantity: 2 },
+    expect(shapeProductCandidates(requests, payload)).toEqual([
+      { ingredient: "Кабачки", quantity: 2, candidates: [] },
       {
         ingredient: "Пармезан",
         quantity: 1,
-        productId: "p2",
-        companyId: "c",
-        title: "Пармезан 200 г",
-        price: 189.9,
-        unit: undefined,
+        candidates: [
+          {
+            productId: "p2",
+            companyId: "c",
+            branchId: "b",
+            title: "Пармезан 200 г",
+            price: 189.9,
+            unit: "200г",
+            stock: 5,
+          },
+        ],
       },
     ]);
   });
 
-  test("falls back to positional groups", () => {
-    const payload = [[{ id: "p1", name: "Кабачок", price: "45" }], []];
+  test("falls back to positional groups and caps the candidates", () => {
+    const payload = [
+      [
+        { id: "p1", name: "Кабачок", price: "45" },
+        { id: "p4", name: "Кабачок міні", price: 60 },
+        { id: "p5", name: "Кабачок жовтий", price: 70 },
+        { id: "p6", name: "Кабачок біо", price: 80 },
+      ],
+      [],
+    ];
+    const [first] = shapeProductCandidates(requests, payload);
 
-    expect(shapeProductMatches(requests, payload)[0]).toMatchObject({
-      productId: "p1",
-      title: "Кабачок",
-      price: 45,
-    });
+    expect(first.candidates).toHaveLength(3);
+    expect(first.candidates[0]).toMatchObject({ productId: "p1", title: "Кабачок", price: 45 });
   });
 
   test("sums the total over matched products", () => {

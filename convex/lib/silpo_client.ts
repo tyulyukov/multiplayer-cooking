@@ -132,5 +132,16 @@ export function shapeProfile(raw: unknown) {
   const name = fullName ?? (joined || undefined);
   const phone = readString(source, ["phone", "phoneNumber", "phone_number", "mobile", "msisdn"]);
 
-  return { name, phone };
+  return { name, phone: phone ? formatPhone(phone) : undefined };
+}
+
+// 380505080405 → +380 50 508 04 05; other lengths are shown as given.
+export function formatPhone(raw: string) {
+  const digits = raw.replace(/\D/g, "");
+
+  if (digits.length !== 12 || !digits.startsWith("380")) {
+    return raw;
+  }
+
+  return `+380 ${digits.slice(3, 5)} ${digits.slice(5, 8)} ${digits.slice(8, 10)} ${digits.slice(10)}`;
 }

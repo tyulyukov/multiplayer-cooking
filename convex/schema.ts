@@ -17,6 +17,7 @@ export const productMatchValidator = v.object({
   quantity: v.number(),
   productId: v.optional(v.string()),
   companyId: v.optional(v.string()),
+  branchId: v.optional(v.string()),
   title: v.optional(v.string()),
   price: v.optional(v.number()),
   unit: v.optional(v.string()),
@@ -25,6 +26,8 @@ export const productMatchValidator = v.object({
 export const ideaCartValidator = v.object({
   checkoutWebLink: v.optional(v.string()),
   itemCount: v.number(),
+  total: v.optional(v.number()),
+  warnings: v.optional(v.array(v.string())),
   addedAt: v.number(),
 });
 

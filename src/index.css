@@ -793,6 +793,11 @@
   font-weight: 600;
 }
 
+.product-unit {
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
 .products li[data-missing="true"] .product-title {
   color: var(--muted-foreground);
   font-weight: 500;

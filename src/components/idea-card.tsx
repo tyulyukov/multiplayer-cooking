@@ -28,6 +28,12 @@ function formatPrice(value: number) {
   return hryvnia.format(value);
 }
 
+const quantityFormat = new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 2 });
+
+function formatQuantity(value: number) {
+  return quantityFormat.format(value);
+}
+
 function itemsLabel(count: number) {
   const tens = count % 100;
   const ones = count % 10;
@@ -126,7 +132,15 @@ function IdeaProducts({
   if (idea.cart) {
     action = (
       <div className="cart-done">
-        <span>Додано {itemsLabel(idea.cart.itemCount)} у кошик</span>
+        <span>
+          Додано {itemsLabel(idea.cart.itemCount)} у кошик
+          {idea.cart.total !== undefined && `, разом ${formatPrice(idea.cart.total)}`}
+        </span>
+        {idea.cart.warnings?.map((warning) => (
+          <span key={warning} className="address-error">
+            {warning}
+          </span>
+        ))}
         {idea.cart.checkoutWebLink && (
           <Button asChild variant="outline" size="chip">
             <a href={idea.cart.checkoutWebLink} target="_blank" rel="noreferrer">
@@ -163,7 +177,8 @@ function IdeaProducts({
               <>
                 <span className="product-title">
                   {product.title ?? "Товар"}
-                  {product.quantity > 1 && ` × ${product.quantity}`}
+                  {product.unit && <span className="product-unit"> · {product.unit}</span>}
+                  {product.quantity !== 1 && ` × ${formatQuantity(product.quantity)}`}
                 </span>
                 <span className="product-price">
                   {product.price !== undefined ? formatPrice(product.price * product.quantity) : ""}

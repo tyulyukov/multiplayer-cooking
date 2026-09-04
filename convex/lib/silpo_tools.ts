@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import type { Doc, Id } from "../_generated/dataModel";
 import { isReauthRequired, withSilpoClient } from "./silpo_client";
-import { shapeProductMatches } from "./silpo_shapes";
+import { shapeProductCandidates } from "./silpo_shapes";
 
 type CartContext = NonNullable<Doc<"silpoConnections">["cart"]>;
 
@@ -14,7 +14,7 @@ export const needsAddressNote =
 export function createSilpoTools(userId: Id<"users">, cart: CartContext | undefined) {
   const silpo_find_products = createTool({
     description:
-      "Підбирає продукти Сільпо з цінами для інгредієнтів. Один запит на інгредієнт. Повертає productId, назву і ціну або порожній збіг.",
+      "Шукає продукти Сільпо для інгредієнтів. Один запит на інгредієнт. Для кожного повертає до 3 кандидатів з productId, companyId, branchId, назвою, ціною, фасуванням і залишком; вибери один доречний або жодного.",
     inputSchema: z.object({
       items: z
         .array(
@@ -29,26 +29,28 @@ export function createSilpoTools(userId: Id<"users">, cart: CartContext | undefi
     }),
     execute: async (ctx, { items }) => {
       if (!cart) {
-        return { needsAddress: true, note: needsAddressNote, products: [] };
+        return { needsAddress: true, note: needsAddressNote, ingredients: [] };
       }
 
       try {
         const raw = await withSilpoClient(ctx, userId, (client) =>
           client.callTool("silpo_find_products_batch", {
-            items: items.map((item) => ({ query: item.query, quantity: item.quantity })),
+            products: items.map((item) => item.query),
             branchId: cart.branchId,
             deliveryType: cart.deliveryType,
-            timeslot: cart.timeslot,
+            timeslotStart: cart.timeslot.start,
+            timeslotEnd: cart.timeslot.end,
+            limit: 5,
           }),
         );
 
-        return { needsAddress: false, products: shapeProductMatches(items, raw) };
+        return { needsAddress: false, ingredients: shapeProductCandidates(items, raw) };
       } catch (error) {
         console.error("silpo_find_products failed", error);
 
         return {
           needsAddress: false,
-          products: [],
+          ingredients: [],
           note: isReauthRequired(error)
             ? "Сесія Сільпо закінчилась. Попроси людину натиснути «Перепідключити» в меню."
             : "Сільпо не відповіло. Скажи, що ціни зараз недоступні, і запропонуй спробувати пізніше.",

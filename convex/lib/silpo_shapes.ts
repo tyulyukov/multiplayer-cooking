@@ -19,6 +19,7 @@ export type ProductMatch = Readonly<{
   quantity: number;
   productId?: string;
   companyId?: string;
+  branchId?: string;
   title?: string;
   price?: number;
   unit?: string;
@@ -167,6 +168,40 @@ export function readCartId(payload: unknown) {
   return isRecord(payload) ? pickString(payload, ["shoppingCartId", "cartId", "id"]) : undefined;
 }
 
+const validationMessages: Record<string, string> = {
+  "product.offer.stock.max": "Деяких товарів на складі менше, ніж додано; кількість зменшено.",
+  "order.min_total": "Сума замовлення менша за мінімальну для доставки.",
+};
+
+function describeValidation(code: string) {
+  return (
+    validationMessages[code] ?? "Сільпо додало зауваження до кошика. Перевір його перед оплатою."
+  );
+}
+
+// Totals and error-level validations from silpo_get_shopping_cart_by_id.
+export function readCartSummary(payload: unknown) {
+  const cart = isRecord(payload) && isRecord(payload.cart) ? payload.cart : undefined;
+  const calculation = cart && isRecord(cart.calculation) ? cart.calculation : undefined;
+  const total = calculation
+    ? pickNumber(calculation, ["totalAfterDiscounts", "total", "productsTotal"])
+    : undefined;
+  const validations = calculation ? findObjectArray(calculation.validations ?? []) : [];
+  const warnings = validations
+    .filter((entry) => {
+      const level = pickString(entry, ["level", "severity", "type"]);
+
+      return level === undefined || /error|warn/i.test(level);
+    })
+    .map((entry) => pickString(entry, ["message", "text", "code"]))
+    .filter((message): message is string => message !== undefined)
+    .map(describeValidation)
+    .filter((message, index, all) => all.indexOf(message) === index)
+    .slice(0, 3);
+
+  return { total, warnings };
+}
+
 export function readCheckoutLink(payload: unknown) {
   if (!isRecord(payload)) {
     return undefined;
@@ -193,35 +228,68 @@ export function readCheckoutLink(payload: unknown) {
 
 export type ProductRequest = Readonly<{ ingredient: string; query: string; quantity: number }>;
 
-// Maps a batch result back onto the requested ingredients, by index first and by query second.
-export function shapeProductMatches(requests: readonly ProductRequest[], payload: unknown) {
+export type ProductCandidate = Readonly<{
+  productId: string;
+  companyId?: string;
+  branchId?: string;
+  title: string;
+  price?: number;
+  unit?: string;
+  stock?: number;
+  weighted?: boolean;
+  step?: number;
+}>;
+
+export type IngredientCandidates = Readonly<{
+  ingredient: string;
+  quantity: number;
+  candidates: ProductCandidate[];
+}>;
+
+export const CANDIDATES_PER_INGREDIENT = 3;
+
+function shapeCandidate(record: Record<string, unknown>): ProductCandidate | null {
+  const productId = pickString(record, ["productId", "id"]);
+  const title = pickString(record, ["name", "title", "productName"]);
+
+  if (!productId || !title || record.available === false) {
+    return null;
+  }
+
+  return {
+    productId,
+    companyId: pickString(record, ["companyId"]),
+    branchId: pickString(record, ["branchId"]),
+    title,
+    price: pickNumber(record, ["price", "currentPrice", "priceValue"]),
+    unit: pickString(record, ["displayRatio", "unit", "measure"]),
+    stock: pickNumber(record, ["stock"]),
+    weighted: record.weighted === true ? true : undefined,
+    step: pickNumber(record, ["step"]),
+  };
+}
+
+// Maps a batch result back onto the requested ingredients, by query first and by index second,
+// keeping a few available candidates so the model can pick the sensible one.
+export function shapeProductCandidates(
+  requests: readonly ProductRequest[],
+  payload: unknown,
+): IngredientCandidates[] {
   const groups = findObjectArray(payload);
 
-  return requests.map((request, index): ProductMatch => {
+  return requests.map((request, index) => {
     const group =
       groups.find((record) => {
-        const query = pickString(record, ["query", "searchText", "text", "name"]);
+        const query = pickString(record, ["query", "searchText", "text"]);
 
         return query !== undefined && query.toLowerCase() === request.query.toLowerCase();
       }) ?? groups[index];
-    const products = group ? findObjectArray(group) : [];
-    const product =
-      products.find((record) => pickString(record, ["productId", "id"]) !== undefined) ??
-      (group && pickString(group, ["productId"]) !== undefined ? group : undefined);
+    const candidates = (group ? findObjectArray(group) : [])
+      .map(shapeCandidate)
+      .filter((candidate): candidate is ProductCandidate => candidate !== null)
+      .slice(0, CANDIDATES_PER_INGREDIENT);
 
-    if (!product) {
-      return { ingredient: request.ingredient, quantity: request.quantity };
-    }
-
-    return {
-      ingredient: request.ingredient,
-      quantity: request.quantity,
-      productId: pickString(product, ["productId", "id"]),
-      companyId: pickString(product, ["companyId"]),
-      title: pickString(product, ["title", "name", "productName"]),
-      price: pickNumber(product, ["price", "currentPrice", "priceValue"]),
-      unit: pickString(product, ["unit", "measure", "weightUnit"]),
-    };
+    return { ingredient: request.ingredient, quantity: request.quantity, candidates };
   });
 }
 

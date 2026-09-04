@@ -9,6 +9,7 @@ import {
   chooseDelivery,
   chooseTimeslot,
   readCartId,
+  readCartSummary,
   readCheckoutLink,
   shapeAddress,
 } from "./lib/silpo_shapes";
@@ -34,7 +35,7 @@ export const setupCart = internalAction({
 
     try {
       const cart = await withSilpoClient(ctx, userId, async (client) => {
-        const found = shapeAddress(await client.callTool("silpo_find_address", { text: address }));
+        const found = shapeAddress(await client.callTool("silpo_find_address", { address }));
 
         if (!found) {
           throw new Error("Сільпо не знайшло цю адресу. Перевір місто, вулицю і будинок.");
@@ -54,7 +55,10 @@ export const setupCart = internalAction({
         const timeslot = chooseTimeslot(
           await client.callTool("silpo_get_time_slots", {
             branchId: delivery.branchId,
-            deliveryType: delivery.deliveryType,
+            deliveryTypes: [delivery.deliveryType],
+            // The API rejects fractional seconds in ISO timestamps.
+            start: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
+            limit: 20,
           }),
         );
 
@@ -127,22 +131,27 @@ export const addIdeaToCart = internalAction({
     try {
       const cart = await withSilpoClient(ctx, userId, async (client) => {
         await client.callTool("silpo_add_or_update_cart_products", {
-          cartId: context.shoppingCartId,
-          branchId: context.branchId,
+          shoppingCartId: context.shoppingCartId,
           products: products.map((product) => ({
             productId: product.productId,
             companyId: product.companyId,
+            branchId: product.branchId ?? context.branchId,
             quantity: product.quantity,
+            addQuantity: false,
           })),
         });
 
         const details = await client.callTool("silpo_get_shopping_cart_by_id", {
-          cartId: context.shoppingCartId,
+          shoppingCartId: context.shoppingCartId,
         });
+
+        const summary = readCartSummary(details);
 
         return {
           checkoutWebLink: readCheckoutLink(details),
           itemCount: products.length,
+          total: summary.total,
+          warnings: summary.warnings.length > 0 ? summary.warnings : undefined,
           addedAt: Date.now(),
         };
       });
