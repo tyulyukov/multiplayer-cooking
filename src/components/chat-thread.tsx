@@ -6,6 +6,9 @@ import type { ReactNode } from "react";
 import { Markdown } from "@/components/markdown";
 
 const toolLabels: Record<string, string> = {
+  web_search: "Шукаю в інтернеті",
+  read_page: "Читаю сторінку",
+  find_dish_image: "Підбираю фото страви",
   save_idea: "Зберігаю ідею",
 };
 

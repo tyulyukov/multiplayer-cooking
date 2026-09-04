@@ -6,6 +6,12 @@ export const ingredientValidator = v.object({
   amount: v.optional(v.string()),
 });
 
+export const ideaImageValidator = v.object({
+  storageId: v.id("_storage"),
+  credit: v.string(),
+  sourceUrl: v.string(),
+});
+
 export const ideaFields = {
   userId: v.id("users"),
   threadId: v.string(),
@@ -16,6 +22,7 @@ export const ideaFields = {
   timeMinutes: v.number(),
   servings: v.number(),
   ingredients: v.array(ingredientValidator),
+  image: v.optional(ideaImageValidator),
 };
 
 export const ideaDocValidator = v.object({

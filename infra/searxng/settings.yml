@@ -1,0 +1,18 @@
+# Private SearXNG instance for the cooking agent. Railway sets SEARXNG_SECRET,
+# SEARXNG_BASE_URL and SEARXNG_LIMITER through environment variables.
+use_default_settings: true
+
+general:
+  instance_name: Multiplayer Cooking search
+  enable_metrics: false
+
+search:
+  safe_search: 1
+  default_lang: auto
+  formats:
+    - html
+    - json
+
+server:
+  image_proxy: false
+  public_instance: false

@@ -594,6 +594,39 @@
   }
 }
 
+.idea-photo {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  justify-self: stretch;
+}
+
+.idea-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--muted);
+}
+
+.idea-pane .idea-photo img {
+  aspect-ratio: 16 / 10;
+}
+
+.idea-photo figcaption {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.idea-photo figcaption a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .idea-head {
   display: flex;
   flex-wrap: wrap;

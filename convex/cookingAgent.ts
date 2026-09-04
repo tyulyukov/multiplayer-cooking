@@ -11,14 +11,17 @@ import { internalAction } from "./_generated/server";
 import { AGENT_MAX_STEPS, AGENT_RUN_TIMEOUT_MS, AI_MAX_OUTPUT_TOKENS } from "./lib/ai_config";
 import { classifyFailure } from "./lib/errors";
 import { recordAiEvent } from "./lib/telemetry";
+import { createWebTools, type ImageRegistry } from "./lib/web_tools";
 
 const instructions = `Ти кухонний агент Multiplayer Cooking. Допомагаєш людині вибрати одну страву, яку вона приготує сьогодні, і робиш це українською, звертаючись на "ти".
 
 Як працюєш:
 1. Зрозумій запит: що є вдома, скільки часу, скільки людей, обмеження.
 2. Запропонуй одну конкретну страву. Не давай список варіантів, якщо тебе не просять.
-3. Збережи ідею інструментом save_idea. Це обов'язково для кожної нової або зміненої ідеї: поле body пиши в Markdown (GFM) на 150–300 слів з розділами "Чому це смачно", "Що потрібно", "Як готувати" у 4–6 коротких кроків. Заголовок до 60 знаків, без крапки в кінці.
-4. Після save_idea напиши в чаті одне-два речення: що це за страва і одне питання або уточнення, якщо чогось не вистачає.
+3. Якщо не впевнений у рецепті, техніці або заміні, скористайся web_search і за потреби read_page. Не шукай для простих страв, які добре знаєш.
+4. Перед save_idea виклич find_dish_image з назвою страви англійською. Якщо фото не знайдено, зберігай ідею без нього.
+5. Збережи ідею інструментом save_idea. Це обов'язково для кожної нової або зміненої ідеї: поле body пиши в Markdown (GFM) на 150–300 слів з розділами "Чому це смачно", "Що потрібно", "Як готувати" у 4–6 коротких кроків. Заголовок до 60 знаків, без крапки в кінці. Передай imageId з find_dish_image. Для уточнень тієї ж страви повторно шукати фото не треба: передай imageId "img_previous", щоб залишити фото попередньої версії.
+6. Після save_idea напиши в чаті одне-два речення: що це за страва і одне питання або уточнення, якщо чогось не вистачає.
 
 Якщо людина каже, що чогось немає або хоче інакше, або запропонуй заміну і збережи оновлену ідею через save_idea, або постав одне коротке уточнювальне питання.
 
@@ -29,7 +32,7 @@ const instructions = `Ти кухонний агент Multiplayer Cooking. До
 type RunContext = Readonly<{ threadId: string; userId: Id<"users">; promptMessageId: string }>;
 
 // Bound per run: the tool context is not guaranteed to carry thread and message ids.
-function createSaveIdeaTool(run: RunContext) {
+function createSaveIdeaTool(run: RunContext, images: ImageRegistry) {
   return createTool({
     description:
       "Зберігає готову ідею страви, щоб показати її людині в картці. Викликай для кожної нової або зміненої ідеї.",
@@ -48,11 +51,19 @@ function createSaveIdeaTool(run: RunContext) {
         )
         .min(1)
         .max(30),
+      imageId: z
+        .string()
+        .optional()
+        .describe(
+          'imageId з find_dish_image або "img_previous", щоб залишити фото попередньої версії',
+        ),
     }),
-    execute: async (ctx, input) => {
-      await ctx.runMutation(internal.ideas.save, { ...input, ...run });
+    execute: async (ctx, { imageId, ...input }) => {
+      const image = imageId ? images.get(imageId) : undefined;
 
-      return { saved: true, title: input.title };
+      await ctx.runMutation(internal.ideas.save, { ...input, ...run, image });
+
+      return { saved: true, title: input.title, withImage: image !== undefined };
     },
   });
 }
@@ -99,11 +110,21 @@ export const respond = internalAction({
       return null;
     }
 
+    const images: ImageRegistry = new Map();
+    const previousImage = await ctx.runQuery(internal.ideas.latestImage, { threadId });
+
+    if (previousImage) {
+      images.set("img_previous", previousImage);
+    }
+
     const agent = new Agent(components.agent, {
       name: "Кухар",
       languageModel: service.model,
       instructions,
-      tools: { save_idea: createSaveIdeaTool({ threadId, userId, promptMessageId }) },
+      tools: {
+        ...createWebTools(images),
+        save_idea: createSaveIdeaTool({ threadId, userId, promptMessageId }, images),
+      },
       stopWhen: stepCountIs(AGENT_MAX_STEPS),
       callSettings: { maxOutputTokens: AI_MAX_OUTPUT_TOKENS },
       usageHandler: async (_ctx, { usage, model, provider }) => {

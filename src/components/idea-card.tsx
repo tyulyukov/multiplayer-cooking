@@ -3,13 +3,14 @@ import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
 import FullScreenIcon from "@hugeicons/core-free-icons/FullScreenIcon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { FunctionReturnType } from "convex/server";
 
-import type { Doc } from "../../convex/_generated/dataModel";
+import type { api } from "../../convex/_generated/api";
 import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export type Idea = Doc<"ideas">;
+export type Idea = NonNullable<FunctionReturnType<typeof api.ideas.latest>>;
 
 function servingsLabel(count: number) {
   if (count === 1) {
@@ -21,6 +22,23 @@ function servingsLabel(count: number) {
   }
 
   return `${count} порцій`;
+}
+
+function IdeaPhoto({ idea }: { idea: Idea }) {
+  if (!idea.imageUrl || !idea.image) {
+    return null;
+  }
+
+  return (
+    <figure className="idea-photo">
+      <img src={idea.imageUrl} alt={idea.title} loading="lazy" decoding="async" />
+      <figcaption>
+        <a href={idea.image.sourceUrl} target="_blank" rel="noreferrer">
+          {idea.image.credit}
+        </a>
+      </figcaption>
+    </figure>
+  );
 }
 
 function IdeaMeta({ idea }: { idea: Idea }) {
@@ -41,6 +59,7 @@ function IdeaMeta({ idea }: { idea: Idea }) {
 export function IdeaCompact({ idea, onOpen }: { idea: Idea; onOpen: () => void }) {
   return (
     <article className="idea-compact chrome" aria-label={idea.title}>
+      <IdeaPhoto idea={idea} />
       <div className="plate plate-sm">
         <h2>{idea.title}</h2>
       </div>
@@ -64,6 +83,7 @@ export function IdeaPane({
 }) {
   return (
     <article className="idea-pane chrome" aria-label={idea.title}>
+      <IdeaPhoto idea={idea} />
       <header className="idea-head">
         <div className="plate plate-sm">
           <h2>{idea.title}</h2>

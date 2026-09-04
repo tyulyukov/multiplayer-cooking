@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { ConvexBoundary } from "@/lib/convex";
+import { useLocalStorage } from "@/lib/session";
 import { router } from "@/router";
 
 import "./index.css";
@@ -11,7 +12,7 @@ import "./index.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ConvexBoundary>
-      <SessionProvider>
+      <SessionProvider useStorage={useLocalStorage}>
         <RouterProvider router={router} />
       </SessionProvider>
     </ConvexBoundary>

@@ -16,6 +16,8 @@ import type * as lib_ai_config from "../lib/ai_config.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_telemetry from "../lib/telemetry.js";
 import type * as lib_users from "../lib/users.js";
+import type * as lib_web from "../lib/web.js";
+import type * as lib_web_tools from "../lib/web_tools.js";
 import type * as status from "../status.js";
 
 import type {
@@ -33,6 +35,8 @@ declare const fullApi: ApiFromModules<{
   "lib/errors": typeof lib_errors;
   "lib/telemetry": typeof lib_telemetry;
   "lib/users": typeof lib_users;
+  "lib/web": typeof lib_web;
+  "lib/web_tools": typeof lib_web_tools;
   status: typeof status;
 }>;
 

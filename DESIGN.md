@@ -101,6 +101,8 @@ Each component below has one job. Reuse them before drawing anything new.
 
 **Idea plate.** The sign plate at 22px (`.plate.plate-sm`) naming the current idea inside the idea pane or the compact idea card. It is the one magenta element in chat mode.
 
+**Dish photo.** One landscape photo above the idea plate, radius 14px, 2px `--border`, `object-fit: cover`. The full pane uses a 16:10 frame, the compact card 16:9. A credit line in Golos 12px `--muted-foreground` sits under the photo and links to the source page. No photo means no frame: the plate moves to the top.
+
 **Chat bubbles.** A person's message is an ink fill with white text, radius 14px with a 4px bottom-right corner, at most 88% wide and right-aligned. The agent's text is a white card with 2px `--border` and a 4px bottom-left corner. Tool activity above it is one Golos 13px `--muted-foreground` line per call with a 6px `--teal-deep` dot. Waiting text uses the shimmer from transitions.dev.
 
 **Card.** White, 2px `--border`, radius 14px, padding 12px 14px. The active card ("now") switches the border to `--foreground`. Done cards drop to 50% opacity with struck-through text.
