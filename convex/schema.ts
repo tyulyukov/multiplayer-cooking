@@ -79,6 +79,10 @@ export default defineSchema({
     activeThreadId: v.optional(v.string()),
   }).index("by_sessionId", ["sessionId"]),
   ideas: defineTable(ideaFields).index("by_thread", ["threadId"]),
+  // Who uploaded which photo; a message may only reference the sender's own uploads.
+  uploads: defineTable({ storageId: v.id("_storage"), userId: v.id("users") }).index("by_storage", [
+    "storageId",
+  ]),
   // One dynamic client registration per deployment, keyed by redirect URI.
   silpoOAuthClients: defineTable({
     issuer: v.string(),

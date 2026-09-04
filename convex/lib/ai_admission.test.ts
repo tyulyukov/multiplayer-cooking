@@ -60,6 +60,12 @@ describe("admitAiGeneration", () => {
         period: 86_400_000,
         rate: 40,
       },
+      uploadBurst: {
+        capacity: 12,
+        kind: "token bucket",
+        period: 60_000,
+        rate: 12,
+      },
     });
     expect(AI_MAX_OUTPUT_TOKENS).toBe(4_000);
   });

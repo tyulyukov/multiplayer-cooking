@@ -88,10 +88,15 @@ export const sendMessage = mutation({
       return { ok: false as const, message: `Можна додати до ${AI_MAX_IMAGES} фото.` };
     }
 
+    const user = await getOrCreateUser(ctx, sessionId);
     const imageUrls: string[] = [];
 
     for (const imageId of imageIds) {
-      const url = await ctx.storage.getUrl(imageId);
+      const upload = await ctx.db
+        .query("uploads")
+        .withIndex("by_storage", (q) => q.eq("storageId", imageId))
+        .unique();
+      const url = upload?.userId === user._id ? await ctx.storage.getUrl(imageId) : null;
 
       if (!url) {
         return { ok: false as const, message: "Фото не завантажилось. Спробуй ще раз." };
@@ -99,8 +104,6 @@ export const sendMessage = mutation({
 
       imageUrls.push(url);
     }
-
-    const user = await getOrCreateUser(ctx, sessionId);
 
     if (requestedThreadId && !(await ownsThread(ctx, user, requestedThreadId))) {
       return { ok: false as const, message: "Ця розмова недоступна. Почни нову." };

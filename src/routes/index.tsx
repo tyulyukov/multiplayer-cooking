@@ -71,7 +71,12 @@ function useComposerDraft() {
 type PendingAttachment = ComposerAttachment & { storageId?: string };
 
 // Photos are resized and uploaded as soon as they are picked; the send carries only storage ids.
-function useAttachments(getUploadUrl: (() => Promise<string>) | null) {
+function useAttachments(
+  upload: {
+    url: () => Promise<string | null>;
+    register: (storageId: string) => Promise<boolean>;
+  } | null,
+) {
   const [items, setItems] = useState<PendingAttachment[]>([]);
 
   function update(id: string, patch: Partial<PendingAttachment>) {
@@ -79,7 +84,7 @@ function useAttachments(getUploadUrl: (() => Promise<string>) | null) {
   }
 
   async function add(files: File[]) {
-    if (!getUploadUrl) {
+    if (!upload) {
       return;
     }
 
@@ -91,7 +96,17 @@ function useAttachments(getUploadUrl: (() => Promise<string>) | null) {
 
       try {
         const blob = await resizeImage(file);
-        const storageId = await uploadImage(await getUploadUrl(), blob);
+        const url = await upload.url();
+
+        if (!url) {
+          throw new Error("Upload limit reached");
+        }
+
+        const storageId = await uploadImage(url, blob);
+
+        if (!(await upload.register(storageId))) {
+          throw new Error("Upload rejected");
+        }
 
         update(id, { state: "done", storageId });
       } catch {
@@ -520,8 +535,17 @@ function ConnectedHome() {
   const addToCart = useMutation(api.ideas.addToCart);
   const setCookServings = useMutation(api.ideas.setCookServings);
   const uploadUrl = useMutation(api.files.uploadUrl);
+  const registerUpload = useMutation(api.files.register);
   const draft = useComposerDraft();
-  const attachments = useAttachments(sessionId ? () => uploadUrl({ sessionId }) : null);
+  const attachments = useAttachments(
+    sessionId
+      ? {
+          url: () => uploadUrl({ sessionId }),
+          register: (storageId) =>
+            registerUpload({ sessionId, storageId: storageId as Id<"_storage"> }),
+        }
+      : null,
+  );
   const [sending, setSending] = useState(false);
   const [answering, setAnswering] = useState(false);
   const [error, setError] = useState<string | null>(null);

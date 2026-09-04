@@ -17,7 +17,13 @@ idea
 
 ## Current state
 
-This repository contains only the initial product foundation. A basic AI response proves the request path. It is not the final recipe architecture.
+Steps `idea → recipe → Сільпо products → cart` work. The cooking agent (`convex/cookingAgent.ts`) runs on `@convex-dev/agent` with OpenRouter and these tools: `save_idea`, `find_dish_image`, `web_search`, `read_page`, `ask_user`, `silpo_find_products`. Сільпо MCP OAuth lives in `convex/silpoAuth.ts`, `convex/lib/silpo_oauth.ts`, and the callback in `convex/http.ts`; cart setup and cart writes are server-side actions in `convex/silpoCart.ts`. The cooking plan and multiplayer cooking are not built; "Готуємо разом" only stores the servings.
+
+Constraints that are not visible in the code:
+
+- Сільпо tool schemas come from `tools/list` after a phone OTP login. `convex/lib/silpo_shapes.ts` reads results defensively; verify field names against the live schema before relying on them.
+- Local Convex storage URLs are unreachable from OpenRouter, so image attachments reach the model only on a cloud deployment.
+- The address form is a secure input: the value goes to `silpoConnections.address` and never into the thread or the model.
 
 ## Architecture
 

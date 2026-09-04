@@ -2,13 +2,16 @@
 
 Multiplayer Cooking is a mobile-first cooking companion for people making one meal together. It began as an entry for the [Сільпо AI Factory](https://ai-factory.silpo.ua/) contest.
 
-There is no authentication yet. The current app proves the frontend, Convex, and a small AI request path. It does not persist recipes or coordinate cooks.
+The app today: you connect your Сільпо account, describe what you want to cook or what you have at home, and a cooking agent proposes one dish with a photo, a recipe, and an ingredient list. You refine it in a chat, answer the agent's questions in a form, and go back to earlier versions. When you want groceries, the agent matches ingredients to Сільпо products with prices, and one click puts them in your Сільпо cart. Photos of your fridge can go into the chat. "Готуємо разом" saves the number of servings for the upcoming cooking plan.
 
-## Prerequisites
+## How it works
 
-- [Bun](https://bun.sh/)
-- An OpenRouter API key to generate responses
-- A [Convex](https://www.convex.dev/) account and project for cloud deployment
+- **Convex** holds the data, the realtime state, and every server-side integration. Secrets live only in Convex environment variables.
+- **@convex-dev/agent** runs the cooking agent on **AI SDK 7** with an **OpenRouter** model. Each person has one active thread; older threads stay in the history.
+- **Tools** the agent can call: `save_idea`, `find_dish_image`, `web_search`, `read_page`, `ask_user`, and `silpo_find_products`. Web search and dish photos go through a private **SearXNG** instance. Photos come from free-licence sources first and are re-hosted in Convex file storage with a credit line.
+- **Сільпо MCP** is the official `https://mcp.silpo.ua/mcp` server. The app registers itself with dynamic client registration, logs the shopper in with OAuth 2.1 and PKCE, and keeps the tokens in Convex. The delivery address is typed into a masked form and stored on the server; the model never sees it. Cart writes happen only from the "Додати в кошик" button.
+- **Frontend** is React, Vite, TanStack Router, shadcn/ui, and Hugeicons. `DESIGN.md` owns the visual system.
+- **Sessions** are anonymous device sessions from `convex-helpers`, kept in `localStorage`.
 
 ## Run locally
 
@@ -18,44 +21,73 @@ Install dependencies:
 bun install
 ```
 
-Start Convex first. The CLI can create an anonymous local deployment without an account and writes its public URL to `.env.local`:
+Start Convex. The CLI creates an anonymous local deployment and writes `VITE_CONVEX_URL` to `.env.local`:
 
 ```sh
 bunx convex dev
 ```
 
-Set the server variables on that Convex deployment. The Convex CLI requires a value. Replace each quoted placeholder locally and do not paste a real key into this README or commit it:
+Set the server variables on that deployment. Replace each placeholder; never paste a real key into this file:
 
 ```sh
 bunx convex env set OPENROUTER_API_KEY '<openrouter-api-key>'
-bunx convex env set OPENROUTER_MODEL '<model-id>'
+bunx convex env set OPENROUTER_MODEL 'openai/gpt-5.6-luna'
+bunx convex env set SEARXNG_URL 'https://<your-searxng-host>'
+bunx convex env set APP_URL 'http://localhost:5173'
 bunx convex env set AXIOM_TOKEN '<axiom-ingest-token>'
 bunx convex env set AXIOM_DATASET '<axiom-dataset-name>'
 bunx convex env set AXIOM_EDGE '<axiom-edge-domain>'
 ```
 
-`OPENROUTER_API_KEY` and `OPENROUTER_MODEL` enable generation. Use a dedicated OpenRouter key and set a hard USD spending limit for it. OpenRouter supports a per-key `limit` and daily, weekly, or monthly `limit_reset` through its [key management API](https://openrouter.ai/docs/api/api-reference/api-keys/create-keys). The app also allows at most three global requests per minute and 100 global requests per day. These limits are coarse because the app has no authentication.
-
-The Axiom variables are optional. Set all three to enable ingestion. Set `AXIOM_EDGE` to the dataset's edge domain, such as `eu-central-1.aws.edge.axiom.co` or `us-east-1.aws.edge.axiom.co`. When configured, the Convex action records AI request outcome, duration, character counts, token counts, and a failure name with HTTP status or retryability when available. It does not record prompts or responses. Axiom ingestion failures are written to the Convex server log and do not fail a cooking-idea request.
-
-In a second terminal, start Vite:
+Start Vite in a second terminal:
 
 ```sh
 bun run dev
 ```
 
-Run the repository checks before you finish work:
+Run the repository checks before you finish a change:
 
 ```sh
 bun run check
 ```
 
+The Сільпо OAuth callback is served by Convex at `<CONVEX_SITE_URL>/silpo/callback`. On the local deployment that is `http://127.0.0.1:3211/silpo/callback`; the Сільпо authorization server accepts it, so the login works locally. Each deployment registers its own OAuth client on first use.
+
 ## Environment variables
 
-`VITE_CONVEX_URL` is the only browser variable. `bunx convex dev` manages it for local development. Set the production deployment URL in Vercel. Set `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `AXIOM_TOKEN`, `AXIOM_DATASET`, and `AXIOM_EDGE` as Convex environment variables, not Vercel browser variables. `.env.example` lists their names but does not configure a Convex deployment. Do not put secrets in `VITE_*` variables or commit them to the repository.
+| Variable                                     | Where         | Purpose                                                                                                                               |
+| -------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_CONVEX_URL`                            | Browser build | Convex deployment URL. `bunx convex dev` sets it locally; the Railway build takes it as a build argument.                             |
+| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`     | Convex        | The agent model. Use a dedicated key with a spending limit.                                                                           |
+| `SEARXNG_URL`                                | Convex        | Base URL of the SearXNG instance for `web_search` and `find_dish_image`. Without it those tools answer that search is not configured. |
+| `APP_URL`                                    | Convex        | Where the OAuth callback sends the browser back. Without it the callback shows a plain text page.                                     |
+| `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_EDGE` | Convex        | Optional telemetry. Records run outcome, duration, and token counts. Never prompts or responses.                                      |
 
-The browser Web Vitals adapter is ready for a future authenticated or proxied ingestion endpoint. It is intentionally inactive because a privileged Axiom token must not ship in browser JavaScript. AI SDK trace export is likewise left off until a compatible Axiom/OpenTelemetry exporter is configured.
+Rate limits are per person: 5 messages per minute and 40 per day.
 
-## Deployment
+## Deploy
 
-Log in to Convex, deploy the backend, and set the same server environment variables on the production deployment. Then deploy the Vite app to Vercel with the production `VITE_CONVEX_URL`. `vercel.json` rewrites application paths to `index.html`, so direct TanStack Router URLs work on Vercel. The production build emits the web app manifest and generated service worker into `dist/`.
+**SearXNG.** `infra/searxng` holds a Dockerfile and `settings.yml` that enable the JSON API. Deploy it as a Railway service and set `SEARXNG_SECRET`, `SEARXNG_LIMITER=false`, `SEARXNG_PUBLIC_INSTANCE=false`, and `SEARXNG_BASE_URL`:
+
+```sh
+railway up infra/searxng --service searxng --path-as-root --ci
+```
+
+**Convex.** Log in, create the production deployment, and set the same variables as above with the production `APP_URL`:
+
+```sh
+bunx convex login
+bunx convex deploy
+```
+
+**Frontend.** The root `Dockerfile` builds the Vite app and serves `dist/` with Caddy. Set `VITE_CONVEX_URL` on the Railway service before the build:
+
+```sh
+railway variables --service web --set 'VITE_CONVEX_URL=https://<deployment>.convex.cloud'
+railway up --service web --ci
+```
+
+## Design and tests
+
+- `DESIGN.md` is the source of truth for palette, type, components, and copy. Read it before changing UI.
+- Unit tests live next to the code as `*.test.ts` and run with `bun test`. They cover rate limit admission, telemetry payloads, web result parsing and SSRF guards, Сільпо response shaping, and quick prompt sampling.
