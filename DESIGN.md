@@ -113,6 +113,10 @@ Each component below has one job. Reuse them before drawing anything new.
 
 **History panel.** A shadcn Sheet from the right on desktop and a Drawer from the bottom on mobile, opened by the "Історія" ink tag. Each row has up to three overlapping 40px photos with 10px radius, the title in Oswald 600 16px or "Без назви", the date in Golos 13px `--muted-foreground`, and a ghost delete button. The open thread has a 25% teal background.
 
+**Photo attachments.** The composer has a ghost image button on the left of its action row; up to four photos show above it as 72px shadcn Attachment tiles with a 2px ink border and a round ink-bordered remove button. In a person's bubble the photos sit in a grid of square thumbnails with 10px radius above the text; tapping one opens the shadcn Dialog as a lightbox on an ink background.
+
+**Servings dialog.** "Готуємо разом" opens a shadcn Dialog on desktop and a Drawer on mobile. A stepper with two ink icon buttons and the count in Oswald 700 28px, then the lime "Згенерувати інструкції". After saving, a bordered "Скоро" note replaces the button.
+
 **Chat bubbles.** A person's message is an ink fill with white text, radius 14px with a 4px bottom-right corner, at most 88% wide and right-aligned. The agent's text is a white card with 2px `--border` and a 4px bottom-left corner. Tool activity above it is one Golos 13px `--muted-foreground` line per call with a 6px `--teal-deep` dot. Waiting text uses the shimmer from transitions.dev.
 
 **Card.** White, 2px `--border`, radius 14px, padding 12px 14px. The active card ("now") switches the border to `--foreground`. Done cards drop to 50% opacity with struck-through text.

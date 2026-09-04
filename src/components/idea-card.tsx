@@ -11,6 +11,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { FunctionReturnType } from "convex/server";
 
 import type { api } from "../../convex/_generated/api";
+import { CookTogether } from "@/components/cook-together";
 import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -236,6 +237,7 @@ export function IdeaPane({
   versions,
   onToggleFullscreen,
   onAddToCart,
+  onCookServings,
 }: {
   idea: Idea;
   fullscreen: boolean;
@@ -243,6 +245,7 @@ export function IdeaPane({
   versions: IdeaVersions;
   onToggleFullscreen: () => void;
   onAddToCart: () => void;
+  onCookServings: (servings: number) => Promise<void> | void;
 }) {
   return (
     <article className="idea-pane chrome" aria-label={idea.title}>
@@ -281,6 +284,13 @@ export function IdeaPane({
         ))}
       </ul>
       <IdeaProducts idea={idea} canAddToCart={canAddToCart} onAddToCart={onAddToCart} />
+      <div className="idea-actions">
+        <CookTogether
+          defaultServings={idea.servings}
+          savedServings={idea.cookServings}
+          onGenerate={onCookServings}
+        />
+      </div>
     </article>
   );
 }

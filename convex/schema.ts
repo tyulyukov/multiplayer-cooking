@@ -43,6 +43,8 @@ export const ideaFields = {
   cart: v.optional(ideaCartValidator),
   cartError: v.optional(v.string()),
   cartPending: v.optional(v.boolean()),
+  // Servings chosen in "Готуємо разом"; the cooking plan itself comes later.
+  cookServings: v.optional(v.number()),
 };
 
 export const ideaDocValidator = v.object({

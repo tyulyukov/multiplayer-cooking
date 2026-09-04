@@ -16,7 +16,7 @@ import { components, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type QueryCtx } from "./_generated/server";
 import { admitAiGeneration } from "./lib/ai_admission";
-import { AI_RATE_LIMITS, AI_REQUEST_MAX_CHARACTERS } from "./lib/ai_config";
+import { AI_MAX_IMAGES, AI_RATE_LIMITS, AI_REQUEST_MAX_CHARACTERS } from "./lib/ai_config";
 import { findUser, getOrCreateUser } from "./lib/users";
 
 const rateLimiter = new RateLimiter(components.rateLimiter, AI_RATE_LIMITS);
@@ -67,16 +67,37 @@ export const sendMessage = mutation({
     ...SessionIdArg,
     threadId: v.optional(v.string()),
     text: v.string(),
+    imageIds: v.optional(v.array(v.id("_storage"))),
   },
   returns: v.union(
     v.object({ ok: v.literal(true), threadId: v.string() }),
     v.object({ ok: v.literal(false), message: v.string() }),
   ),
-  handler: async (ctx, { sessionId, threadId: requestedThreadId, text }) => {
+  handler: async (ctx, { sessionId, threadId: requestedThreadId, text, imageIds = [] }) => {
     const prompt = text.trim();
 
-    if (!prompt || prompt.length > AI_REQUEST_MAX_CHARACTERS) {
+    if (prompt.length > AI_REQUEST_MAX_CHARACTERS) {
       return { ok: false as const, message: "Опиши страву коротше, до 1024 знаків." };
+    }
+
+    if (!prompt && imageIds.length === 0) {
+      return { ok: false as const, message: "Напиши, що приготувати, або додай фото." };
+    }
+
+    if (imageIds.length > AI_MAX_IMAGES) {
+      return { ok: false as const, message: `Можна додати до ${AI_MAX_IMAGES} фото.` };
+    }
+
+    const imageUrls: string[] = [];
+
+    for (const imageId of imageIds) {
+      const url = await ctx.storage.getUrl(imageId);
+
+      if (!url) {
+        return { ok: false as const, message: "Фото не завантажилось. Спробуй ще раз." };
+      }
+
+      imageUrls.push(url);
     }
 
     const user = await getOrCreateUser(ctx, sessionId);
@@ -103,7 +124,17 @@ export const sendMessage = mutation({
     const { messageId } = await saveMessage(ctx, components.agent, {
       threadId,
       userId: user._id,
-      prompt,
+      message: {
+        role: "user",
+        content: [
+          ...imageUrls.map((url) => ({
+            type: "image" as const,
+            image: url,
+            mediaType: "image/jpeg",
+          })),
+          { type: "text" as const, text: prompt || "Що можна приготувати з цього?" },
+        ],
+      },
     });
 
     await ctx.scheduler.runAfter(0, internal.cookingAgent.respond, {

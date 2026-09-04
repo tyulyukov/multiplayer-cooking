@@ -11,3 +11,8 @@ export const AI_RATE_LIMITS = {
 
 // Delivery address length accepted by the secure address form.
 export const ADDRESS_MAX_CHARACTERS = 200;
+
+// Photo attachments in a message: the browser resizes them before upload.
+export const AI_MAX_IMAGES = 4;
+export const IMAGE_UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
+export const IMAGE_UPLOAD_MAX_EDGE = 1600;

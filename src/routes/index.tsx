@@ -10,9 +10,10 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { AddressPrompt } from "@/components/address-prompt";
 import { ChatThread, type QuestionSubmit } from "@/components/chat-thread";
-import { Composer } from "@/components/composer";
+import { Composer, type ComposerAttachment } from "@/components/composer";
 import { HistoryPanel } from "@/components/history-panel";
 import {
   IdeaCompact,
@@ -25,6 +26,7 @@ import { ConnectCard, ProfileMenu, type SilpoConnection } from "@/components/sil
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { isConvexConfigured } from "@/lib/convex";
+import { resizeImage, uploadImage } from "@/lib/images";
 import { pickQuickPrompts, type QuickPrompt } from "@/lib/quick-prompts";
 
 type PromptSelection = Readonly<{
@@ -64,6 +66,67 @@ function useComposerDraft() {
   }
 
   return { request, selection, quickPrompts, change, togglePrompt, reset };
+}
+
+type PendingAttachment = ComposerAttachment & { storageId?: string };
+
+// Photos are resized and uploaded as soon as they are picked; the send carries only storage ids.
+function useAttachments(getUploadUrl: (() => Promise<string>) | null) {
+  const [items, setItems] = useState<PendingAttachment[]>([]);
+
+  function update(id: string, patch: Partial<PendingAttachment>) {
+    setItems((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
+  async function add(files: File[]) {
+    if (!getUploadUrl) {
+      return;
+    }
+
+    for (const file of files) {
+      const id = crypto.randomUUID();
+      const previewUrl = URL.createObjectURL(file);
+
+      setItems((current) => [...current, { id, previewUrl, state: "uploading" }]);
+
+      try {
+        const blob = await resizeImage(file);
+        const storageId = await uploadImage(await getUploadUrl(), blob);
+
+        update(id, { state: "done", storageId });
+      } catch {
+        update(id, { state: "error" });
+      }
+    }
+  }
+
+  function remove(id: string) {
+    setItems((current) => {
+      const item = current.find((entry) => entry.id === id);
+
+      if (item) {
+        URL.revokeObjectURL(item.previewUrl);
+      }
+
+      return current.filter((entry) => entry.id !== id);
+    });
+  }
+
+  function clear() {
+    setItems((current) => {
+      for (const item of current) {
+        URL.revokeObjectURL(item.previewUrl);
+      }
+
+      return [];
+    });
+  }
+
+  const storageIds = items.flatMap((item) =>
+    item.state === "done" && item.storageId ? [item.storageId] : [],
+  );
+
+  return { items, storageIds, add, remove, clear };
 }
 
 function Brand({ ready }: { ready: boolean }) {
@@ -120,10 +183,13 @@ function ConnectScreen({
   );
 }
 
+type AttachmentsState = ReturnType<typeof useAttachments>;
+
 function HomeScreen({
   backendReady,
   menu,
   draft,
+  attachments,
   busy,
   error,
   onSubmit,
@@ -131,6 +197,7 @@ function HomeScreen({
   backendReady: boolean;
   menu?: ReactNode;
   draft: ReturnType<typeof useComposerDraft>;
+  attachments: AttachmentsState;
   busy: boolean;
   error: string | null;
   onSubmit: (text: string) => void;
@@ -153,8 +220,11 @@ function HomeScreen({
           value={draft.request}
           busy={busy}
           autoFocus
+          attachments={attachments.items}
           onChange={draft.change}
           onSubmit={onSubmit}
+          onAttach={(files) => void attachments.add(files)}
+          onRemoveAttachment={attachments.remove}
         />
 
         <div className="quick-prompts" role="group" aria-label="Швидкі запити">
@@ -191,6 +261,7 @@ function ChatScreen({
   working,
   answering,
   draft,
+  attachments,
   error,
   addressError,
   onSubmit,
@@ -198,6 +269,7 @@ function ChatScreen({
   onSaveAddress,
   onAddToCart,
   onAnswer,
+  onCookServings,
 }: {
   backendReady: boolean;
   menu?: ReactNode;
@@ -208,6 +280,7 @@ function ChatScreen({
   working: boolean;
   answering: boolean;
   draft: ReturnType<typeof useComposerDraft>;
+  attachments: AttachmentsState;
   error: string | null;
   addressError: string | null;
   onSubmit: (text: string) => void;
@@ -215,6 +288,7 @@ function ChatScreen({
   onSaveAddress: (address: string) => void;
   onAddToCart: () => void;
   onAnswer: QuestionSubmit;
+  onCookServings: (servings: number) => Promise<void>;
 }) {
   const [fullscreen, setFullscreen] = useState(false);
   const showFullscreen = fullscreen && idea != null;
@@ -233,6 +307,7 @@ function ChatScreen({
         versions={versions}
         onToggleFullscreen={() => setFullscreen((value) => !value)}
         onAddToCart={onAddToCart}
+        onCookServings={onCookServings}
       />
     );
   } else if (working || idea === undefined) {
@@ -277,8 +352,11 @@ function ChatScreen({
               value={draft.request}
               busy={working}
               autoFocus={false}
+              attachments={attachments.items}
               onChange={draft.change}
               onSubmit={onSubmit}
+              onAttach={(files) => void attachments.add(files)}
+              onRemoveAttachment={attachments.remove}
             />
           </section>
           <aside className="idea-column" aria-label="Ідея">
@@ -440,7 +518,10 @@ function ConnectedHome() {
   const answerQuestion = useMutation(api.chat.answerQuestion);
   const saveAddress = useMutation(api.silpo.saveAddress);
   const addToCart = useMutation(api.ideas.addToCart);
+  const setCookServings = useMutation(api.ideas.setCookServings);
+  const uploadUrl = useMutation(api.files.uploadUrl);
   const draft = useComposerDraft();
+  const attachments = useAttachments(sessionId ? () => uploadUrl({ sessionId }) : null);
   const [sending, setSending] = useState(false);
   const [answering, setAnswering] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -462,10 +543,12 @@ function ConnectedHome() {
         sessionId,
         threadId: threadId ?? undefined,
         text,
+        imageIds: attachments.storageIds as Id<"_storage">[],
       });
 
       if (result.ok) {
         draft.change("");
+        attachments.clear();
       } else {
         setError(result.message);
       }
@@ -494,6 +577,12 @@ function ConnectedHome() {
     }
   }
 
+  async function cookServings(servings: number) {
+    if (sessionId && idea) {
+      await setCookServings({ sessionId, ideaId: idea._id, servings });
+    }
+  }
+
   async function submitCart() {
     if (!sessionId || !idea) {
       return;
@@ -517,6 +606,7 @@ function ConnectedHome() {
 
     await newThread({ sessionId });
     draft.reset();
+    attachments.clear();
     resetVersion();
     setError(null);
   }
@@ -588,6 +678,7 @@ function ConnectedHome() {
         backendReady={status?.ready === true}
         menu={menu}
         draft={draft}
+        attachments={attachments}
         busy={sending}
         error={error}
         onSubmit={submit}
@@ -606,6 +697,7 @@ function ConnectedHome() {
       working={working}
       answering={answering}
       draft={draft}
+      attachments={attachments}
       error={error}
       addressError={addressError}
       onSubmit={submit}
@@ -613,18 +705,21 @@ function ConnectedHome() {
       onSaveAddress={submitAddress}
       onAddToCart={submitCart}
       onAnswer={answer}
+      onCookServings={cookServings}
     />
   );
 }
 
 function MissingConvexHome() {
   const draft = useComposerDraft();
+  const attachments = useAttachments(null);
   const [error, setError] = useState<string | null>(null);
 
   return (
     <HomeScreen
       backendReady={false}
       draft={draft}
+      attachments={attachments}
       busy={false}
       error={error}
       onSubmit={() => setError("Convex ще не налаштований. Запусти bunx convex dev.")}

@@ -10,6 +10,7 @@
 
 import type * as chat from "../chat.js";
 import type * as cookingAgent from "../cookingAgent.js";
+import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as ideas from "../ideas.js";
 import type * as lib_ai_admission from "../lib/ai_admission.js";
@@ -37,6 +38,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   cookingAgent: typeof cookingAgent;
+  files: typeof files;
   http: typeof http;
   ideas: typeof ideas;
   "lib/ai_admission": typeof lib_ai_admission;

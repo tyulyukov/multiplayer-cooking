@@ -214,3 +214,22 @@ export const restore = mutation({
     return { ok: true as const };
   },
 });
+
+export const setCookServings = mutation({
+  args: { ...SessionIdArg, ideaId: v.id("ideas"), servings: v.number() },
+  returns: v.null(),
+  handler: async (ctx, { sessionId, ideaId, servings }) => {
+    const user = await findUser(ctx, sessionId);
+    const idea = await ctx.db.get(ideaId);
+
+    if (!user || !idea || idea.userId !== user._id) {
+      return null;
+    }
+
+    const count = Math.min(12, Math.max(1, Math.round(servings)));
+
+    await ctx.db.patch(ideaId, { cookServings: count });
+
+    return null;
+  },
+});

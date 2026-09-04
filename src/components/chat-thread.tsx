@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
 import { Markdown } from "@/components/markdown";
+import { PhotoStrip } from "@/components/photo-lightbox";
 import { QuestionCard } from "@/components/question-card";
 import { readQuestionAnswer, readQuestionInput, type QuestionAnswer } from "@/lib/question";
 
@@ -15,6 +16,24 @@ export type QuestionSubmit = (
 
 function isToolPart(part: UIMessage["parts"][number]): part is ToolUIPart {
   return part.type.startsWith("tool-");
+}
+
+function imageUrls(message: UIMessage) {
+  return message.parts.flatMap((part) =>
+    part.type === "file" && part.mediaType.startsWith("image/") ? [part.url] : [],
+  );
+}
+
+function UserMessage({ message }: { message: UIMessage }) {
+  const photos = imageUrls(message);
+  const text = message.text.trim();
+
+  return (
+    <div className="msg msg-user" data-photos={photos.length > 0}>
+      <PhotoStrip urls={photos} alt="Фото від тебе" />
+      {text}
+    </div>
+  );
 }
 
 // Tool results saved later live in their own message; map them back by call id.
@@ -161,7 +180,7 @@ export function ChatThread({
         {messages.map((message) => (
           <li key={message.key}>
             {message.role === "user" ? (
-              <div className="msg msg-user">{message.text}</div>
+              <UserMessage message={message} />
             ) : (
               <AssistantMessage
                 message={message}

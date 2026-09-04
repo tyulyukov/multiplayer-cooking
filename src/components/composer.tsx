@@ -1,12 +1,27 @@
 import ArrowUp02Icon from "@hugeicons/core-free-icons/ArrowUp02Icon";
+import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import CookingPotIcon from "@hugeicons/core-free-icons/CookingPotIcon";
+import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef } from "react";
 import type { FormEvent } from "react";
 
-import { AI_REQUEST_MAX_CHARACTERS } from "../../convex/lib/ai_config";
+import { AI_MAX_IMAGES, AI_REQUEST_MAX_CHARACTERS } from "../../convex/lib/ai_config";
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentGroup,
+  AttachmentMedia,
+} from "@/components/ui/attachment";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+
+export type ComposerAttachment = Readonly<{
+  id: string;
+  previewUrl: string;
+  state: "uploading" | "done" | "error";
+}>;
 
 const counterThreshold = Math.floor(AI_REQUEST_MAX_CHARACTERS * 0.8);
 const shakeDurationMs = 300;
@@ -20,20 +35,30 @@ export function Composer({
   value,
   busy,
   autoFocus,
+  attachments,
   onChange,
   onSubmit,
+  onAttach,
+  onRemoveAttachment,
 }: {
   mode: "home" | "chat";
   value: string;
   busy: boolean;
   autoFocus: boolean;
+  attachments: readonly ComposerAttachment[];
   onChange: (value: string) => void;
   onSubmit: (text: string) => void;
+  onAttach: (files: File[]) => void;
+  onRemoveAttachment: (id: string) => void;
 }) {
   const composerRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const overLimit = isOverLimit(value);
   const showCounter = value.length >= counterThreshold;
+  const readyAttachments = attachments.filter((item) => item.state === "done");
+  const uploading = attachments.some((item) => item.state === "uploading");
+  const canAttach = attachments.length < AI_MAX_IMAGES && !busy;
 
   useEffect(() => {
     if (autoFocus && window.matchMedia("(pointer: fine)").matches) {
@@ -80,13 +105,25 @@ export function Composer({
 
     const text = value.trim();
 
-    if (!text) {
+    if ((!text && readyAttachments.length === 0) || uploading) {
       textareaRef.current?.focus();
       return;
     }
 
     textareaRef.current?.blur();
     onSubmit(text);
+  }
+
+  function pickFiles(list: FileList | null) {
+    const files = Array.from(list ?? []).filter((file) => file.type.startsWith("image/"));
+
+    if (files.length > 0) {
+      onAttach(files.slice(0, AI_MAX_IMAGES - attachments.length));
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   return (
@@ -121,7 +158,48 @@ export function Composer({
         }}
       />
 
+      {attachments.length > 0 && (
+        <AttachmentGroup className="composer-attachments" aria-label="Додані фото">
+          {attachments.map((item) => (
+            <Attachment key={item.id} state={item.state} size="sm" orientation="vertical">
+              <AttachmentMedia variant="image">
+                <img src={item.previewUrl} alt="" />
+              </AttachmentMedia>
+              <AttachmentActions>
+                <AttachmentAction
+                  aria-label="Прибрати фото"
+                  disabled={busy}
+                  onClick={() => onRemoveAttachment(item.id)}
+                >
+                  <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} aria-hidden />
+                </AttachmentAction>
+              </AttachmentActions>
+            </Attachment>
+          ))}
+        </AttachmentGroup>
+      )}
+
       <div className="composer-actions">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="sr-only"
+          tabIndex={-1}
+          onChange={(event) => pickFiles(event.target.files)}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-lg"
+          className="attach-button"
+          aria-label="Додати фото"
+          disabled={!canAttach}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <HugeiconsIcon icon={ImageAdd01Icon} className="size-5" strokeWidth={1.5} aria-hidden />
+        </Button>
         <span className="character-count" data-over-limit={overLimit} aria-live="polite">
           {showCounter ? `${value.length}/${AI_REQUEST_MAX_CHARACTERS}` : null}
           {overLimit && <span className="sr-only">, забагато знаків</span>}
@@ -130,7 +208,7 @@ export function Composer({
           <Button
             type="submit"
             size="xl"
-            disabled={overLimit}
+            disabled={overLimit || uploading}
             aria-busy={busy}
             aria-disabled={busy}
             className="generate-button"
@@ -148,7 +226,7 @@ export function Composer({
             type="submit"
             variant="ghost"
             size="icon-lg"
-            disabled={overLimit || busy}
+            disabled={overLimit || busy || uploading}
             aria-label="Надіслати"
             className="send-button"
           >
