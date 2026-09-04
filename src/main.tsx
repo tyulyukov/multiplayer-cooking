@@ -1,4 +1,5 @@
 import { RouterProvider } from "@tanstack/react-router";
+import { SessionProvider } from "convex-helpers/react/sessions";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -10,7 +11,9 @@ import "./index.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ConvexBoundary>
-      <RouterProvider router={router} />
+      <SessionProvider>
+        <RouterProvider router={router} />
+      </SessionProvider>
     </ConvexBoundary>
   </StrictMode>,
 );

@@ -14,7 +14,7 @@ describe("admitAiGeneration", () => {
     });
 
     expect(allowed).toBe(false);
-    expect(calls).toEqual(["aiBurst"]);
+    expect(calls).toEqual(["chatBurst"]);
   });
 
   test("refunds the burst limit when the daily limit denies", async () => {
@@ -22,15 +22,15 @@ describe("admitAiGeneration", () => {
     const allowed = await admitAiGeneration({
       limit: async (name, options) => {
         calls.push([name, options?.count]);
-        return { ok: name !== "aiDaily" };
+        return { ok: name !== "chatDaily" };
       },
     });
 
     expect(allowed).toBe(false);
     expect(calls).toEqual([
-      ["aiBurst", undefined],
-      ["aiDaily", undefined],
-      ["aiBurst", -1],
+      ["chatBurst", undefined],
+      ["chatDaily", undefined],
+      ["chatBurst", -1],
     ]);
   });
 
@@ -44,23 +44,23 @@ describe("admitAiGeneration", () => {
     });
 
     expect(allowed).toBe(true);
-    expect(calls).toEqual(["aiBurst", "aiDaily"]);
+    expect(calls).toEqual(["chatBurst", "chatDaily"]);
   });
 
-  test("pins the contest budget constants", () => {
+  test("pins the per-user budget constants", () => {
     expect(AI_RATE_LIMITS).toEqual({
-      aiBurst: {
-        capacity: 3,
+      chatBurst: {
+        capacity: 5,
         kind: "token bucket",
         period: 60_000,
-        rate: 3,
+        rate: 5,
       },
-      aiDaily: {
+      chatDaily: {
         kind: "fixed window",
         period: 86_400_000,
-        rate: 100,
+        rate: 40,
       },
     });
-    expect(AI_MAX_OUTPUT_TOKENS).toBe(600);
+    expect(AI_MAX_OUTPUT_TOKENS).toBe(4_000);
   });
 });

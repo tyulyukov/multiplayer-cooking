@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
-import { recordAiGeneration } from "./telemetry";
+import { recordAiEvent } from "./telemetry";
 
 const originalFetch = globalThis.fetch;
 const originalEnvironment = {
@@ -25,7 +25,7 @@ afterEach(() => {
   }
 });
 
-describe("recordAiGeneration", () => {
+describe("recordAiEvent", () => {
   test("sends events to the configured Axiom edge", async () => {
     process.env.AXIOM_TOKEN = "xaat-test";
     process.env.AXIOM_DATASET = "multiplayer-cooking-test";
@@ -49,10 +49,11 @@ describe("recordAiGeneration", () => {
       { preconnect: () => undefined },
     );
 
-    await recordAiGeneration({
-      inputCharacters: 12,
+    await recordAiEvent({
+      event: "ai.usage",
       model: "openrouter/test",
-      outcome: "success",
+      provider: "openrouter",
+      inputTokens: 12,
     });
 
     expect(requestUrl).toBe(

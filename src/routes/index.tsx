@@ -1,162 +1,41 @@
+import type { UIMessage } from "@convex-dev/agent";
+import { useUIMessages } from "@convex-dev/agent/react";
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
-import ChefHatIcon from "@hugeicons/core-free-icons/ChefHatIcon";
-import CookingPotIcon from "@hugeicons/core-free-icons/CookingPotIcon";
+import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useAction, useQuery } from "convex/react";
-import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import { useSessionId } from "convex-helpers/react/sessions";
+import { useMutation, useQuery } from "convex/react";
+import { useState } from "react";
+import type { ReactNode } from "react";
 
 import { api } from "../../convex/_generated/api";
-import { AI_REQUEST_MAX_CHARACTERS } from "../../convex/lib/ai_config";
+import { ChatThread } from "@/components/chat-thread";
+import { Composer } from "@/components/composer";
+import { IdeaCompact, IdeaPane, IdeaWaiting, type Idea } from "@/components/idea-card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { isConvexConfigured } from "@/lib/convex";
 import { pickQuickPrompts, type QuickPrompt } from "@/lib/quick-prompts";
-
-type GenerateResult = { ok: true; text: string } | { ok: false; message: string };
-
-type OutputState =
-  | { kind: "idle" }
-  | { kind: "loading" }
-  | { kind: "success"; text: string }
-  | { kind: "error"; message: string };
 
 type PromptSelection = Readonly<{
   promptId: string;
   baseRequest: string;
 }>;
 
-// Sits above the ~25s server timeout so a hung transport cannot stay in loading forever.
-const generateDeadlineMs = 40_000;
-const counterThreshold = Math.floor(AI_REQUEST_MAX_CHARACTERS * 0.8);
-const shakeDurationMs = 300;
+type SendResult = { ok: true } | { ok: false; message: string };
 
-function MissingConvexHome() {
-  return (
-    <HomeScreen
-      backendReady={false}
-      onGenerate={async () => ({
-        ok: false,
-        message: "Convex ще не налаштований. Запусти bunx convex dev.",
-      })}
-    />
-  );
-}
-
-function ConnectedHome() {
-  const generateIdea = useAction(api.ai.generate);
-  const status = useQuery(api.status.current);
-
-  return <HomeScreen backendReady={status?.ready === true} onGenerate={generateIdea} />;
-}
-
-function HomeScreen({
-  backendReady,
-  onGenerate,
-}: {
-  backendReady: boolean;
-  onGenerate: (request: { request: string }) => Promise<GenerateResult>;
-}) {
+function useComposerDraft() {
   const [request, setRequest] = useState("");
   const [selection, setSelection] = useState<PromptSelection | null>(null);
-  const [quickPrompts] = useState(() => pickQuickPrompts());
-  const [output, setOutput] = useState<OutputState>({ kind: "idle" });
-  const resultRef = useRef<HTMLDivElement>(null);
-  const composerRef = useRef<HTMLFormElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const isLoading = output.kind === "loading";
-  const overLimit = request.length > AI_REQUEST_MAX_CHARACTERS;
-  const showCounter = request.length >= counterThreshold;
+  const [quickPrompts, setQuickPrompts] = useState(() => pickQuickPrompts());
 
-  useEffect(() => {
-    if (window.matchMedia("(pointer: fine)").matches) {
-      textareaRef.current?.focus({ preventScroll: true });
-    }
-  }, []);
-
-  useEffect(() => {
-    const textarea = textareaRef.current;
-
-    if (!textarea || CSS.supports("field-sizing", "content")) {
-      return;
-    }
-
-    textarea.style.height = "auto";
-    textarea.style.height = `${textarea.scrollHeight}px`;
-  }, [request]);
-
-  useEffect(() => {
-    if (output.kind !== "success" && output.kind !== "error") {
-      return;
-    }
-
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    resultRef.current?.scrollIntoView({
-      behavior: reducedMotion ? "auto" : "smooth",
-      block: "start",
-    });
-  }, [output]);
-
-  function shakeComposer() {
-    const composer = composerRef.current;
-
-    if (!composer) {
-      return;
-    }
-
-    composer.classList.remove("is-shaking");
-    void composer.offsetWidth;
-    composer.classList.add("is-shaking");
-    window.setTimeout(() => composer.classList.remove("is-shaking"), shakeDurationMs);
+  function change(value: string) {
+    setRequest(value);
+    setSelection(null);
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const trimmedRequest = request.trim();
-
-    if (isLoading) {
-      return;
-    }
-
-    if (overLimit) {
-      shakeComposer();
-      textareaRef.current?.focus();
-      return;
-    }
-
-    if (!trimmedRequest) {
-      textareaRef.current?.focus();
-      return;
-    }
-
-    textareaRef.current?.blur();
-    setOutput({ kind: "loading" });
-
-    const deadline = new Promise<GenerateResult>((resolve) => {
-      setTimeout(
-        () => resolve({ ok: false, message: "Відповідь не прийшла вчасно. Спробуй ще раз." }),
-        generateDeadlineMs,
-      );
-    });
-
-    try {
-      const result = await Promise.race([onGenerate({ request: trimmedRequest }), deadline]);
-      setOutput(
-        result.ok
-          ? { kind: "success", text: result.text }
-          : { kind: "error", message: result.message },
-      );
-    } catch {
-      setOutput({
-        kind: "error",
-        message: "Не вдалося звернутися до ШІ. Спробуй ще раз.",
-      });
-    }
-  }
-
-  function handlePrompt(prompt: QuickPrompt) {
+  function togglePrompt(prompt: QuickPrompt) {
     if (selection?.promptId === prompt.id) {
       setRequest(selection.baseRequest);
       setSelection(null);
@@ -169,87 +48,83 @@ function HomeScreen({
     setSelection({ promptId: prompt.id, baseRequest });
   }
 
+  function reset() {
+    setRequest("");
+    setSelection(null);
+    setQuickPrompts(pickQuickPrompts());
+  }
+
+  return { request, selection, quickPrompts, change, togglePrompt, reset };
+}
+
+function Brand({ ready }: { ready: boolean }) {
+  return (
+    <div className="brand" data-backend-ready={ready}>
+      <i aria-hidden />
+      Multiplayer Cooking
+    </div>
+  );
+}
+
+function SendError({ message }: { message: string }) {
+  return (
+    <Alert
+      variant="destructive"
+      className="home-error rounded-[14px] border-2 px-[18px] py-4 has-[>svg]:gap-x-2.5"
+    >
+      <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
+      <AlertDescription className="text-[0.9375rem] leading-[1.375rem] font-medium">
+        {message}
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function HomeScreen({
+  backendReady,
+  draft,
+  busy,
+  error,
+  onSubmit,
+}: {
+  backendReady: boolean;
+  draft: ReturnType<typeof useComposerDraft>;
+  busy: boolean;
+  error: string | null;
+  onSubmit: (text: string) => void;
+}) {
   return (
     <main className="app-shell">
       <div className="checker-band" aria-hidden />
       <div className="home-layout">
         <header className="topbar">
-          <div className="brand" data-backend-ready={backendReady}>
-            <i aria-hidden />
-            Multiplayer Cooking
-          </div>
+          <Brand ready={backendReady} />
         </header>
 
         <div className="sign">
           <h1>Що готуємо сьогодні?</h1>
         </div>
 
-        <form
-          ref={composerRef}
-          className="composer chrome t-input"
-          data-over-limit={overLimit}
-          onSubmit={handleSubmit}
-        >
-          <label className="sr-only" htmlFor="cooking-request">
-            Що хочеш приготувати
-          </label>
-          <Textarea
-            ref={textareaRef}
-            id="cooking-request"
-            name="request"
-            variant="ghost"
-            value={request}
-            readOnly={isLoading}
-            aria-invalid={overLimit}
-            placeholder="Опиши страву або напиши, що є вдома"
-            className="request-textarea"
-            onChange={(event) => {
-              setRequest(event.target.value);
-              setSelection(null);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                event.preventDefault();
-                event.currentTarget.form?.requestSubmit();
-              }
-            }}
-          />
-
-          <div className="composer-actions">
-            <span className="character-count" data-over-limit={overLimit} aria-live="polite">
-              {showCounter ? `${request.length}/${AI_REQUEST_MAX_CHARACTERS}` : null}
-              {overLimit && <span className="sr-only">, забагато знаків</span>}
-            </span>
-            <Button
-              type="submit"
-              size="xl"
-              disabled={overLimit}
-              aria-busy={isLoading}
-              aria-disabled={isLoading}
-              className="generate-button"
-            >
-              <HugeiconsIcon
-                icon={CookingPotIcon}
-                className="size-5 pot-icon"
-                strokeWidth={1.5}
-                aria-hidden
-              />
-              {isLoading ? "Генеруємо…" : "Згенерувати"}
-            </Button>
-          </div>
-        </form>
+        <Composer
+          mode="home"
+          value={draft.request}
+          busy={busy}
+          autoFocus
+          onChange={draft.change}
+          onSubmit={onSubmit}
+        />
 
         <div className="quick-prompts" role="group" aria-label="Швидкі запити">
-          {quickPrompts.map((prompt) => (
+          {draft.quickPrompts.map((prompt) => (
             <Button
               key={prompt.id}
               type="button"
               size="chip"
               variant="outline"
-              aria-pressed={selection?.promptId === prompt.id}
-              disabled={isLoading}
+              aria-pressed={draft.selection?.promptId === prompt.id}
+              disabled={busy}
               className="quick-prompt"
-              onClick={() => handlePrompt(prompt)}
+              onClick={() => draft.togglePrompt(prompt)}
             >
               <HugeiconsIcon icon={prompt.icon} strokeWidth={1.5} aria-hidden />
               {prompt.label}
@@ -257,52 +132,198 @@ function HomeScreen({
           ))}
         </div>
 
-        <div ref={resultRef} className="result-slot">
-          <div aria-live="polite">
-            {output.kind === "loading" && <LoadingResult />}
-            {output.kind === "success" && <SuccessResult text={output.text} />}
+        {error && <SendError message={error} />}
+      </div>
+    </main>
+  );
+}
+
+function ChatScreen({
+  backendReady,
+  messages,
+  idea,
+  working,
+  draft,
+  error,
+  onSubmit,
+  onNew,
+}: {
+  backendReady: boolean;
+  messages: readonly UIMessage[];
+  idea: Idea | null | undefined;
+  working: boolean;
+  draft: ReturnType<typeof useComposerDraft>;
+  error: string | null;
+  onSubmit: (text: string) => void;
+  onNew: () => void;
+}) {
+  const [fullscreen, setFullscreen] = useState(false);
+  const showFullscreen = fullscreen && idea != null;
+
+  let pane: ReactNode = null;
+
+  if (idea) {
+    pane = (
+      <IdeaPane
+        idea={idea}
+        fullscreen={showFullscreen}
+        onToggleFullscreen={() => setFullscreen((value) => !value)}
+      />
+    );
+  } else if (working || idea === undefined) {
+    pane = <IdeaWaiting />;
+  }
+
+  return (
+    <main className="app-shell chat-shell" data-fullscreen={showFullscreen}>
+      <div className="checker-band" aria-hidden />
+      <div className="chat-frame">
+        <header className="topbar chat-topbar">
+          <Brand ready={backendReady} />
+          <div className="topbar-actions">
+            <Button type="button" variant="outline" size="chip" onClick={onNew}>
+              <HugeiconsIcon icon={PlusSignIcon} strokeWidth={1.5} aria-hidden />
+              Нова
+            </Button>
           </div>
-          {output.kind === "error" && <ErrorResult message={output.message} />}
+        </header>
+
+        <div className="chat-layout">
+          <section className="chat-column" aria-label="Розмова">
+            <ChatThread messages={messages} working={working}>
+              {idea && <IdeaCompact idea={idea} onOpen={() => setFullscreen(true)} />}
+            </ChatThread>
+            {error && <SendError message={error} />}
+            <Composer
+              mode="chat"
+              value={draft.request}
+              busy={working}
+              autoFocus={false}
+              onChange={draft.change}
+              onSubmit={onSubmit}
+            />
+          </section>
+          <aside className="idea-column" aria-label="Ідея">
+            {pane}
+          </aside>
         </div>
       </div>
     </main>
   );
 }
 
-function LoadingResult() {
+function sortMessages(messages: readonly UIMessage[]) {
+  return [...messages].sort((a, b) => a.order - b.order || a.stepOrder - b.stepOrder);
+}
+
+function isAgentWorking(messages: readonly UIMessage[]) {
+  const last = messages.at(-1);
+
+  if (!last) {
+    return false;
+  }
+
   return (
-    <div className="result-card chrome loading-card">
-      <p className="sr-only">Готуємо відповідь</p>
-      <span />
-      <span />
-      <span />
-    </div>
+    last.role === "user" ||
+    (last.role === "assistant" && (last.status === "pending" || last.status === "streaming"))
   );
 }
 
-function SuccessResult({ text }: { text: string }) {
+function ConnectedHome() {
+  const [sessionId] = useSessionId();
+  const status = useQuery(api.status.current);
+  const active = useQuery(api.chat.activeThread, sessionId ? { sessionId } : "skip");
+  const threadId = active?.threadId ?? null;
+  const threadArgs = sessionId && threadId ? { sessionId, threadId } : ("skip" as const);
+  const { results } = useUIMessages(api.chat.listMessages, threadArgs, {
+    initialNumItems: 50,
+    stream: true,
+  });
+  const idea = useQuery(api.ideas.latest, threadArgs);
+  const sendMessage = useMutation(api.chat.sendMessage);
+  const newThread = useMutation(api.chat.newThread);
+  const draft = useComposerDraft();
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const messages = sortMessages(results);
+  const working = sending || isAgentWorking(messages);
+
+  async function submit(text: string) {
+    if (!sessionId) {
+      return;
+    }
+
+    setSending(true);
+    setError(null);
+
+    try {
+      const result: SendResult = await sendMessage({
+        sessionId,
+        threadId: threadId ?? undefined,
+        text,
+      });
+
+      if (result.ok) {
+        draft.change("");
+      } else {
+        setError(result.message);
+      }
+    } catch {
+      setError("Не вдалося надіслати. Спробуй ще раз.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function startNew() {
+    if (!sessionId) {
+      return;
+    }
+
+    await newThread({ sessionId });
+    draft.reset();
+    setError(null);
+  }
+
+  if (!threadId) {
+    return (
+      <HomeScreen
+        backendReady={status?.ready === true}
+        draft={draft}
+        busy={sending}
+        error={error}
+        onSubmit={submit}
+      />
+    );
+  }
+
   return (
-    <article className="result-card chrome">
-      <div className="result-label sign-text">
-        <HugeiconsIcon icon={ChefHatIcon} size={16} strokeWidth={1.5} aria-hidden />
-        <span>Ідея</span>
-      </div>
-      <p className="result-copy">{text}</p>
-    </article>
+    <ChatScreen
+      backendReady={status?.ready === true}
+      messages={messages}
+      idea={idea}
+      working={working}
+      draft={draft}
+      error={error}
+      onSubmit={submit}
+      onNew={startNew}
+    />
   );
 }
 
-function ErrorResult({ message }: { message: string }) {
+function MissingConvexHome() {
+  const draft = useComposerDraft();
+  const [error, setError] = useState<string | null>(null);
+
   return (
-    <Alert
-      variant="destructive"
-      className="rounded-[14px] border-2 px-[18px] py-4 has-[>svg]:gap-x-2.5"
-    >
-      <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
-      <AlertDescription className="text-[0.9375rem] leading-[1.375rem] font-medium">
-        {message}
-      </AlertDescription>
-    </Alert>
+    <HomeScreen
+      backendReady={false}
+      draft={draft}
+      busy={false}
+      error={error}
+      onSubmit={() => setError("Convex ще не налаштований. Запусти bunx convex dev.")}
+    />
   );
 }
 

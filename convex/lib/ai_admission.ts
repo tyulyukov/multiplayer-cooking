@@ -10,18 +10,18 @@ export type AiLimitPort = Readonly<{
 }>;
 
 export async function admitAiGeneration({ limit }: AiLimitPort) {
-  const burst = await limit("aiBurst");
+  const burst = await limit("chatBurst");
 
   if (!burst.ok) {
     return false;
   }
 
-  const daily = await limit("aiDaily");
+  const daily = await limit("chatDaily");
 
   if (daily.ok) {
     return true;
   }
 
-  await limit("aiBurst", { count: -1 });
+  await limit("chatBurst", { count: -1 });
   return false;
 }

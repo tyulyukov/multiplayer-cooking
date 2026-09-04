@@ -50,7 +50,7 @@ Contrast limits that follow from these values:
 
 ## Colour budget per screen
 
-Magenta appears once: the sign plate, or the "now" marker when the screen has no plate. Lime marks the primary action and the "everyone" cook colour. Teal marks identity and status. Blue appears only as neon lines and the focus ring. Ink and cream carry everything else. A new element that needs a colour takes ink or cream first. If it must stand out, check which slot in this budget is free before adding a colour.
+Magenta appears once: the sign plate, the idea plate in chat mode, or the "now" marker when the screen has no plate. Lime marks the primary action and the "everyone" cook colour. Teal marks identity and status. Blue appears only as neon lines and the focus ring. Ink and cream carry everything else. A new element that needs a colour takes ink or cream first. If it must stand out, check which slot in this budget is free before adding a colour.
 
 ## Type
 
@@ -98,6 +98,10 @@ Each component below has one job. Reuse them before drawing anything new.
 **Ghost button.** Secondary actions next to a lime CTA: white fill, 2px ink border, radius 12px, Golos 600 15px.
 
 **Rail.** A section label: Oswald 600 13px `--muted-foreground` centred between two 2px lines at 15% ink opacity. Not an empty state. The empty home screen is the composer alone.
+
+**Idea plate.** The sign plate at 22px (`.plate.plate-sm`) naming the current idea inside the idea pane or the compact idea card. It is the one magenta element in chat mode.
+
+**Chat bubbles.** A person's message is an ink fill with white text, radius 14px with a 4px bottom-right corner, at most 88% wide and right-aligned. The agent's text is a white card with 2px `--border` and a 4px bottom-left corner. Tool activity above it is one Golos 13px `--muted-foreground` line per call with a 6px `--teal-deep` dot. Waiting text uses the shimmer from transitions.dev.
 
 **Card.** White, 2px `--border`, radius 14px, padding 12px 14px. The active card ("now") switches the border to `--foreground`. Done cards drop to 50% opacity with struck-through text.
 

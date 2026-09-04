@@ -4,20 +4,27 @@ import { classifyFailure } from "./errors";
 
 const AXIOM_REQUEST_TIMEOUT_MS = 1_500;
 
-export type AiGenerationEvent = Readonly<{
-  durationMs?: number;
-  errorName?: string;
-  finishReason?: string;
-  httpStatus?: number;
-  inputCharacters: number;
-  inputTokens?: number;
-  model: string;
-  outcome: "error" | "success";
-  outputCharacters?: number;
-  outputTokens?: number;
-  retryable?: boolean;
-  truncated?: boolean;
-}>;
+export type AiTelemetryEvent =
+  | Readonly<{
+      event: "ai.usage";
+      model: string;
+      provider: string;
+      inputTokens?: number;
+      outputTokens?: number;
+      threadId?: string;
+      userId?: string;
+    }>
+  | Readonly<{
+      event: "ai.run";
+      outcome: "error" | "success";
+      durationMs: number;
+      model: string;
+      threadId: string;
+      userId: string;
+      errorName?: string;
+      httpStatus?: number;
+      retryable?: boolean;
+    }>;
 
 let cachedAxiom: Readonly<{ client: Axiom; edge: string; token: string }> | undefined;
 
@@ -57,7 +64,7 @@ function getAxiom(token: string, edge: string) {
   return cachedAxiom.client;
 }
 
-export async function recordAiGeneration(event: AiGenerationEvent) {
+export async function recordAiEvent(event: AiTelemetryEvent) {
   const token = process.env.AXIOM_TOKEN;
   const dataset = process.env.AXIOM_DATASET;
   const edge = process.env.AXIOM_EDGE;
@@ -71,7 +78,6 @@ export async function recordAiGeneration(event: AiGenerationEvent) {
 
     client.ingest(dataset, {
       _time: new Date().toISOString(),
-      event: "ai.generate",
       service: "multiplayer-cooking",
       ...event,
     });
