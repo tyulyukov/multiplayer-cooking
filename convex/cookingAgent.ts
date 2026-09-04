@@ -1,13 +1,21 @@
 "use node";
 
-import { Agent, createTool, saveMessage, stepCountIs } from "@convex-dev/agent";
+import {
+  Agent,
+  createTool,
+  getThreadMetadata,
+  saveMessage,
+  stepCountIs,
+  updateThreadMetadata,
+} from "@convex-dev/agent";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { generateText } from "ai";
 import { v } from "convex/values";
 import { z } from "zod";
 
 import { components, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { internalAction } from "./_generated/server";
+import { internalAction, type ActionCtx } from "./_generated/server";
 import { AGENT_MAX_STEPS, AGENT_RUN_TIMEOUT_MS, AI_MAX_OUTPUT_TOKENS } from "./lib/ai_config";
 import { classifyFailure } from "./lib/errors";
 import { recordAiEvent } from "./lib/telemetry";
@@ -23,6 +31,8 @@ const instructions = `Ти кухонний агент Multiplayer Cooking. До
 4. Перед save_idea виклич find_dish_image з назвою страви англійською. Якщо фото не знайдено, зберігай ідею без нього.
 5. Збережи ідею інструментом save_idea. Це обов'язково для кожної нової або зміненої ідеї: поле body пиши в Markdown (GFM) на 150–300 слів з розділами "Чому це смачно", "Що потрібно", "Як готувати" у 4–6 коротких кроків. Заголовок до 60 знаків, без крапки в кінці. Передай imageId з find_dish_image. Для уточнень тієї ж страви повторно шукати фото не треба: передай imageId "img_previous", щоб залишити фото попередньої версії.
 6. Після save_idea напиши в чаті одне-два речення: що це за страва і одне питання або уточнення, якщо чогось не вистачає.
+
+Питання з варіантами. Якщо без відповіді не можна вибрати страву (наприклад, невідомо, м'ясо чи без, скільки часу є, гостре чи ні), виклич ask_user з одним питанням і 2–5 короткими варіантами замість того, щоб питати текстом. Після відповіді продовжуй роботу. Не більше одного ask_user підряд і не для дрібниць.
 
 Продукти Сільпо. Коли людина просить продукти, ціни або кошик, або просить підібрати продукти в Сільпо: виклич silpo_find_products з одним елементом на інгредієнт (query українською, 1–3 слова, quantity в упаковках). Потім збережи ту ж ідею через save_idea з полем products і тим самим imageId. Ціни бери лише з результату інструмента, нічого не вигадуй. Якщо інструмент повернув needsAddress, поясни, що для цін потрібна адреса доставки, і попроси ввести її у формі під повідомленням.
 
@@ -86,6 +96,63 @@ function createSaveIdeaTool(run: RunContext, images: ImageRegistry) {
   });
 }
 
+// No execute: the run stops here and continues after the person answers in the questionnaire.
+const askUserTool = createTool({
+  description:
+    "Задає людині одне питання з варіантами відповіді у формі. Використовуй, коли без відповіді не можна вибрати страву.",
+  inputSchema: z.object({
+    question: z.string().min(5).max(160).describe("Питання українською, на 'ти'"),
+    options: z
+      .array(
+        z.object({
+          id: z.string().min(1).max(30).describe("Короткий латинський ідентифікатор"),
+          label: z.string().min(1).max(60).describe("Текст варіанта"),
+        }),
+      )
+      .min(2)
+      .max(5),
+    allowMultiple: z.boolean().default(false).describe("Чи можна вибрати кілька варіантів"),
+    allowCustom: z.boolean().default(true).describe("Чи можна написати свій варіант"),
+  }),
+  outputSchema: z.object({
+    selected: z.array(z.string()).describe("Вибрані варіанти"),
+    custom: z.string().optional().describe("Свій варіант, якщо людина його написала"),
+  }),
+});
+
+const titleInstructions =
+  "Придумай назву розмови про страву: до 40 знаків, українською, без крапки в кінці, без лапок, у нижньому регістрі крім першої літери. Відповідай лише назвою.";
+
+async function ensureThreadTitle(
+  ctx: ActionCtx,
+  openrouter: ReturnType<typeof createOpenRouter>,
+  modelId: string,
+  threadId: string,
+  basis: string,
+) {
+  const thread = await getThreadMetadata(ctx, components.agent, { threadId });
+
+  if (thread.title) {
+    return;
+  }
+
+  const { text } = await generateText({
+    model: openrouter.chat(modelId, { reasoning: { effort: "low" } }),
+    system: titleInstructions,
+    prompt: basis.slice(0, 600),
+    maxOutputTokens: 60,
+    abortSignal: AbortSignal.timeout(20_000),
+  });
+  const title = text
+    .trim()
+    .replace(/^["«»']+|["«»'.]+$/g, "")
+    .slice(0, 40);
+
+  if (title) {
+    await updateThreadMetadata(ctx, components.agent, { threadId, patch: { title } });
+  }
+}
+
 function createModel() {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const modelId = process.env.OPENROUTER_MODEL;
@@ -102,6 +169,7 @@ function createModel() {
 
   return {
     modelId,
+    openrouter,
     model: openrouter.chat(modelId, { reasoning: { effort: "medium" } }),
   };
 }
@@ -145,6 +213,7 @@ export const respond = internalAction({
       tools: {
         ...createWebTools(images),
         ...(connection ? createSilpoTools(userId, connection.cart) : {}),
+        ask_user: askUserTool,
         save_idea: createSaveIdeaTool({ threadId, userId, promptMessageId }, images),
       },
       stopWhen: stepCountIs(AGENT_MAX_STEPS),
@@ -173,6 +242,24 @@ export const respond = internalAction({
       );
 
       await result.consumeStream();
+
+      // Titles come from the saved idea; a thread without one stays untitled for now.
+      try {
+        const latestIdea = await ctx.runQuery(internal.ideas.latestForThread, { threadId });
+
+        if (latestIdea) {
+          await ensureThreadTitle(
+            ctx,
+            service.openrouter,
+            service.modelId,
+            threadId,
+            `${latestIdea.title}. ${latestIdea.summary}`,
+          );
+        }
+      } catch (error) {
+        console.warn("Thread title generation failed", error);
+      }
+
       await recordAiEvent({
         event: "ai.run",
         outcome: "success",

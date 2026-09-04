@@ -13,7 +13,7 @@ import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
 import { components, internal } from "./_generated/api";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type QueryCtx } from "./_generated/server";
 import { admitAiGeneration } from "./lib/ai_admission";
 import { AI_RATE_LIMITS, AI_REQUEST_MAX_CHARACTERS } from "./lib/ai_config";
@@ -150,6 +150,180 @@ export const followUp = internalMutation({
       promptMessageId: messageId,
       userId,
     });
+
+    return null;
+  },
+});
+
+export const answerQuestion = mutation({
+  args: {
+    ...SessionIdArg,
+    threadId: v.string(),
+    toolCallId: v.string(),
+    answer: v.object({
+      optionIds: v.array(v.string()),
+      labels: v.array(v.string()),
+      custom: v.optional(v.string()),
+    }),
+  },
+  returns: v.union(
+    v.object({ ok: v.literal(true) }),
+    v.object({ ok: v.literal(false), message: v.string() }),
+  ),
+  handler: async (ctx, { sessionId, threadId, toolCallId, answer }) => {
+    const user = await findUser(ctx, sessionId);
+
+    if (!user || !(await ownsThread(ctx, user, threadId))) {
+      return { ok: false as const, message: "Ця розмова недоступна. Почни нову." };
+    }
+
+    const custom = answer.custom?.trim().slice(0, 200);
+    const value = {
+      selected: answer.labels.slice(0, 5),
+      ...(custom ? { custom } : {}),
+    };
+
+    const { messageId } = await saveMessage(ctx, components.agent, {
+      threadId,
+      userId: user._id,
+      message: {
+        role: "tool",
+        content: [
+          {
+            type: "tool-result",
+            toolCallId,
+            toolName: "ask_user",
+            output: { type: "json", value },
+          },
+        ],
+      },
+    });
+
+    await ctx.scheduler.runAfter(0, internal.cookingAgent.respond, {
+      threadId,
+      promptMessageId: messageId,
+      userId: user._id,
+    });
+
+    return { ok: true as const };
+  },
+});
+
+export const HISTORY_LIMIT = 30;
+
+const historyItemValidator = v.object({
+  threadId: v.string(),
+  title: v.optional(v.string()),
+  createdAt: v.number(),
+  active: v.boolean(),
+  photos: v.array(v.string()),
+});
+
+async function threadPhotos(ctx: QueryCtx, threadId: string) {
+  const ideas = await ctx.db
+    .query("ideas")
+    .withIndex("by_thread", (q) => q.eq("threadId", threadId))
+    .order("desc")
+    .take(12);
+  const seen = new Set<Id<"_storage">>();
+  const photos: string[] = [];
+
+  for (const idea of ideas) {
+    if (!idea.image || seen.has(idea.image.storageId) || photos.length >= 3) {
+      continue;
+    }
+
+    seen.add(idea.image.storageId);
+    const url = await ctx.storage.getUrl(idea.image.storageId);
+
+    if (url) {
+      photos.push(url);
+    }
+  }
+
+  return photos;
+}
+
+export const history = query({
+  args: SessionIdArg,
+  returns: v.array(historyItemValidator),
+  handler: async (ctx, { sessionId }) => {
+    const user = await findUser(ctx, sessionId);
+
+    if (!user) {
+      return [];
+    }
+
+    const threads = await ctx.runQuery(components.agent.threads.listThreadsByUserId, {
+      userId: user._id,
+      order: "desc",
+      paginationOpts: { cursor: null, numItems: HISTORY_LIMIT },
+    });
+
+    return Promise.all(
+      threads.page.map(async (thread) => ({
+        threadId: thread._id,
+        title: thread.title,
+        createdAt: thread._creationTime,
+        active: thread._id === user.activeThreadId,
+        photos: await threadPhotos(ctx, thread._id),
+      })),
+    );
+  },
+});
+
+export const openThread = mutation({
+  args: { ...SessionIdArg, threadId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { sessionId, threadId }) => {
+    const user = await getOrCreateUser(ctx, sessionId);
+
+    if (!(await ownsThread(ctx, user, threadId)) || user.activeThreadId === threadId) {
+      return null;
+    }
+
+    if (user.activeThreadId) {
+      await updateThreadMetadata(ctx, components.agent, {
+        threadId: user.activeThreadId,
+        patch: { status: "archived" },
+      });
+    }
+
+    await updateThreadMetadata(ctx, components.agent, { threadId, patch: { status: "active" } });
+    await ctx.db.patch(user._id, { activeThreadId: threadId });
+
+    return null;
+  },
+});
+
+export const deleteThread = mutation({
+  args: { ...SessionIdArg, threadId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { sessionId, threadId }) => {
+    const user = await findUser(ctx, sessionId);
+
+    if (!user || !(await ownsThread(ctx, user, threadId))) {
+      return null;
+    }
+
+    const ideas = await ctx.db
+      .query("ideas")
+      .withIndex("by_thread", (q) => q.eq("threadId", threadId))
+      .collect();
+
+    for (const idea of ideas) {
+      if (idea.image) {
+        await ctx.storage.delete(idea.image.storageId);
+      }
+
+      await ctx.db.delete(idea._id);
+    }
+
+    if (user.activeThreadId === threadId) {
+      await ctx.db.patch(user._id, { activeThreadId: undefined });
+    }
+
+    await ctx.runMutation(components.agent.threads.deleteAllForThreadIdAsync, { threadId });
 
     return null;
   },

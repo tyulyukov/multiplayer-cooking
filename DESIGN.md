@@ -107,6 +107,12 @@ Each component below has one job. Reuse them before drawing anything new.
 
 **Profile menu.** An ink tag in the top right with the user icon and the person's name or phone, opening a shadcn dropdown: 2px ink border, radius 14px, items in Golos 600 15px with teal icons. "Від'єднати" is the destructive item and sits last after a separator.
 
+**Question card.** The agent's question with 2 to 5 options, rendered with the shadcn Questionnaire inside a chrome frame, radius 18px. Options are ink tags stacked in a column; a chosen option fills ink with white text. An optional text field "Або напиши свій варіант" sits below, then one lime "Відповісти". After the answer the card collapses to the question and the chosen answer in `--teal-deep`.
+
+**Version nav.** "Версія N з M" in Oswald 600 15px between two ghost arrow buttons at the top of the idea pane. Older versions show an ink tag "Повернути цю версію" on the right. Hidden when there is one version.
+
+**History panel.** A shadcn Sheet from the right on desktop and a Drawer from the bottom on mobile, opened by the "Історія" ink tag. Each row has up to three overlapping 40px photos with 10px radius, the title in Oswald 600 16px or "Без назви", the date in Golos 13px `--muted-foreground`, and a ghost delete button. The open thread has a 25% teal background.
+
 **Chat bubbles.** A person's message is an ink fill with white text, radius 14px with a 4px bottom-right corner, at most 88% wide and right-aligned. The agent's text is a white card with 2px `--border` and a 4px bottom-left corner. Tool activity above it is one Golos 13px `--muted-foreground` line per call with a 6px `--teal-deep` dot. Waiting text uses the shimmer from transitions.dev.
 
 **Card.** White, 2px `--border`, radius 14px, padding 12px 14px. The active card ("now") switches the border to `--foreground`. Done cards drop to 50% opacity with struck-through text.

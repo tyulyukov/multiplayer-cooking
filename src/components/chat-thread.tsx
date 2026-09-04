@@ -1,9 +1,40 @@
 import type { UIMessage } from "@convex-dev/agent";
 import { useSmoothText } from "@convex-dev/agent/react";
+import type { ToolUIPart } from "ai";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
 import { Markdown } from "@/components/markdown";
+import { QuestionCard } from "@/components/question-card";
+import { readQuestionAnswer, readQuestionInput, type QuestionAnswer } from "@/lib/question";
+
+export type QuestionSubmit = (
+  toolCallId: string,
+  answer: { optionIds: string[]; labels: string[]; custom?: string },
+) => void;
+
+function isToolPart(part: UIMessage["parts"][number]): part is ToolUIPart {
+  return part.type.startsWith("tool-");
+}
+
+// Tool results saved later live in their own message; map them back by call id.
+function collectAnswers(messages: readonly UIMessage[]) {
+  const answers = new Map<string, QuestionAnswer>();
+
+  for (const message of messages) {
+    for (const part of message.parts) {
+      if (isToolPart(part) && part.type === "tool-ask_user" && "output" in part) {
+        const answer = readQuestionAnswer(part.output);
+
+        if (answer) {
+          answers.set(part.toolCallId, answer);
+        }
+      }
+    }
+  }
+
+  return answers;
+}
 
 const toolLabels: Record<string, string> = {
   web_search: "Шукаю в інтернеті",
@@ -25,10 +56,28 @@ function AssistantText({ text, streaming }: { text: string; streaming: boolean }
   return <Markdown text={visibleText} className="msg-text" />;
 }
 
-function AssistantMessage({ message }: { message: UIMessage }) {
+function AssistantMessage({
+  message,
+  answers,
+  isLast,
+  answering,
+  onAnswer,
+}: {
+  message: UIMessage;
+  answers: ReadonlyMap<string, QuestionAnswer>;
+  isLast: boolean;
+  answering: boolean;
+  onAnswer: QuestionSubmit;
+}) {
   const streaming = message.status === "streaming";
-  const activity = message.parts.filter((part) => part.type.startsWith("tool-"));
+  const toolParts = message.parts.filter(isToolPart);
+  const activity = toolParts.filter((part) => part.type !== "tool-ask_user");
+  const questions = toolParts.filter((part) => part.type === "tool-ask_user");
   const text = message.text.trim();
+
+  if (activity.length === 0 && questions.length === 0 && !text && message.status !== "failed") {
+    return null;
+  }
 
   return (
     <div className="msg msg-agent">
@@ -39,6 +88,30 @@ function AssistantMessage({ message }: { message: UIMessage }) {
           ))}
         </ul>
       )}
+      {questions.map((part) => {
+        const input = readQuestionInput(part.input);
+
+        if (!input) {
+          return null;
+        }
+
+        const answer = answers.get(part.toolCallId) ?? null;
+
+        // Only the latest unanswered question is live; older ones stay as summaries.
+        if (!answer && !isLast) {
+          return null;
+        }
+
+        return (
+          <QuestionCard
+            key={part.toolCallId}
+            input={input}
+            answer={answer}
+            pending={answering}
+            onSubmit={(value) => onAnswer(part.toolCallId, value)}
+          />
+        );
+      })}
       {text && <AssistantText text={text} streaming={streaming} />}
       {message.status === "failed" && (
         <p className="msg-error">Відповідь не вдалася. Спробуй надіслати ще раз.</p>
@@ -50,14 +123,20 @@ function AssistantMessage({ message }: { message: UIMessage }) {
 export function ChatThread({
   messages,
   working,
+  answering,
+  onAnswer,
   children,
 }: {
   messages: readonly UIMessage[];
   working: boolean;
+  answering: boolean;
+  onAnswer: QuestionSubmit;
   children?: ReactNode;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const pinnedRef = useRef(true);
+  const answers = collectAnswers(messages);
+  const lastAssistantKey = messages.filter((message) => message.role === "assistant").at(-1)?.key;
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -84,7 +163,13 @@ export function ChatThread({
             {message.role === "user" ? (
               <div className="msg msg-user">{message.text}</div>
             ) : (
-              <AssistantMessage message={message} />
+              <AssistantMessage
+                message={message}
+                answers={answers}
+                isLast={message.key === lastAssistantKey}
+                answering={answering}
+                onAnswer={onAnswer}
+              />
             )}
           </li>
         ))}

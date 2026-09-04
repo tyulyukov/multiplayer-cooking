@@ -11,9 +11,16 @@ import type { ReactNode } from "react";
 
 import { api } from "../../convex/_generated/api";
 import { AddressPrompt } from "@/components/address-prompt";
-import { ChatThread } from "@/components/chat-thread";
+import { ChatThread, type QuestionSubmit } from "@/components/chat-thread";
 import { Composer } from "@/components/composer";
-import { IdeaCompact, IdeaPane, IdeaWaiting, type Idea } from "@/components/idea-card";
+import { HistoryPanel } from "@/components/history-panel";
+import {
+  IdeaCompact,
+  IdeaPane,
+  IdeaWaiting,
+  type Idea,
+  type IdeaVersions,
+} from "@/components/idea-card";
 import { ConnectCard, ProfileMenu, type SilpoConnection } from "@/components/silpo-connect";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -134,7 +141,7 @@ function HomeScreen({
       <div className="home-layout">
         <header className="topbar">
           <Brand ready={backendReady} />
-          {menu}
+          {menu && <div className="topbar-actions">{menu}</div>}
         </header>
 
         <div className="sign">
@@ -180,7 +187,9 @@ function ChatScreen({
   connection,
   messages,
   idea,
+  versions,
   working,
+  answering,
   draft,
   error,
   addressError,
@@ -188,13 +197,16 @@ function ChatScreen({
   onNew,
   onSaveAddress,
   onAddToCart,
+  onAnswer,
 }: {
   backendReady: boolean;
   menu?: ReactNode;
   connection: SilpoConnection;
   messages: readonly UIMessage[];
   idea: Idea | null | undefined;
+  versions: IdeaVersions;
   working: boolean;
+  answering: boolean;
   draft: ReturnType<typeof useComposerDraft>;
   error: string | null;
   addressError: string | null;
@@ -202,12 +214,13 @@ function ChatScreen({
   onNew: () => void;
   onSaveAddress: (address: string) => void;
   onAddToCart: () => void;
+  onAnswer: QuestionSubmit;
 }) {
   const [fullscreen, setFullscreen] = useState(false);
   const showFullscreen = fullscreen && idea != null;
+  // Shown while the cart is being built or while the agent's latest message asks for the address.
   const showAddressPrompt =
-    !connection.hasCart &&
-    (connection.cartPending || connection.cartError !== undefined || wantsAddress(messages));
+    !connection.hasCart && (connection.cartPending || wantsAddress(messages));
 
   let pane: ReactNode = null;
 
@@ -217,6 +230,7 @@ function ChatScreen({
         idea={idea}
         fullscreen={showFullscreen}
         canAddToCart={connection.hasCart}
+        versions={versions}
         onToggleFullscreen={() => setFullscreen((value) => !value)}
         onAddToCart={onAddToCart}
       />
@@ -242,7 +256,12 @@ function ChatScreen({
 
         <div className="chat-layout">
           <section className="chat-column" aria-label="Розмова">
-            <ChatThread messages={messages} working={working}>
+            <ChatThread
+              messages={messages}
+              working={working}
+              answering={answering}
+              onAnswer={onAnswer}
+            >
               {idea && <IdeaCompact idea={idea} onOpen={() => setFullscreen(true)} />}
               {showAddressPrompt && (
                 <AddressPrompt
@@ -312,6 +331,48 @@ function isAgentWorking(messages: readonly UIMessage[]) {
   );
 }
 
+function useIdeaVersions(
+  sessionId: ReturnType<typeof useSessionId>[0],
+  threadId: string | null,
+  latest: Idea | null | undefined,
+) {
+  const threadArgs = sessionId && threadId ? { sessionId, threadId } : ("skip" as const);
+  const list = useQuery(api.ideas.listForThread, threadArgs) ?? [];
+  const restore = useMutation(api.ideas.restore);
+  const [selectedId, setSelectedId] = useState<Idea["_id"] | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const selectedIndex = list.findIndex((idea) => idea._id === selectedId);
+  const index = selectedIndex === -1 ? list.length - 1 : selectedIndex;
+  const idea = index >= 0 ? list[index] : latest;
+
+  async function restoreSelected() {
+    const target = idea;
+
+    if (!sessionId || !target || restoring) {
+      return;
+    }
+
+    setRestoring(true);
+
+    try {
+      await restore({ sessionId, ideaId: target._id });
+      setSelectedId(null);
+    } finally {
+      setRestoring(false);
+    }
+  }
+
+  const versions: IdeaVersions = {
+    index: Math.max(index, 0),
+    count: list.length,
+    onSelect: (next) => setSelectedId(list[next]?._id ?? null),
+    onRestore: () => void restoreSelected(),
+    restoring,
+  };
+
+  return { idea, versions, reset: () => setSelectedId(null) };
+}
+
 function useSilpoConnection(sessionId: ReturnType<typeof useSessionId>[0]) {
   const search = Route.useSearch();
   const navigate = useNavigate();
@@ -369,18 +430,24 @@ function ConnectedHome() {
     initialNumItems: 50,
     stream: true,
   });
-  const idea = useQuery(api.ideas.latest, threadArgs);
+  const latestIdea = useQuery(api.ideas.latest, threadArgs);
+  const { idea, versions, reset: resetVersion } = useIdeaVersions(sessionId, threadId, latestIdea);
+  const history = useQuery(api.chat.history, sessionId && connected ? { sessionId } : "skip");
   const sendMessage = useMutation(api.chat.sendMessage);
   const newThread = useMutation(api.chat.newThread);
+  const openThread = useMutation(api.chat.openThread);
+  const deleteThread = useMutation(api.chat.deleteThread);
+  const answerQuestion = useMutation(api.chat.answerQuestion);
   const saveAddress = useMutation(api.silpo.saveAddress);
   const addToCart = useMutation(api.ideas.addToCart);
   const draft = useComposerDraft();
   const [sending, setSending] = useState(false);
+  const [answering, setAnswering] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
 
   const messages = sortMessages(results);
-  const working = sending || isAgentWorking(messages);
+  const working = sending || answering || isAgentWorking(messages);
 
   async function submit(text: string) {
     if (!sessionId) {
@@ -450,7 +517,42 @@ function ConnectedHome() {
 
     await newThread({ sessionId });
     draft.reset();
+    resetVersion();
     setError(null);
+  }
+
+  async function answer(toolCallId: string, value: Parameters<QuestionSubmit>[1]) {
+    if (!sessionId || !threadId) {
+      return;
+    }
+
+    setAnswering(true);
+    setError(null);
+
+    try {
+      const result = await answerQuestion({ sessionId, threadId, toolCallId, answer: value });
+
+      if (!result.ok) {
+        setError(result.message);
+      }
+    } catch {
+      setError("Не вдалося надіслати відповідь. Спробуй ще раз.");
+    } finally {
+      setAnswering(false);
+    }
+  }
+
+  function openFromHistory(target: string) {
+    if (sessionId) {
+      resetVersion();
+      void openThread({ sessionId, threadId: target });
+    }
+  }
+
+  function removeFromHistory(target: string) {
+    if (sessionId) {
+      void deleteThread({ sessionId, threadId: target });
+    }
   }
 
   if (silpo.connection === undefined) {
@@ -469,12 +571,15 @@ function ConnectedHome() {
   }
 
   const menu = (
-    <ProfileMenu
-      connection={silpo.connection}
-      onReconnect={() => void silpo.connect()}
-      onForgetAddress={() => void silpo.forgetAddress()}
-      onDisconnect={() => void silpo.disconnect()}
-    />
+    <>
+      <HistoryPanel items={history} onOpen={openFromHistory} onDelete={removeFromHistory} />
+      <ProfileMenu
+        connection={silpo.connection}
+        onReconnect={() => void silpo.connect()}
+        onForgetAddress={() => void silpo.forgetAddress()}
+        onDisconnect={() => void silpo.disconnect()}
+      />
+    </>
   );
 
   if (!threadId) {
@@ -497,7 +602,9 @@ function ConnectedHome() {
       connection={silpo.connection}
       messages={messages}
       idea={idea}
+      versions={versions}
       working={working}
+      answering={answering}
       draft={draft}
       error={error}
       addressError={addressError}
@@ -505,6 +612,7 @@ function ConnectedHome() {
       onNew={startNew}
       onSaveAddress={submitAddress}
       onAddToCart={submitCart}
+      onAnswer={answer}
     />
   );
 }

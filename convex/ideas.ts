@@ -1,7 +1,7 @@
 import { SessionIdArg } from "convex-helpers/server/sessions";
 import { v } from "convex/values";
 
-import { internal } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { findUser } from "./lib/users";
 import { ideaCartValidator, ideaDocValidator, ideaFields, ideaImageValidator } from "./schema";
@@ -24,6 +24,17 @@ export const latestImage = internalQuery({
 
     return ideas.find((idea) => idea.image)?.image ?? null;
   },
+});
+
+export const latestForThread = internalQuery({
+  args: { threadId: v.string() },
+  returns: v.union(v.null(), ideaDocValidator),
+  handler: async (ctx, { threadId }) =>
+    ctx.db
+      .query("ideas")
+      .withIndex("by_thread", (q) => q.eq("threadId", threadId))
+      .order("desc")
+      .first(),
 });
 
 export const ideaViewValidator = v.object({
@@ -113,5 +124,93 @@ export const saveCartError = internalMutation({
     await ctx.db.patch(ideaId, { cartError: message, cartPending: false });
 
     return null;
+  },
+});
+
+export const IDEA_VERSIONS_LIMIT = 30;
+
+// Every saved version of the idea in a thread, oldest first, with photo URLs resolved.
+export const listForThread = query({
+  args: { ...SessionIdArg, threadId: v.string() },
+  returns: v.array(ideaViewValidator),
+  handler: async (ctx, { sessionId, threadId }) => {
+    const user = await findUser(ctx, sessionId);
+
+    if (!user) {
+      return [];
+    }
+
+    const ideas = await ctx.db
+      .query("ideas")
+      .withIndex("by_thread", (q) => q.eq("threadId", threadId))
+      .order("asc")
+      .take(IDEA_VERSIONS_LIMIT);
+
+    return Promise.all(
+      ideas
+        .filter((idea) => idea.userId === user._id)
+        .map(async (idea) => ({
+          ...idea,
+          imageUrl: idea.image
+            ? ((await ctx.storage.getUrl(idea.image.storageId)) ?? undefined)
+            : undefined,
+        })),
+    );
+  },
+});
+
+// Returns the thread to the state right after this version: later messages and ideas are removed.
+export const restore = mutation({
+  args: { ...SessionIdArg, ideaId: v.id("ideas") },
+  returns: v.union(
+    v.object({ ok: v.literal(true) }),
+    v.object({ ok: v.literal(false), message: v.string() }),
+  ),
+  handler: async (ctx, { sessionId, ideaId }) => {
+    const user = await findUser(ctx, sessionId);
+    const idea = await ctx.db.get(ideaId);
+
+    if (!user || !idea || idea.userId !== user._id) {
+      return { ok: false as const, message: "Ця версія недоступна." };
+    }
+
+    const [prompt] = await ctx.runQuery(components.agent.messages.getMessagesByIds, {
+      messageIds: [idea.promptMessageId],
+    });
+
+    if (!prompt) {
+      return { ok: false as const, message: "Повідомлення цієї версії вже видалено." };
+    }
+
+    let cursor = { startOrder: prompt.order + 1, startStepOrder: undefined as number | undefined };
+
+    for (let round = 0; round < 20; round += 1) {
+      const result = await ctx.runMutation(components.agent.messages.deleteByOrder, {
+        threadId: idea.threadId,
+        startOrder: cursor.startOrder,
+        startStepOrder: cursor.startStepOrder,
+        endOrder: Number.MAX_SAFE_INTEGER,
+      });
+
+      if (result.isDone || result.lastOrder === undefined) {
+        break;
+      }
+
+      cursor = { startOrder: result.lastOrder, startStepOrder: result.lastStepOrder };
+    }
+
+    const later = await ctx.db
+      .query("ideas")
+      .withIndex("by_thread", (q) => q.eq("threadId", idea.threadId))
+      .order("desc")
+      .take(IDEA_VERSIONS_LIMIT);
+
+    for (const version of later) {
+      if (version._creationTime > idea._creationTime) {
+        await ctx.db.delete(version._id);
+      }
+    }
+
+    return { ok: true as const };
   },
 });

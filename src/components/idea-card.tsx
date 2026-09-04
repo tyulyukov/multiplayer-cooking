@@ -1,8 +1,11 @@
+import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
+import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
 import FullScreenIcon from "@hugeicons/core-free-icons/FullScreenIcon";
 import LinkSquare01Icon from "@hugeicons/core-free-icons/LinkSquare01Icon";
 import ShoppingBasketAdd01Icon from "@hugeicons/core-free-icons/ShoppingBasketAdd01Icon";
+import UndoIcon from "@hugeicons/core-free-icons/UndoIcon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { FunctionReturnType } from "convex/server";
@@ -168,21 +171,82 @@ function IdeaProducts({
   );
 }
 
+export type IdeaVersions = Readonly<{
+  index: number;
+  count: number;
+  onSelect: (index: number) => void;
+  onRestore: () => void;
+  restoring: boolean;
+}>;
+
+// "Версія N з M": older versions are read-only until restored.
+function VersionNav({ versions }: { versions: IdeaVersions }) {
+  if (versions.count < 2) {
+    return null;
+  }
+
+  const latest = versions.index === versions.count - 1;
+
+  return (
+    <nav className="version-nav" aria-label="Версії ідеї">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label="Попередня версія"
+        disabled={versions.index === 0}
+        onClick={() => versions.onSelect(versions.index - 1)}
+      >
+        <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={1.5} aria-hidden />
+      </Button>
+      <span className="version-label">
+        Версія {versions.index + 1} з {versions.count}
+      </span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label="Наступна версія"
+        disabled={latest}
+        onClick={() => versions.onSelect(versions.index + 1)}
+      >
+        <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={1.5} aria-hidden />
+      </Button>
+      {!latest && (
+        <Button
+          type="button"
+          variant="outline"
+          size="chip"
+          disabled={versions.restoring}
+          aria-busy={versions.restoring}
+          onClick={versions.onRestore}
+        >
+          <HugeiconsIcon icon={UndoIcon} strokeWidth={1.5} aria-hidden />
+          {versions.restoring ? "Повертаємо…" : "Повернути цю версію"}
+        </Button>
+      )}
+    </nav>
+  );
+}
+
 export function IdeaPane({
   idea,
   fullscreen,
   canAddToCart,
+  versions,
   onToggleFullscreen,
   onAddToCart,
 }: {
   idea: Idea;
   fullscreen: boolean;
   canAddToCart: boolean;
+  versions: IdeaVersions;
   onToggleFullscreen: () => void;
   onAddToCart: () => void;
 }) {
   return (
     <article className="idea-pane chrome" aria-label={idea.title}>
+      <VersionNav versions={versions} />
       <IdeaPhoto idea={idea} />
       <header className="idea-head">
         <div className="plate plate-sm">
