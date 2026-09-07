@@ -1,3 +1,4 @@
+import { resetUnstartedReadiness } from "./lib/cooking_readiness";
 import { ConvexError, v } from "convex/values";
 
 import type { Doc } from "./_generated/dataModel";
@@ -104,6 +105,17 @@ export const complete = mutation({
       .take(24);
     if (timers.some((timer) => ["running", "paused"].includes(timer.status)))
       throw new ConvexError("Спершу завершіть, скасуйте або дочекайтеся таймера.");
+    for (const timer of timers) {
+      if (timer.status === "fired") {
+        await ctx.db.patch(timer._id, {
+          status: "acknowledged",
+          deadline: undefined,
+          remainingMs: undefined,
+          version: timer.version + 1,
+          jobId: undefined,
+        });
+      }
+    }
     await ctx.db.patch(loaded.runtime._id, {
       status: "done",
       completedAt: Date.now(),
@@ -156,7 +168,13 @@ export const takeover = mutation({
       .take(ROOM_MEMBER_LIMIT);
     if (active.some((other) => other._id !== member._id && other.slots.includes(args.slot)))
       throw new ConvexError("Це місце ще зайняте іншим кухарем.");
+    if (member.slots.includes(args.slot)) return false;
     await ctx.db.patch(member._id, { slots: [...member.slots, args.slot].sort((a, b) => a - b) });
+    const steps = await ctx.db
+      .query("cookingSteps")
+      .withIndex("by_room_step", (q) => q.eq("roomId", args.roomId))
+      .take(80);
+    await resetUnstartedReadiness(ctx, steps, new Set([args.slot]));
     return true;
   },
 });
@@ -194,10 +212,7 @@ export const swapRoles = mutation({
       throw new ConvexError("Завершіть почату роботу перед обміном ролями.");
     await ctx.db.patch(member._id, { slots: other.slots });
     await ctx.db.patch(other._id, { slots: member.slots });
-    for (const step of steps) {
-      if (!step.startedAt && step.slots.some((slot) => slots.has(slot)))
-        await ctx.db.patch(step._id, { status: "pending", readyMemberIds: [] });
-    }
+    await resetUnstartedReadiness(ctx, steps, slots);
     return true;
   },
 });

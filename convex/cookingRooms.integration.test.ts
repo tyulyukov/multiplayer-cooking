@@ -118,3 +118,29 @@ test("role swaps reject active work and exchange free slots", async () => {
   expect(view?.members.find((member) => member._id === free.guestId)?.slots).toEqual([1]);
   expect(view?.steps.map((step) => step.status)).toEqual(["pending", "pending"]);
 });
+
+for (const recovery of ["continueAlone", "takeover"] as const) {
+  test(`${recovery} resets an unstarted shared step after another cook leaves`, async () => {
+    const { t, host, guest } = await cookingFixture([
+      task("together", 1, { kind: "together", slots: [1, 2] }),
+    ]);
+    await t.mutation(api.cookingSteps.markReady, { ...host, stepKey: "together" });
+    await t.mutation(api.cookingRooms.leave, guest);
+    if (recovery === "continueAlone") await t.mutation(api.cookingRooms.continueAlone, host);
+    else await t.mutation(api.cookingSteps.takeover, { ...host, slot: 2 });
+    const recovered = await t.query(api.cookingRooms.read, host);
+    expect(recovered?.me.slots).toEqual([1, 2]);
+    expect(recovered?.steps[0]).toMatchObject({ status: "pending", readyMemberIds: [] });
+    await t.mutation(api.cookingSteps.markReady, { ...host, stepKey: "together" });
+    expect((await t.query(api.cookingRooms.read, host))?.steps[0]).toMatchObject({
+      status: "active",
+    });
+    expect(
+      await t.mutation(api.cookingSteps.complete, {
+        ...host,
+        stepKey: "together",
+        confirmed: true,
+      }),
+    ).toBe(true);
+  });
+}

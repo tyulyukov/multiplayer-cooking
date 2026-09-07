@@ -1,3 +1,4 @@
+import { resetUnstartedReadiness } from "./lib/cooking_readiness";
 import { RateLimiter } from "@convex-dev/rate-limiter";
 import { SessionIdArg } from "convex-helpers/server/sessions";
 import { ConvexError, v } from "convex/values";
@@ -416,10 +417,13 @@ export const continueAlone = mutation({
       .take(ROOM_MEMBER_LIMIT);
     for (const other of others)
       if (other._id !== member._id) await ctx.db.patch(other._id, { slots: [] });
-    const slots = [...new Set(room.plan?.steps.flatMap((step) => step.slots) ?? [1])].sort(
-      (a, b) => a - b,
-    );
+    const slots = Array.from({ length: room.cookCount }, (_, index) => index + 1);
     await ctx.db.patch(member._id, { slots });
+    const steps = await ctx.db
+      .query("cookingSteps")
+      .withIndex("by_room_step", (q) => q.eq("roomId", args.roomId))
+      .take(80);
+    await resetUnstartedReadiness(ctx, steps, new Set(slots));
     await ctx.db.patch(args.roomId, { inviteOpen: false });
     return true;
   },

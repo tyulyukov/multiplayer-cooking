@@ -208,7 +208,7 @@ test("only an idea owner can create a room, and cook again starts fresh progress
       participantToken: newHostToken,
       inviteToken: newInviteToken,
       name: "Іван",
-      cookCount: 1,
+      cookCount: 2,
       servings: 2,
       constraints: "  без перцю  ",
     }),
@@ -223,6 +223,19 @@ test("only an idea owner can create a room, and cook again starts fresh progress
     planVersion: 0,
     constraints: "без перцю",
   });
+
+  await fixture.t.mutation(api.cookingRooms.continueAlone, {
+    roomId: created!.roomId,
+    participantToken: newHostToken,
+  });
+  expect(
+    (
+      await fixture.t.query(api.cookingRooms.read, {
+        roomId: created!.roomId,
+        participantToken: newHostToken,
+      })
+    )?.me.slots,
+  ).toEqual([1, 2]);
 
   await expect(
     withoutScheduledCallbacks(() =>

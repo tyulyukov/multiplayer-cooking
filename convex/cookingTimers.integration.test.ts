@@ -93,3 +93,24 @@ test("manual timers enforce duration bounds and the twenty-four timer cap", asyn
     }),
   ).rejects.toThrow("24 активні таймери");
 });
+
+test("completing a step acknowledges its fired reminder and prevents stale expiry", async () => {
+  const { t, host, roomId } = await cookingFixture([
+    task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
+  ]);
+  await t.mutation(api.cookingSteps.start, { ...host, stepKey: "boil" });
+  await t.mutation(api.cookingTimers.start, timerArgs(roomId, host.participantToken));
+  const timer = (await t.query(api.cookingRooms.read, host))!.timers[0]!;
+  const deadline = Date.now() - 1;
+  await t.run((ctx) => ctx.db.patch(timer._id, { deadline }));
+  const expiry = { timerId: timer._id, version: timer.version, deadline };
+  expect(await t.mutation(internal.cookingTimers.expire, expiry)).toBe(true);
+  expect(
+    await t.mutation(api.cookingSteps.complete, { ...host, stepKey: "boil", confirmed: true }),
+  ).toBe(true);
+  expect((await t.query(api.cookingRooms.read, host))?.timers[0]).toMatchObject({
+    status: "acknowledged",
+    version: timer.version + 1,
+  });
+  expect(await t.mutation(internal.cookingTimers.expire, expiry)).toBe(false);
+});

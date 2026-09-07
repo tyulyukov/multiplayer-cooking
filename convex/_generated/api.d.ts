@@ -26,6 +26,7 @@ import type * as lib_ai_config from "../lib/ai_config.js";
 import type * as lib_cooking_access from "../lib/cooking_access.js";
 import type * as lib_cooking_instructions from "../lib/cooking_instructions.js";
 import type * as lib_cooking_plan from "../lib/cooking_plan.js";
+import type * as lib_cooking_readiness from "../lib/cooking_readiness.js";
 import type * as lib_cooking_reference from "../lib/cooking_reference.js";
 import type * as lib_cooking_validators from "../lib/cooking_validators.js";
 import type * as lib_dish_image from "../lib/dish_image.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   "lib/cooking_access": typeof lib_cooking_access;
   "lib/cooking_instructions": typeof lib_cooking_instructions;
   "lib/cooking_plan": typeof lib_cooking_plan;
+  "lib/cooking_readiness": typeof lib_cooking_readiness;
   "lib/cooking_reference": typeof lib_cooking_reference;
   "lib/cooking_validators": typeof lib_cooking_validators;
   "lib/dish_image": typeof lib_dish_image;
