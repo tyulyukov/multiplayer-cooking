@@ -531,25 +531,27 @@ export function IdeaPane({
 }) {
   return (
     <article className="idea-pane chrome" aria-label={idea.title}>
-      <VersionNav versions={versions} />
-      {versions.restoreError && (
-        <Alert variant="destructive" className="idea-image-error">
-          <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
-          <AlertDescription>{versions.restoreError}</AlertDescription>
-        </Alert>
-      )}
-      <IdeaPhoto key={idea.imageUrl ?? idea._id} idea={idea} />
-      <header className="idea-head">
-        <div className="plate plate-sm">
-          <h2>{idea.title}</h2>
+      <div className="idea-pane-scroll" role="region" aria-label={idea.title} tabIndex={0}>
+        <VersionNav versions={versions} />
+        {versions.restoreError && (
+          <Alert variant="destructive" className="idea-image-error">
+            <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
+            <AlertDescription>{versions.restoreError}</AlertDescription>
+          </Alert>
+        )}
+        <IdeaPhoto key={idea.imageUrl ?? idea._id} idea={idea} />
+        <header className="idea-head">
+          <div className="plate plate-sm">
+            <h2>{idea.title}</h2>
+          </div>
+        </header>
+        <IdeaMeta idea={idea} />
+        <p className="idea-summary">{idea.summary}</p>
+        <Markdown text={idea.body} className="idea-body" />
+        <IdeaProducts idea={idea} canAddToCart={canAddToCart} onAddToCart={onAddToCart} />
+        <div className="idea-actions">
+          <CookTogether savedCount={idea.cookCount} onGenerate={onCookCount} />
         </div>
-      </header>
-      <IdeaMeta idea={idea} />
-      <p className="idea-summary">{idea.summary}</p>
-      <Markdown text={idea.body} className="idea-body" />
-      <IdeaProducts idea={idea} canAddToCart={canAddToCart} onAddToCart={onAddToCart} />
-      <div className="idea-actions">
-        <CookTogether savedCount={idea.cookCount} onGenerate={onCookCount} />
       </div>
     </article>
   );
