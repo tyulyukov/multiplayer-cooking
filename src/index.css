@@ -417,6 +417,58 @@
   flex: none;
 }
 
+.kitchen-illustration {
+  display: block;
+  flex: none;
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.illustrated-empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.illustrated-empty p {
+  margin: 0;
+}
+
+.connect-illustration {
+  justify-self: center;
+  width: 128px;
+  height: 128px;
+}
+
+.cooks-illustration {
+  justify-self: center;
+  width: 104px;
+  height: 104px;
+}
+
+.idea-image-notice,
+.cart-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.idea-image-notice .kitchen-illustration,
+.cart-heading-row .kitchen-illustration {
+  width: 64px;
+  height: 64px;
+}
+
+.idea-image-notice > .idea-image-error,
+.cart-heading-row > .cart-heading {
+  flex: 1;
+  min-width: 0;
+}
+
 .connect-card {
   display: grid;
   gap: 16px;

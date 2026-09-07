@@ -5,6 +5,7 @@ import LaptopIcon from "@hugeicons/core-free-icons/LaptopIcon";
 import UserSettings02Icon from "@hugeicons/core-free-icons/UserSettings02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 
+import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -250,9 +251,10 @@ export function PersonalSettings({
             <section className="personal-settings__memories" aria-live="polite">
               {loading ? <p className="personal-settings__quiet">Завантажуємо спогади…</p> : null}
               {!loading && sortedMemories.length === 0 ? (
-                <p className="personal-settings__empty">
-                  Щойно щось стане для тебе важливим, агент збереже це тут.
-                </p>
+                <div className="personal-settings__empty illustrated-empty">
+                  <KitchenIllustration name="memory-fridge" />
+                  <p>Щойно щось стане для тебе важливим, агент збереже це тут.</p>
+                </div>
               ) : null}
               {sortedMemories.map((memory) => (
                 <article className="personal-settings__memory" key={memory._id}>

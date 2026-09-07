@@ -14,6 +14,7 @@ import { useState } from "react";
 
 import type { api } from "../../convex/_generated/api";
 import { CookTogether } from "@/components/cook-together";
+import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Markdown } from "@/components/markdown";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -101,13 +102,16 @@ function IdeaImageNotice({ message }: { message?: string }) {
   }
 
   return (
-    <Alert variant="destructive" className="idea-image-error">
-      <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
-      <div>
-        <AlertTitle>Фото страви не завантажилося</AlertTitle>
-        <AlertDescription>{message}</AlertDescription>
-      </div>
-    </Alert>
+    <div className="idea-image-notice">
+      <KitchenIllustration name="serving-dome" />
+      <Alert variant="destructive" className="idea-image-error">
+        <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
+        <div>
+          <AlertTitle>Фото страви не завантажилося</AlertTitle>
+          <AlertDescription>{message}</AlertDescription>
+        </div>
+      </Alert>
+    </div>
   );
 }
 
@@ -195,9 +199,12 @@ function IdeaProducts({
   if (idea.cart) {
     action = (
       <div className="cart-done" aria-busy={idea.cartPending === true}>
-        <div className="cart-heading">
-          <strong>Кошик Сільпо</strong>
-          <span>{idea.cartPending ? "Оновлюємо…" : "Готовий до перевірки"}</span>
+        <div className="cart-heading-row">
+          {!idea.cartPending && <KitchenIllustration name="basket-filled" />}
+          <div className="cart-heading">
+            <strong>Кошик Сільпо</strong>
+            <span>{idea.cartPending ? "Оновлюємо…" : "Готовий до перевірки"}</span>
+          </div>
         </div>
         <div className="cart-overview">
           <div className="cart-payable">

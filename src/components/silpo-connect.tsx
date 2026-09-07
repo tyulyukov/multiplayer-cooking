@@ -9,6 +9,7 @@ import type { FunctionReturnType } from "convex/server";
 import * as React from "react";
 
 import type { api } from "../../convex/_generated/api";
+import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ export type SilpoConnection = NonNullable<FunctionReturnType<typeof api.silpo.co
 export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () => void }) {
   return (
     <section className="connect-card chrome" aria-label="Підключення Сільпо">
+      <KitchenIllustration name="bag-pot" className="connect-illustration" />
       <p>
         Ідеї страв, продукти з цінами і кошик працюють через твій акаунт Сільпо. Вхід за номером
         телефону на auth.silpo.ua.

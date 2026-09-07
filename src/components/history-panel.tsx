@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import type { api } from "../../convex/_generated/api";
+import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -50,7 +51,12 @@ function HistoryList({
   }
 
   if (items.length === 0) {
-    return <p className="history-empty">Тут з'являться попередні розмови.</p>;
+    return (
+      <div className="history-empty illustrated-empty">
+        <KitchenIllustration name="recipe-box" />
+        <p>Тут з'являться попередні розмови.</p>
+      </div>
+    );
   }
 
   return (

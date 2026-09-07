@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
+import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -66,6 +67,7 @@ function CooksForm({
 
   return (
     <div className="cook-form">
+      <KitchenIllustration name="oven-mitts" className="cooks-illustration" />
       <div className="servings-stepper" role="group" aria-label="Кількість кухарів">
         <Button
           type="button"
