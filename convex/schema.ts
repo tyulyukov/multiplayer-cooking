@@ -1,4 +1,5 @@
 import { defineSchema, defineTable } from "convex/server";
+import { cookingTables } from "./cookingSchema";
 import { v } from "convex/values";
 
 export const ingredientValidator = v.object({
@@ -119,6 +120,7 @@ export const silpoCartContextValidator = v.object({
 });
 
 export default defineSchema({
+  ...cookingTables,
   // A user becomes the durable account record after a verified Сільпо login.
   // sessionId and activeThreadId remain only to read data created before sessions existed.
   users: defineTable({

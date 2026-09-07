@@ -49,6 +49,10 @@ export function decodeDishImage(payload: unknown) {
 }
 
 export async function generateDishImage(dish: DishDescription) {
+  return generateImageFromPrompt(dishImagePrompt(dish));
+}
+
+export async function generateImageFromPrompt(prompt: string) {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error("Image provider is not configured");
   const response = await fetch("https://openrouter.ai/api/v1/images", {
@@ -56,7 +60,7 @@ export async function generateDishImage(dish: DishDescription) {
     headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
     body: JSON.stringify({
       model: DISH_IMAGE_MODEL,
-      prompt: dishImagePrompt(dish),
+      prompt,
       n: 1,
       resolution: "1K",
       aspect_ratio: "3:2",

@@ -1469,6 +1469,8 @@
 }
 
 .cook-form {
+  min-height: 0;
+  overflow-y: auto;
   display: grid;
   gap: 18px;
   padding: 6px 18px 18px;
@@ -1492,6 +1494,25 @@
 
 .cook-form > button {
   justify-self: center;
+}
+
+.cook-setup-field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.cook-setup-field input,
+.cook-setup-field textarea {
+  width: 100%;
+  border: 2px solid var(--foreground);
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: var(--card);
+  font: inherit;
+  font-size: 17px;
+  min-height: 50px;
 }
 
 .cook-soon {
@@ -2307,4 +2328,15 @@ button.question-progress[aria-expanded="true"] > svg {
 .missing-ingredients li > :last-child:not(:first-child) {
   flex: none;
   color: var(--muted-foreground);
+}
+
+.history-sections {
+  min-height: 0;
+  overflow-y: auto;
+}
+.history-sections > section > h3 {
+  margin: 12px 18px;
+}
+.history-sections .history-row {
+  min-height: 56px;
 }

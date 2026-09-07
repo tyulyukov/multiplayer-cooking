@@ -21,7 +21,7 @@ import { useMediaQuery } from "@/lib/use-media-query";
 
 export type HistoryItem = FunctionReturnType<typeof api.chat.history>[number];
 
-const title = "Історія розмов";
+const title = "Історія";
 
 // Relative labels ("5 хвилин тому") go stale while the panel is open; tick once a minute.
 function useNow() {
@@ -99,10 +99,16 @@ export function HistoryPanel({
   items,
   onOpen,
   onDelete,
+  cookingRooms = [],
+  onOpenCooking,
 }: {
   items: readonly HistoryItem[] | undefined;
   onOpen: (threadId: string) => void;
   onDelete: (threadId: string) => void;
+  cookingRooms?: readonly FunctionReturnType<typeof api.cookingRooms.listOwned>[number][];
+  onOpenCooking?: (
+    roomId: FunctionReturnType<typeof api.cookingRooms.listOwned>[number]["_id"],
+  ) => void;
 }) {
   const [open, setOpen] = useState(false);
   const desktop = useMediaQuery("(min-width: 1024px)");
@@ -114,14 +120,50 @@ export function HistoryPanel({
     </Button>
   );
   const list = (
-    <HistoryList
-      items={items}
-      onOpen={(threadId) => {
-        setOpen(false);
-        onOpen(threadId);
-      }}
-      onDelete={onDelete}
-    />
+    <div className="history-sections">
+      {cookingRooms.length > 0 && (
+        <section>
+          <h3 className="sign-text">Готування</h3>
+          <ul className="history-list">
+            {cookingRooms.map((room) => (
+              <li key={room._id}>
+                <button
+                  className="history-row"
+                  onClick={() => {
+                    setOpen(false);
+                    onOpenCooking?.(room._id);
+                  }}
+                >
+                  <span className="history-text">
+                    <strong>{room.source.title}</strong>
+                    <span>
+                      {room.state === "done"
+                        ? "Вечеря готова"
+                        : room.state === "cooking"
+                          ? "Готуємо"
+                          : room.state === "error"
+                            ? "План потребує повторної спроби"
+                            : "Підготовка"}{" "}
+                      · {room.requestedServings} порцій
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {(cookingRooms.length === 0 || Boolean(items?.length)) && (
+        <HistoryList
+          items={items}
+          onOpen={(threadId) => {
+            setOpen(false);
+            onOpen(threadId);
+          }}
+          onDelete={onDelete}
+        />
+      )}
+    </div>
   );
 
   if (desktop) {
