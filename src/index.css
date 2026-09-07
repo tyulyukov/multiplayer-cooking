@@ -564,6 +564,10 @@
 @media (min-width: 1200px) {
   .starter-screen {
     background-image: url("/images/starter-kitchen.webp");
+    background-image: image-set(
+      url("/images/starter-kitchen.webp") 1x,
+      url("/images/starter-kitchen-retina.webp") 2x
+    );
   }
 }
 
