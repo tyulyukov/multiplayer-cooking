@@ -47,3 +47,13 @@ WebP quality 84. Desktop 1600 × 1000, mobile 780 × 1688, sign 384 × 394 with 
 ## Tablet scene
 
 Adapt the desktop background to a square composition. Preserve both objects in the lower 35 percent, extend the continuous cream wall through the upper 65 percent, and keep all text and UI out of the asset. Preserve the desktop materials, lighting, and camera without stretching.
+
+## Retina desktop correction, 2026-09-08
+
+The original 1600 × 1000 export supplied only 55.6% of the dimensions needed at a 1440 × 900 CSS viewport with device pixel ratio 2. The built-in regeneration still returned 1586 × 992 despite a larger-size prompt. The user authorized OpenRouter for native high-resolution generation.
+
+Used OpenRouter’s official `openrouter-images` edit script and `google/gemini-3.1-flash-image-preview`, requesting `resolution: 4K` and `aspect_ratio: 3:2`. The returned JPEG is 5056 × 3392. Source: `design/sources/starter-kitchen-4k.jpg`. The crop removes 232px of blank upper wall, producing 5056 × 3160 before downsampling. No image was upscaled.
+
+Restore this exact approved kitchen background as a native 4K high-detail render for a Retina desktop. Preserve the composition, camera, perspective, object sizes and positions, warm cream wall, soft sunlight, teal tiled backsplash, grocery bag and onion on the left, teal enamel pot on a cream hotplate and folded towel on the right. The upper and central wall must remain empty for live website controls. Keep every object and edge in sharp focus: visible fine canvas weave and stitching, clean tile grout lines, individual parsley leaves, fine onion skin, crisp enamel and chrome highlights. Do not introduce blur, depth of field, haze, smoothing, new objects, lettering, UI, signs, logos or borders. This is a detail restoration, not a redesign. Adapt the original 16:10 composition to 3:2 only by a small extension of the blank upper wall, never stretch objects.
+
+Exports use cwebp method 6: standard 1920 × 1200 at quality 92, 97,462 bytes; Retina 3840 × 2400 at quality 95, 502,840 bytes. Native CSS `image-set()` selects the density; the single-URL declaration remains as fallback. Mobile, tablet, sign, layout, and authentication behavior are unchanged. Candidate mobile/tablet rerenders were not integrated because they changed the approved composition or introduced lettering.
