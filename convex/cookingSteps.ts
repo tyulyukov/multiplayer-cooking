@@ -168,7 +168,6 @@ export const takeover = mutation({
       .take(ROOM_MEMBER_LIMIT);
     if (active.some((other) => other._id !== member._id && other.slots.includes(args.slot)))
       throw new ConvexError("Це місце ще зайняте іншим кухарем.");
-    if (member.slots.includes(args.slot)) return false;
     await ctx.db.patch(member._id, { slots: [...member.slots, args.slot].sort((a, b) => a - b) });
     const steps = await ctx.db
       .query("cookingSteps")
