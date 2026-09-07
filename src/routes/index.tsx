@@ -1028,7 +1028,6 @@ function ConnectedHome() {
       <ProfileMenu
         onOpenSettings={() => setPersonalTab("settings")}
         connection={silpo.connection}
-        onReconnect={() => void silpo.connect()}
         onForgetAddress={() => void silpo.forgetAddress()}
         onDisconnect={() => void silpo.disconnect()}
       />
