@@ -3,26 +3,46 @@
 import { randomBytes } from "node:crypto";
 
 import { auth } from "@modelcontextprotocol/sdk/client/auth.js";
+import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
 import { SessionIdArg } from "convex-helpers/server/sessions";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { action, internalAction } from "./_generated/server";
-import { shapeProfile, withSilpoClient } from "./lib/silpo_client";
-import { createSilpoAuthProvider, SILPO_MCP_URL } from "./lib/silpo_oauth";
+import { parseVerifiedSilpoProfile, withSilpoClient } from "./lib/silpo_client";
+import { createSilpoAuthProvider, SILPO_ISSUER, SILPO_MCP_URL } from "./lib/silpo_oauth";
+
+function storedTokens(tokens: OAuthTokens) {
+  if (!tokens.access_token || !tokens.token_type) {
+    throw new Error("Сільпо не повернуло токен доступу");
+  }
+
+  return {
+    access_token: tokens.access_token,
+    token_type: tokens.token_type,
+    refresh_token: tokens.refresh_token,
+    expires_in: tokens.expires_in,
+    scope: tokens.scope,
+  };
+}
 
 // Returns the Сільпо authorization URL; the browser navigates there.
 export const startConnect = action({
   args: SessionIdArg,
   returns: v.object({ url: v.string() }),
   handler: async (ctx, { sessionId }) => {
-    const userId = await ctx.runMutation(internal.silpo.ensureUser, { sessionId });
+    const previousUserId = await ctx.runMutation(internal.silpo.ensureUser, { sessionId });
+    await ctx.runAction(internal.silpoAuth.verifyExistingConnection, { userId: previousUserId });
+    const connecting = await ctx.runMutation(internal.accounts.beginConnect, { sessionId });
     const state = randomBytes(32).toString("base64url");
     let redirectUrl: URL | null = null;
     const provider = createSilpoAuthProvider(ctx, {
-      userId,
+      userId: connecting.userId,
       start: {
         state,
+        sessionId,
+        authVersion: connecting.authVersion,
         onRedirect: (url) => {
           redirectUrl = url;
         },
@@ -39,20 +59,31 @@ export const startConnect = action({
   },
 });
 
-export const finishConnect = internalAction({
-  args: { state: v.string(), code: v.string() },
+export const finishConnect = action({
+  args: { ...SessionIdArg, state: v.string(), code: v.string() },
   returns: v.boolean(),
-  handler: async (ctx, { state, code }) => {
-    const pending = await ctx.runMutation(internal.silpo.consumeAuthState, { state });
+  handler: async (ctx, { state, code, sessionId }): Promise<boolean> => {
+    const pending: {
+      userId: Id<"users">;
+      sessionId: string;
+      authVersion: number;
+      codeVerifier: string;
+    } | null = await ctx.runMutation(internal.silpo.consumeAuthState, { state, sessionId });
 
     if (!pending) {
       console.warn("Silpo callback with unknown or expired state");
       return false;
     }
 
+    let stagedTokens: OAuthTokens | undefined;
+    const saveStagedTokens = async (tokens: OAuthTokens) => {
+      stagedTokens = tokens;
+    };
     const provider = createSilpoAuthProvider(ctx, {
       userId: pending.userId,
       codeVerifier: pending.codeVerifier,
+      getStagedTokens: () => stagedTokens,
+      saveStagedTokens,
     });
 
     try {
@@ -66,20 +97,83 @@ export const finishConnect = internalAction({
       return false;
     }
 
-    try {
-      const profile = await withSilpoClient(ctx, pending.userId, (client) =>
-        client.callTool("silpo_get_my_profile", {}),
-      );
-
-      await ctx.runMutation(internal.silpo.saveProfile, {
-        userId: pending.userId,
-        profile: shapeProfile(profile),
-      });
-    } catch (error) {
-      console.error("Silpo profile fetch failed", error);
+    if (!stagedTokens) {
+      console.error("Silpo token exchange completed without tokens");
+      return false;
     }
 
-    return true;
+    try {
+      const profileResult = await withSilpoClient(
+        ctx,
+        pending.userId,
+        (client) => client.callTool("silpo_get_my_profile", {}),
+        { provider },
+      );
+      const verified = parseVerifiedSilpoProfile(profileResult);
+
+      if (!verified || !stagedTokens) {
+        console.error("Silpo returned an unverified profile shape");
+        return false;
+      }
+
+      const linked: Id<"users"> | null = await ctx.runMutation(internal.accounts.linkConnection, {
+        sessionId: pending.sessionId,
+        authVersion: pending.authVersion,
+        sourceUserId: pending.userId,
+        accountId: `${SILPO_ISSUER}:${verified.accountSubject}`,
+        profile: verified.profile,
+        tokens: storedTokens(stagedTokens),
+      });
+
+      return linked !== null;
+    } catch (error) {
+      console.error("Silpo profile verification failed", error);
+      return false;
+    }
+  },
+});
+
+// Re-verifies a saved connection before folding legacy browser history into a canonical account.
+export const verifyExistingConnection = internalAction({
+  args: { userId: v.id("users") },
+  returns: v.object({ verified: v.boolean() }),
+  handler: async (ctx, { userId }): Promise<{ verified: boolean }> => {
+    try {
+      const connection = await ctx.runQuery(internal.silpo.connectionByUser, { userId });
+      if (!connection) return { verified: false };
+      let stagedTokens: OAuthTokens = connection.tokens;
+      const provider = createSilpoAuthProvider(ctx, {
+        userId,
+        getStagedTokens: () => stagedTokens,
+        saveStagedTokens: async (tokens) => {
+          stagedTokens = tokens;
+        },
+      });
+      const profileResult = await withSilpoClient(
+        ctx,
+        userId,
+        (client) => client.callTool("silpo_get_my_profile", {}),
+        { provider },
+      );
+      const verified = parseVerifiedSilpoProfile(profileResult);
+
+      if (!verified || !connection) {
+        return { verified: false };
+      }
+
+      const linked = await ctx.runMutation(internal.accounts.linkExistingConnection, {
+        expectedAccessToken: connection.tokens.access_token,
+        expectedTokensSavedAt: connection.tokensSavedAt,
+        sourceUserId: userId,
+        accountId: `${SILPO_ISSUER}:${verified.accountSubject}`,
+        profile: verified.profile,
+        tokens: storedTokens(stagedTokens),
+      });
+      return { verified: linked !== null };
+    } catch (error) {
+      console.error("Silpo existing connection verification failed", error);
+      return { verified: false };
+    }
   },
 });
 

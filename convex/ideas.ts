@@ -3,26 +3,43 @@ import { v } from "convex/values";
 
 import { components, internal } from "./_generated/api";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
-import { findUser } from "./lib/users";
+import { findUser, resolveUserId } from "./lib/users";
 import { ideaCartValidator, ideaDocValidator, ideaFields, ideaImageValidator } from "./schema";
 
 export const save = internalMutation({
   args: ideaFields,
   returns: v.id("ideas"),
-  handler: async (ctx, args) => ctx.db.insert("ideas", args),
+  handler: async (ctx, args) =>
+    ctx.db.insert("ideas", {
+      ...args,
+      userId: await resolveUserId(ctx, args.userId),
+      pending: true,
+    }),
 });
 
-export const latestImage = internalQuery({
-  args: { threadId: v.string() },
-  returns: v.union(v.null(), ideaImageValidator),
-  handler: async (ctx, { threadId }) => {
+export const finishRun = internalMutation({
+  args: {
+    threadId: v.string(),
+    promptMessageId: v.string(),
+    userId: v.id("users"),
+  },
+  returns: v.null(),
+  handler: async (ctx, { threadId, promptMessageId, userId: requestedUserId }) => {
+    const userId = await resolveUserId(ctx, requestedUserId);
     const ideas = await ctx.db
       .query("ideas")
-      .withIndex("by_thread", (q) => q.eq("threadId", threadId))
-      .order("desc")
-      .take(20);
+      .withIndex("by_thread_prompt", (q) =>
+        q.eq("threadId", threadId).eq("promptMessageId", promptMessageId),
+      )
+      .collect();
 
-    return ideas.find((idea) => idea.image)?.image ?? null;
+    for (const idea of ideas) {
+      if (idea.userId === userId && idea.promptMessageId === promptMessageId && idea.pending) {
+        await ctx.db.patch(idea._id, { pending: false });
+      }
+    }
+
+    return null;
   },
 });
 
@@ -52,11 +69,12 @@ export const latest = query({
       return null;
     }
 
-    const idea = await ctx.db
+    const ideas = await ctx.db
       .query("ideas")
       .withIndex("by_thread", (q) => q.eq("threadId", threadId))
       .order("desc")
-      .first();
+      .take(IDEA_VERSIONS_LIMIT);
+    const idea = ideas.find((item) => !item.pending);
 
     if (!idea || idea.userId !== user._id) {
       return null;
@@ -101,6 +119,7 @@ export const addToCart = mutation({
     await ctx.scheduler.runAfter(0, internal.silpoCart.addIdeaToCart, {
       ideaId,
       userId: user._id,
+      refreshOnly: Boolean(idea.cart),
     });
 
     return { ok: true as const };
@@ -146,15 +165,14 @@ export const listForThread = query({
       .order("asc")
       .take(IDEA_VERSIONS_LIMIT);
 
+    const visibleIdeas = ideas.filter((idea) => idea.userId === user._id && !idea.pending);
     return Promise.all(
-      ideas
-        .filter((idea) => idea.userId === user._id)
-        .map(async (idea) => ({
-          ...idea,
-          imageUrl: idea.image
-            ? ((await ctx.storage.getUrl(idea.image.storageId)) ?? undefined)
-            : undefined,
-        })),
+      visibleIdeas.map(async (idea) => ({
+        ...idea,
+        imageUrl: idea.image
+          ? ((await ctx.storage.getUrl(idea.image.storageId)) ?? undefined)
+          : undefined,
+      })),
     );
   },
 });
@@ -207,6 +225,7 @@ export const restore = mutation({
 
     for (const version of later) {
       if (version._creationTime > idea._creationTime) {
+        if (version.image?.generated) await ctx.storage.delete(version.image.storageId);
         await ctx.db.delete(version._id);
       }
     }
@@ -215,10 +234,10 @@ export const restore = mutation({
   },
 });
 
-export const setCookServings = mutation({
-  args: { ...SessionIdArg, ideaId: v.id("ideas"), servings: v.number() },
+export const setCookCount = mutation({
+  args: { ...SessionIdArg, ideaId: v.id("ideas"), count: v.number() },
   returns: v.null(),
-  handler: async (ctx, { sessionId, ideaId, servings }) => {
+  handler: async (ctx, { sessionId, ideaId, count }) => {
     const user = await findUser(ctx, sessionId);
     const idea = await ctx.db.get(ideaId);
 
@@ -226,10 +245,35 @@ export const setCookServings = mutation({
       return null;
     }
 
-    const count = Math.min(12, Math.max(1, Math.round(servings)));
+    if (!Number.isInteger(count) || count < 1 || count > 12) {
+      return null;
+    }
 
-    await ctx.db.patch(ideaId, { cookServings: count });
+    await ctx.db.patch(ideaId, { cookCount: count });
 
+    return null;
+  },
+});
+
+export const saveImage = internalMutation({
+  args: { ideaId: v.id("ideas"), image: ideaImageValidator },
+  returns: v.boolean(),
+  handler: async (ctx, { ideaId, image }) => {
+    const idea = await ctx.db.get(ideaId);
+    if (!idea || idea.image?.generated) {
+      await ctx.storage.delete(image.storageId);
+      return Boolean(idea?.image?.generated);
+    }
+    await ctx.db.patch(ideaId, { image, imageError: undefined });
+    return true;
+  },
+});
+
+export const saveImageError = internalMutation({
+  args: { ideaId: v.id("ideas"), message: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { ideaId, message }) => {
+    if (await ctx.db.get(ideaId)) await ctx.db.patch(ideaId, { imageError: message });
     return null;
   },
 });

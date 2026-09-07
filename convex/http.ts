@@ -1,16 +1,15 @@
 import { httpRouter } from "convex/server";
 
-import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 
 // The redirect target comes only from configuration, never from the request.
-function backToApp(outcome: "connected" | "error") {
+function backToApp(outcome: "callback" | "error", callback?: { code: string; state: string }) {
   const appUrl = process.env.APP_URL;
 
   if (!appUrl) {
     const text =
-      outcome === "connected"
-        ? "Сільпо підключено. Повернись у застосунок."
+      outcome === "callback"
+        ? "Повернись у застосунок і повтори підключення Сільпо."
         : "Не вдалося підключити Сільпо.";
 
     return new Response(text, {
@@ -22,7 +21,18 @@ function backToApp(outcome: "connected" | "error") {
   const target = new URL(appUrl);
   target.searchParams.set("silpo", outcome);
 
-  return Response.redirect(target.toString(), 302);
+  if (callback) {
+    target.searchParams.set("code", callback.code);
+    target.searchParams.set("state", callback.state);
+  }
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: target.toString(),
+      "Referrer-Policy": "no-referrer",
+      "Cache-Control": "no-store",
+    },
+  });
 }
 
 const http = httpRouter();
@@ -30,7 +40,7 @@ const http = httpRouter();
 http.route({
   path: "/silpo/callback",
   method: "GET",
-  handler: httpAction(async (ctx, request) => {
+  handler: httpAction(async (_ctx, request) => {
     const params = new URL(request.url).searchParams;
     const code = params.get("code");
     const state = params.get("state");
@@ -40,9 +50,7 @@ http.route({
       return backToApp("error");
     }
 
-    const ok = await ctx.runAction(internal.silpoAuth.finishConnect, { state, code });
-
-    return backToApp(ok ? "connected" : "error");
+    return backToApp("callback", { state, code });
   }),
 });
 

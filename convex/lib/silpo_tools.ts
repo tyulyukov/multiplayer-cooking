@@ -1,17 +1,54 @@
+import { productRegistryKey } from "./ingredient";
+export { productRegistryKey } from "./ingredient";
 import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
 
 import type { Doc, Id } from "../_generated/dataModel";
 import { isReauthRequired, withSilpoClient } from "./silpo_client";
-import { shapeProductCandidates } from "./silpo_shapes";
+import {
+  shapeProductCandidates,
+  type IngredientCandidates,
+  type ProductCandidate,
+} from "./silpo_shapes";
 
 type CartContext = NonNullable<Doc<"silpoConnections">["cart"]>;
+
+export type ProductRegistry = {
+  attempted: boolean;
+  status?: "not_connected" | "needs_address" | "unavailable";
+  candidates: Map<string, readonly ProductCandidate[]>;
+};
+
+export function createProductRegistry(): ProductRegistry {
+  return { attempted: false, candidates: new Map() };
+}
+
+export function recordProductCandidates(
+  registry: ProductRegistry,
+  ingredients: readonly IngredientCandidates[],
+) {
+  registry.status = undefined;
+  for (const item of ingredients) {
+    registry.candidates.set(productRegistryKey(item.ingredient), item.candidates);
+  }
+}
+
+export function recordProductFailure(registry: ProductRegistry) {
+  if (![...registry.candidates.values()].some((candidates) => candidates.length > 0)) {
+    registry.status = "unavailable";
+  }
+}
 
 export const needsAddressNote =
   "Адреса доставки ще не вказана. Скажи людині, що для цін потрібна адреса, і попроси ввести її у формі під твоїм повідомленням.";
 
 // The cart context is injected here so the model never sees branch or timeslot ids.
-export function createSilpoTools(userId: Id<"users">, cart: CartContext | undefined) {
+export function createSilpoTools(
+  userId: Id<"users">,
+  cart: CartContext | undefined,
+  registry: ProductRegistry,
+  connected: boolean,
+) {
   const silpo_find_products = createTool({
     description:
       "Шукає продукти Сільпо для інгредієнтів. Один запит на інгредієнт. Для кожного повертає до 3 кандидатів з productId, companyId, branchId, назвою, ціною, фасуванням і залишком; вибери один доречний або жодного.",
@@ -28,7 +65,19 @@ export function createSilpoTools(userId: Id<"users">, cart: CartContext | undefi
         .max(30),
     }),
     execute: async (ctx, { items }) => {
+      registry.attempted = true;
+
+      if (!connected) {
+        registry.status = "not_connected";
+        return {
+          needsAddress: false,
+          ingredients: [],
+          note: "Сільпо не підключено. Попроси людину підключити його в меню.",
+        };
+      }
+
       if (!cart) {
+        registry.status = "needs_address";
         return { needsAddress: true, note: needsAddressNote, ingredients: [] };
       }
 
@@ -44,16 +93,22 @@ export function createSilpoTools(userId: Id<"users">, cart: CartContext | undefi
           }),
         );
 
-        return { needsAddress: false, ingredients: shapeProductCandidates(items, raw) };
+        const ingredients = shapeProductCandidates(items, raw);
+
+        recordProductCandidates(registry, ingredients);
+
+        return { needsAddress: false, ingredients };
       } catch (error) {
         console.error("silpo_find_products failed", error);
 
+        const note = isReauthRequired(error)
+          ? "Сесія Сільпо закінчилась. Попроси людину натиснути «Перепідключити» в меню."
+          : "Сільпо не відповіло. Скажи, що ціни зараз недоступні, і запропонуй спробувати пізніше.";
+        recordProductFailure(registry);
         return {
           needsAddress: false,
           ingredients: [],
-          note: isReauthRequired(error)
-            ? "Сесія Сільпо закінчилась. Попроси людину натиснути «Перепідключити» в меню."
-            : "Сільпо не відповіло. Скажи, що ціни зараз недоступні, і запропонуй спробувати пізніше.",
+          note,
         };
       }
     },

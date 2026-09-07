@@ -8,7 +8,12 @@ export const AI_RATE_LIMITS = {
   chatBurst: { kind: "token bucket", rate: 5, period: 60_000, capacity: 5 },
   chatDaily: { kind: "fixed window", rate: 40, period: 86_400_000 },
   uploadBurst: { kind: "token bucket", rate: 12, period: 60_000, capacity: 12 },
+  // The composer saves a draft at most twice a second; this only catches scripted abuse.
+  draftBurst: { kind: "token bucket", rate: 180, period: 60_000, capacity: 180 },
 } as const;
+
+// A draft may hold more than a sendable request; the composer shows the limit before sending.
+export const DRAFT_MAX_CHARACTERS = 4 * AI_REQUEST_MAX_CHARACTERS;
 
 // Delivery address length accepted by the secure address form.
 export const ADDRESS_MAX_CHARACTERS = 200;

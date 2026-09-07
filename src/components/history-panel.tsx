@@ -2,7 +2,7 @@ import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import HistoryIcon from "@hugeicons/core-free-icons/HistoryIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { FunctionReturnType } from "convex/server";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import type { api } from "../../convex/_generated/api";
@@ -10,24 +10,29 @@ import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { formatRelativeTime } from "@/lib/relative-time";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 export type HistoryItem = FunctionReturnType<typeof api.chat.history>[number];
 
-const dateFormat = new Intl.DateTimeFormat("uk-UA", { day: "numeric", month: "long" });
+const title = "Історія розмов";
+
+// Relative labels ("5 хвилин тому") go stale while the panel is open; tick once a minute.
+function useNow() {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return now;
+}
 
 function HistoryList({
   items,
@@ -38,6 +43,8 @@ function HistoryList({
   onOpen: (threadId: string) => void;
   onDelete: (threadId: string) => void;
 }) {
+  const now = useNow();
+
   if (items === undefined) {
     return null;
   }
@@ -59,7 +66,9 @@ function HistoryList({
             <span className="history-text">
               <strong>{item.title ?? "Без назви"}</strong>
               <span>
-                {dateFormat.format(item.createdAt)}
+                <time dateTime={new Date(item.createdAt).toISOString()}>
+                  {formatRelativeTime(item.createdAt, now)}
+                </time>
                 {item.active && " · відкрита"}
               </span>
             </span>
@@ -113,10 +122,9 @@ export function HistoryPanel({
     return (
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>{trigger}</SheetTrigger>
-        <SheetContent side="right" className="history-panel">
+        <SheetContent side="right" className="history-panel" aria-describedby={undefined}>
           <SheetHeader>
-            <SheetTitle>Історія</SheetTitle>
-            <SheetDescription>Попередні розмови та їхні страви.</SheetDescription>
+            <SheetTitle>{title}</SheetTitle>
           </SheetHeader>
           {list}
         </SheetContent>
@@ -127,10 +135,9 @@ export function HistoryPanel({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-      <DrawerContent className="history-panel">
+      <DrawerContent className="history-panel" aria-describedby={undefined}>
         <DrawerHeader>
-          <DrawerTitle>Історія</DrawerTitle>
-          <DrawerDescription>Попередні розмови та їхні страви.</DrawerDescription>
+          <DrawerTitle>{title}</DrawerTitle>
         </DrawerHeader>
         {list}
       </DrawerContent>

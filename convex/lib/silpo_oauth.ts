@@ -34,9 +34,13 @@ export function silpoRedirectUri() {
 type ProviderOptions = Readonly<{
   userId: Id<"users">;
   // The authorization leg: ignore stored tokens and remember where the SDK wants to redirect.
-  start?: { state: string; onRedirect: (url: URL) => void };
+  start?: { state: string; sessionId: string; authVersion: number; onRedirect: (url: URL) => void };
   // The callback leg: the verifier saved during the authorization leg.
   codeVerifier?: string;
+  // Callback tokens stay in action memory until the verified profile selects its canonical account.
+  stagedTokens?: OAuthTokens;
+  getStagedTokens?: () => OAuthTokens | undefined;
+  saveStagedTokens?: (tokens: OAuthTokens) => Promise<void>;
 }>;
 
 // Persists client registration and tokens in Convex; the SDK drives the OAuth flow.
@@ -46,7 +50,7 @@ export function createSilpoAuthProvider(
 ): OAuthClientProvider {
   const redirectUri = silpoRedirectUri();
   const clientKey = { issuer: SILPO_ISSUER, redirectUri };
-  const { userId, start, codeVerifier } = options;
+  const { userId, start, codeVerifier, stagedTokens, getStagedTokens, saveStagedTokens } = options;
 
   return {
     redirectUrl: redirectUri,
@@ -75,11 +79,22 @@ export function createSilpoAuthProvider(
         return undefined;
       }
 
+      const staged = getStagedTokens?.() ?? stagedTokens;
+
+      if (staged) {
+        return staged;
+      }
+
       const found = await ctx.runQuery(internal.silpo.connectionByUser, { userId });
 
       return found?.tokens;
     },
     async saveTokens(tokens: OAuthTokens) {
+      if (saveStagedTokens) {
+        await saveStagedTokens(tokens);
+        return;
+      }
+
       await ctx.runMutation(internal.silpo.saveTokens, {
         userId,
         tokens: {
@@ -106,6 +121,8 @@ export function createSilpoAuthProvider(
       await ctx.runMutation(internal.silpo.createAuthState, {
         state: start.state,
         userId,
+        sessionId: start.sessionId,
+        authVersion: start.authVersion,
         codeVerifier: verifier,
       });
     },
@@ -121,9 +138,7 @@ export function createSilpoAuthProvider(
         await ctx.runMutation(internal.silpo.clearOAuthClient, clientKey);
       }
 
-      if (scope === "all" || scope === "tokens") {
-        await ctx.runMutation(internal.silpo.deleteConnection, { userId });
-      }
+      // The account and its history outlive a stale browser credential. A reconnect replaces tokens.
     },
   };
 }

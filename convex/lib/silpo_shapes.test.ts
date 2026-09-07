@@ -86,12 +86,15 @@ describe("chooseTimeslot", () => {
 });
 
 describe("cart readers", () => {
-  test("reads the total and keeps only warning or error validations", () => {
+  test("reads named cart amounts and keeps only warning or error validations", () => {
     const payload = {
       cart: {
         calculation: {
-          total: 826.32,
+          subTotal: 826.32,
           productsTotal: 727.32,
+          subDiscount: 10.5,
+          totalAfterDiscounts: 816.82,
+          delivery: { total: 99 },
           validations: [
             { level: "info", type: "order", message: "order.payment_types.disabled" },
             { level: "error", type: "product", message: "product.offer.stock.max" },
@@ -102,10 +105,27 @@ describe("cart readers", () => {
     };
 
     expect(readCartSummary(payload)).toEqual({
-      total: 826.32,
+      productsTotal: 727.32,
+      subtotal: 826.32,
+      discount: 10.5,
+      deliveryTotal: 99,
+      total: 816.82,
       warnings: ["Деяких товарів на складі менше, ніж додано; кількість зменшено."],
     });
-    expect(readCartSummary({})).toEqual({ total: undefined, warnings: [] });
+    expect(readCartSummary({})).toEqual({
+      productsTotal: undefined,
+      subtotal: undefined,
+      discount: undefined,
+      deliveryTotal: undefined,
+      total: undefined,
+      warnings: [],
+    });
+  });
+
+  test("does not present a products-only estimate as the payable total", () => {
+    expect(
+      readCartSummary({ cart: { calculation: { productsTotal: 709.65 } } }).total,
+    ).toBeUndefined();
   });
 
   test("reads the cart id and the checkout link", () => {
@@ -135,10 +155,13 @@ describe("shapeProductCandidates", () => {
               id: "p2",
               name: "Пармезан 200 г",
               price: 189.9,
+              oldPrice: 229.9,
               companyId: "c",
               branchId: "b",
               displayRatio: "200г",
               stock: 5,
+              image: "https://img.silpo.ua/parmesan.jpg",
+              slug: "parmezan-200g",
             },
             { id: "p3", name: "Пармезан тертий", price: 99, available: false },
           ],
@@ -159,11 +182,37 @@ describe("shapeProductCandidates", () => {
             branchId: "b",
             title: "Пармезан 200 г",
             price: 189.9,
+            oldPrice: 229.9,
             unit: "200г",
             stock: 5,
+            imageUrl: "https://img.silpo.ua/parmesan.jpg",
+            slug: "parmezan-200g",
+            productUrl: "https://silpo.ua/product/parmezan-200g",
           },
         ],
       },
+    ]);
+  });
+
+  test("keeps only HTTP product images", () => {
+    const [result] = shapeProductCandidates(
+      [{ ingredient: "Кабачок", query: "кабачок", quantity: 1 }],
+      {
+        queries: [
+          {
+            query: "кабачок",
+            products: [
+              { id: "p1", name: "Кабачок", image: "javascript:alert(1)" },
+              { id: "p2", name: "Кабачок зелений", image: "https://img.silpo.ua/zucchini.jpg" },
+            ],
+          },
+        ],
+      },
+    );
+
+    expect(result.candidates.map((candidate) => candidate.imageUrl)).toEqual([
+      undefined,
+      "https://img.silpo.ua/zucchini.jpg",
     ]);
   });
 
@@ -181,6 +230,25 @@ describe("shapeProductCandidates", () => {
 
     expect(first.candidates).toHaveLength(3);
     expect(first.candidates[0]).toMatchObject({ productId: "p1", title: "Кабачок", price: 45 });
+  });
+
+  test("keeps the verified oldPrice only when it exceeds the current price", () => {
+    const [result] = shapeProductCandidates([{ ingredient: "Сир", query: "сир", quantity: 1 }], {
+      queries: [
+        {
+          query: "сир",
+          products: [
+            { id: "sale", name: "Сир зі знижкою", price: 89.99, oldPrice: 179 },
+            { id: "regular", name: "Сир без знижки", price: 99, oldPrice: 99 },
+          ],
+        },
+      ],
+    });
+
+    expect(result.candidates).toEqual([
+      { productId: "sale", title: "Сир зі знижкою", price: 89.99, oldPrice: 179 },
+      { productId: "regular", title: "Сир без знижки", price: 99, oldPrice: undefined },
+    ]);
   });
 
   test("sums the total over matched products", () => {

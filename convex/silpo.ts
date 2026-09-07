@@ -11,7 +11,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { ADDRESS_MAX_CHARACTERS } from "./lib/ai_config";
-import { findUser, getOrCreateUser } from "./lib/users";
+import { findSession, findUser, getOrCreateUser, resolveUserId } from "./lib/users";
 import { silpoCartContextValidator, silpoProfileValidator, silpoTokensValidator } from "./schema";
 
 export const AUTH_STATE_TTL_MS = 10 * 60_000;
@@ -47,6 +47,7 @@ export const connection = query({
     v.object({
       name: v.optional(v.string()),
       phone: v.optional(v.string()),
+      email: v.optional(v.string()),
       hasAddress: v.boolean(),
       hasCart: v.boolean(),
       cartPending: v.boolean(),
@@ -64,6 +65,7 @@ export const connection = query({
     return {
       name: found.profile?.name,
       phone: found.profile?.phone,
+      email: found.profile?.email,
       hasAddress: found.address !== undefined,
       hasCart: found.cart !== undefined,
       cartPending: found.cartPending === true,
@@ -76,12 +78,7 @@ export const disconnect = mutation({
   args: SessionIdArg,
   returns: v.null(),
   handler: async (ctx, { sessionId }) => {
-    const user = await findUser(ctx, sessionId);
-    const found = user ? await findConnection(ctx, user._id) : null;
-
-    if (found) {
-      await ctx.db.delete(found._id);
-    }
+    await ctx.runMutation(internal.accounts.disconnectSession, { sessionId });
 
     return null;
   },
@@ -138,9 +135,10 @@ export const saveAddress = mutation({
       cartError: undefined,
       cartPending: true,
     });
+    const session = await findSession(ctx, sessionId);
     await ctx.scheduler.runAfter(0, internal.silpoCart.setupCart, {
       userId: user._id,
-      threadId: user.activeThreadId,
+      threadId: session?.activeThreadId,
     });
 
     return { ok: true as const };
@@ -148,26 +146,24 @@ export const saveAddress = mutation({
 });
 
 export const saveCartContext = internalMutation({
-  args: { userId: v.id("users"), cart: silpoCartContextValidator },
-  returns: v.null(),
-  handler: async (ctx, { userId, cart }) => {
-    const found = await findConnection(ctx, userId);
+  args: { userId: v.id("users"), expectedAddress: v.string(), cart: silpoCartContextValidator },
+  returns: v.boolean(),
+  handler: async (ctx, { userId, expectedAddress, cart }) => {
+    const found = await findConnection(ctx, await resolveUserId(ctx, userId));
 
-    if (found) {
-      await ctx.db.patch(found._id, { cart, cartError: undefined, cartPending: false });
-    }
-
-    return null;
+    if (!found || found.address !== expectedAddress) return false;
+    await ctx.db.patch(found._id, { cart, cartError: undefined, cartPending: false });
+    return true;
   },
 });
 
 export const saveCartError = internalMutation({
-  args: { userId: v.id("users"), message: v.string() },
+  args: { userId: v.id("users"), expectedAddress: v.string(), message: v.string() },
   returns: v.null(),
-  handler: async (ctx, { userId, message }) => {
-    const found = await findConnection(ctx, userId);
+  handler: async (ctx, { userId, expectedAddress, message }) => {
+    const found = await findConnection(ctx, await resolveUserId(ctx, userId));
 
-    if (found) {
+    if (found?.address === expectedAddress) {
       await ctx.db.patch(found._id, { cartError: message, cartPending: false });
     }
 
@@ -231,7 +227,13 @@ export const clearOAuthClient = internalMutation({
 });
 
 export const createAuthState = internalMutation({
-  args: { state: v.string(), userId: v.id("users"), codeVerifier: v.string() },
+  args: {
+    state: v.string(),
+    userId: v.id("users"),
+    sessionId: v.string(),
+    authVersion: v.number(),
+    codeVerifier: v.string(),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.insert("silpoAuthStates", { ...args, expiresAt: Date.now() + AUTH_STATE_TTL_MS });
@@ -242,43 +244,59 @@ export const createAuthState = internalMutation({
 
 // Single use: the row is deleted in the same transaction that reads it.
 export const consumeAuthState = internalMutation({
-  args: { state: v.string() },
-  returns: v.union(v.null(), v.object({ userId: v.id("users"), codeVerifier: v.string() })),
-  handler: async (ctx, { state }) => {
+  args: { state: v.string(), sessionId: v.string() },
+  returns: v.union(
+    v.null(),
+    v.object({
+      userId: v.id("users"),
+      sessionId: v.string(),
+      authVersion: v.number(),
+      codeVerifier: v.string(),
+    }),
+  ),
+  handler: async (ctx, { state, sessionId }) => {
     const found = await ctx.db
       .query("silpoAuthStates")
       .withIndex("by_state", (q) => q.eq("state", state))
       .unique();
 
-    if (!found) {
+    if (!found || found.sessionId !== sessionId) {
       return null;
     }
 
     await ctx.db.delete(found._id);
 
-    return found.expiresAt > Date.now()
-      ? { userId: found.userId, codeVerifier: found.codeVerifier }
-      : null;
+    if (found.expiresAt <= Date.now() || !found.sessionId || found.authVersion === undefined) {
+      return null;
+    }
+
+    return {
+      userId: found.userId,
+      sessionId: found.sessionId,
+      authVersion: found.authVersion,
+      codeVerifier: found.codeVerifier,
+    };
   },
 });
 
 export const connectionByUser = internalQuery({
   args: { userId: v.id("users") },
   returns: v.union(v.null(), connectionDocValidator),
-  handler: async (ctx, { userId }) => findConnection(ctx, userId),
+  handler: async (ctx, { userId }) => findConnection(ctx, await resolveUserId(ctx, userId)),
 });
 
 export const saveTokens = internalMutation({
   args: { userId: v.id("users"), tokens: silpoTokensValidator },
   returns: v.null(),
   handler: async (ctx, { userId, tokens }) => {
-    const existing = await findConnection(ctx, userId);
+    const canonicalUserId = await resolveUserId(ctx, userId);
+    const existing = await findConnection(ctx, canonicalUserId);
     const tokensSavedAt = Date.now();
 
     if (existing) {
       await ctx.db.patch(existing._id, { tokens, tokensSavedAt });
     } else {
-      await ctx.db.insert("silpoConnections", { userId, tokens, tokensSavedAt });
+      await ctx.db.insert("silpoConnections", { userId: canonicalUserId, tokens, tokensSavedAt });
     }
 
     return null;
@@ -289,7 +307,7 @@ export const saveProfile = internalMutation({
   args: { userId: v.id("users"), profile: silpoProfileValidator },
   returns: v.null(),
   handler: async (ctx, { userId, profile }) => {
-    const existing = await findConnection(ctx, userId);
+    const existing = await findConnection(ctx, await resolveUserId(ctx, userId));
 
     if (existing) {
       await ctx.db.patch(existing._id, { profile });
@@ -303,7 +321,7 @@ export const deleteConnection = internalMutation({
   args: { userId: v.id("users") },
   returns: v.null(),
   handler: async (ctx, { userId }) => {
-    const existing = await findConnection(ctx, userId);
+    const existing = await findConnection(ctx, await resolveUserId(ctx, userId));
 
     if (existing) {
       await ctx.db.delete(existing._id);

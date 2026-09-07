@@ -1,20 +1,23 @@
+import { productRegistryKey } from "../../convex/lib/ingredient";
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
-import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
+import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
-import FullScreenIcon from "@hugeicons/core-free-icons/FullScreenIcon";
 import LinkSquare01Icon from "@hugeicons/core-free-icons/LinkSquare01Icon";
+import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import ShoppingBasketAdd01Icon from "@hugeicons/core-free-icons/ShoppingBasketAdd01Icon";
 import UndoIcon from "@hugeicons/core-free-icons/UndoIcon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { FunctionReturnType } from "convex/server";
+import { useState } from "react";
 
 import type { api } from "../../convex/_generated/api";
 import { CookTogether } from "@/components/cook-together";
 import { Markdown } from "@/components/markdown";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import "./product-price.css";
 
 export type Idea = NonNullable<FunctionReturnType<typeof api.ideas.latest>>;
 
@@ -62,19 +65,49 @@ function servingsLabel(count: number) {
 }
 
 function IdeaPhoto({ idea }: { idea: Idea }) {
+  const [failed, setFailed] = useState(false);
+
   if (!idea.imageUrl || !idea.image) {
-    return null;
+    return <IdeaImageNotice message={idea.imageError} />;
+  }
+
+  if (failed) {
+    return <IdeaImageNotice message={idea.imageError ?? "Спробуй відкрити ідею ще раз."} />;
   }
 
   return (
     <figure className="idea-photo">
-      <img src={idea.imageUrl} alt={idea.title} loading="lazy" decoding="async" />
-      <figcaption>
-        <a href={idea.image.sourceUrl} target="_blank" rel="noreferrer">
-          {idea.image.credit}
-        </a>
-      </figcaption>
+      <img
+        src={idea.imageUrl}
+        alt={idea.title}
+        loading="lazy"
+        decoding="async"
+        onError={() => setFailed(true)}
+      />
+      {idea.image.sourceUrl && idea.image.credit && (
+        <figcaption>
+          <a href={idea.image.sourceUrl} target="_blank" rel="noreferrer">
+            {idea.image.credit}
+          </a>
+        </figcaption>
+      )}
     </figure>
+  );
+}
+
+function IdeaImageNotice({ message }: { message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <Alert variant="destructive" className="idea-image-error">
+      <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
+      <div>
+        <AlertTitle>Фото страви не завантажилося</AlertTitle>
+        <AlertDescription>{message}</AlertDescription>
+      </div>
+    </Alert>
   );
 }
 
@@ -94,18 +127,45 @@ function IdeaMeta({ idea }: { idea: Idea }) {
 }
 
 export function IdeaCompact({ idea, onOpen }: { idea: Idea; onOpen: () => void }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
   return (
-    <article className="idea-compact chrome" aria-label={idea.title}>
-      <IdeaPhoto idea={idea} />
-      <div className="plate plate-sm">
-        <h2>{idea.title}</h2>
-      </div>
-      <IdeaMeta idea={idea} />
-      <p className="idea-summary">{idea.summary}</p>
-      <Button type="button" variant="outline" size="chip" onClick={onOpen}>
-        Відкрити
-      </Button>
-    </article>
+    <button
+      type="button"
+      className="idea-peek"
+      onClick={onOpen}
+      aria-label={`Відкрити ідею: ${idea.title}`}
+    >
+      {idea.imageUrl && !imageFailed && (
+        <img src={idea.imageUrl} alt="" onError={() => setImageFailed(true)} />
+      )}
+      <span>
+        <small>Ідея готова</small>
+        <strong>{idea.title}</strong>
+      </span>
+      <HugeiconsIcon icon={ArrowRight01Icon} size={20} strokeWidth={1.5} aria-hidden />
+    </button>
+  );
+}
+
+function ProductThumbnail({ url }: { url: string }) {
+  const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
+  return (
+    <div className="product-thumbnail" data-state={state}>
+      {state !== "failed" && (
+        <img
+          src={url}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onLoad={() => setState("ready")}
+          onError={() => setState("failed")}
+        />
+      )}
+      {state === "failed" && (
+        <HugeiconsIcon icon={ShoppingBasketAdd01Icon} size={20} strokeWidth={1.5} aria-hidden />
+      )}
+    </div>
   );
 }
 
@@ -120,35 +180,90 @@ function IdeaProducts({
 }) {
   const products = idea.products ?? [];
 
-  if (products.length === 0) {
-    return null;
-  }
-
   const matched = products.filter((product) => product.productId);
+  const matchedIngredients = new Set(
+    matched.map((product) => productRegistryKey(product.ingredient)),
+  );
+  const missing = idea.ingredients.filter(
+    (ingredient) => !matchedIngredients.has(productRegistryKey(ingredient.name)),
+  );
   const total = matched.reduce((sum, product) => sum + (product.price ?? 0) * product.quantity, 0);
+  const noMatches = matched.length === 0;
 
   let action = null;
 
   if (idea.cart) {
     action = (
-      <div className="cart-done">
-        <span>
-          Додано {itemsLabel(idea.cart.itemCount)} у кошик
-          {idea.cart.total !== undefined && `, разом ${formatPrice(idea.cart.total)}`}
-        </span>
-        {idea.cart.warnings?.map((warning) => (
-          <span key={warning} className="address-error">
-            {warning}
-          </span>
-        ))}
+      <div className="cart-done" aria-busy={idea.cartPending === true}>
+        <div className="cart-heading">
+          <strong>Кошик Сільпо</strong>
+          <span>{idea.cartPending ? "Оновлюємо…" : "Готовий до перевірки"}</span>
+        </div>
+        <div className="cart-overview">
+          <div className="cart-payable">
+            <span>До сплати</span>
+            <strong>
+              {idea.cart.total === undefined ? "Уточнюється" : formatPrice(idea.cart.total)}
+            </strong>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-lg"
+            aria-label="Оновити суму кошика"
+            title="Оновити суму кошика"
+            disabled={!canAddToCart || idea.cartPending === true}
+            onClick={onAddToCart}
+          >
+            <HugeiconsIcon icon={RefreshIcon} size={20} strokeWidth={1.5} aria-hidden />
+          </Button>
+        </div>
         {idea.cart.checkoutWebLink && (
           <Button asChild variant="outline" size="chip">
             <a href={idea.cart.checkoutWebLink} target="_blank" rel="noreferrer">
               <HugeiconsIcon icon={LinkSquare01Icon} strokeWidth={1.5} aria-hidden />
-              Відкрити кошик у Сільпо
+              Перевірити й оформити
             </a>
           </Button>
         )}
+        {idea.cart.warnings?.length ? (
+          <div className="cart-warnings" role="status">
+            <strong>Перевір товари перед замовленням</strong>
+            {idea.cart.warnings.map((warning) => (
+              <p key={warning}>{warning}</p>
+            ))}
+          </div>
+        ) : null}
+        <details className="cart-details">
+          <summary>Деталі кошика</summary>
+          <div className="cart-details-content">
+            <dl className="cart-breakdown">
+              {idea.cart.productsTotal !== undefined && (
+                <div>
+                  <dt>Товари</dt>
+                  <dd>{formatPrice(idea.cart.productsTotal)}</dd>
+                </div>
+              )}
+              <div>
+                <dt>Доставка</dt>
+                <dd>
+                  {idea.cart.deliveryTotal === undefined
+                    ? "Уточнюється"
+                    : formatPrice(idea.cart.deliveryTotal)}
+                </dd>
+              </div>
+            </dl>
+            {idea.cart.discount !== undefined && idea.cart.discount > 0 && (
+              <p className="cart-discount">
+                Вже враховано {formatPrice(idea.cart.discount)} знижки
+              </p>
+            )}
+            <p className="cart-note">
+              Сума всього кошика разом із раніше доданими товарами. Остаточну суму Сільпо уточнить
+              при оформленні.
+            </p>
+          </div>
+        </details>
       </div>
     );
   } else if (matched.length > 0) {
@@ -161,7 +276,11 @@ function IdeaProducts({
         onClick={onAddToCart}
       >
         <HugeiconsIcon icon={ShoppingBasketAdd01Icon} strokeWidth={1.5} aria-hidden />
-        {idea.cartPending ? "Додаємо…" : "Додати в кошик"}
+        {idea.cartPending ? (
+          <span className="t-shimmer">Додаємо в кошик…</span>
+        ) : (
+          `Додати ${itemsLabel(matched.length)} у кошик`
+        )}
       </Button>
     );
   }
@@ -169,35 +288,162 @@ function IdeaProducts({
   return (
     <section className="idea-products" aria-label="Продукти в Сільпо">
       <h3 className="idea-section">Продукти в Сільпо</h3>
-      <ul className="products">
-        {products.map((product, index) => (
-          <li key={`${product.ingredient}-${index}`} data-missing={!product.productId}>
-            <span className="product-ingredient">{product.ingredient}</span>
-            {product.productId ? (
-              <>
-                <span className="product-title">
-                  {product.title ?? "Товар"}
-                  {product.unit && <span className="product-unit"> · {product.unit}</span>}
-                  {product.quantity !== 1 && ` × ${formatQuantity(product.quantity)}`}
-                </span>
-                <span className="product-price">
-                  {product.price !== undefined ? formatPrice(product.price * product.quantity) : ""}
-                </span>
-              </>
-            ) : (
-              <span className="product-title">не знайдено</span>
-            )}
-          </li>
-        ))}
-      </ul>
+      {noMatches ? (
+        <ProductEmptyState ingredients={missing} status={idea.productsStatus} />
+      ) : (
+        <ul className="products">
+          {matched.map((product, index) => {
+            const amount = idea.ingredients.find(
+              (ingredient) =>
+                productRegistryKey(ingredient.name) === productRegistryKey(product.ingredient),
+            )?.amount;
+            return (
+              <li
+                key={`${product.ingredient}-${index}`}
+                data-missing={!product.productId}
+                data-photo={Boolean(product.imageUrl)}
+              >
+                {product.imageUrl && (
+                  <ProductThumbnail key={product.imageUrl} url={product.imageUrl} />
+                )}
+                <div className="product-info">
+                  <span className="product-ingredient">
+                    {product.ingredient}
+                    {amount && ` · ${amount}`}
+                  </span>
+                  {product.productId ? (
+                    <>
+                      {product.productUrl ? (
+                        <a
+                          className="product-title product-link"
+                          href={product.productUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {product.title ?? "Товар"}
+                          <HugeiconsIcon
+                            icon={LinkSquare01Icon}
+                            size={14}
+                            strokeWidth={1.5}
+                            aria-hidden
+                          />
+                        </a>
+                      ) : (
+                        <span className="product-title">{product.title ?? "Товар"}</span>
+                      )}
+                      <span className="product-unit">
+                        {product.unit}
+                        {product.quantity !== 1 && ` × ${formatQuantity(product.quantity)}`}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="product-title">Не знайдено в Сільпо</span>
+                  )}
+                </div>
+                {product.productId && (
+                  <span className="product-price">
+                    {product.price === undefined ? (
+                      "Ціна уточнюється"
+                    ) : product.oldPrice !== undefined && product.oldPrice > product.price ? (
+                      <span className="product-price-sale">
+                        <span className="product-price-current">
+                          {formatPrice(product.price * product.quantity)}
+                        </span>
+                        <s className="product-price-original">
+                          {formatPrice(product.oldPrice * product.quantity)}
+                        </s>
+                        <span className="product-price-discount">
+                          −{Math.round((1 - product.price / product.oldPrice) * 100)}%
+                        </span>
+                      </span>
+                    ) : (
+                      formatPrice(product.price * product.quantity)
+                    )}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {matched.length > 0 && missing.length > 0 && (
+        <section className="missing-ingredients" aria-label="Немає в Сільпо">
+          <h4>Немає в Сільпо, купи окремо</h4>
+          <ul>
+            {missing.map((ingredient, index) => (
+              <li key={`${ingredient.name}-${index}`}>
+                <span>{ingredient.name}</span>
+                {ingredient.amount && <span>{ingredient.amount}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {matched.length > 0 && (
         <p className="products-total">
-          <span>Разом</span>
+          <span>Разом, без доставки</span>
           <strong>{formatPrice(total)}</strong>
         </p>
       )}
+      {matched.some((product) => product.price === undefined) && (
+        <p className="cart-note">Товари без ціни в суму не входять.</p>
+      )}
       {idea.cartError && <p className="address-error">{idea.cartError}</p>}
       {action}
+    </section>
+  );
+}
+
+function ProductEmptyState({
+  ingredients,
+  status,
+}: {
+  ingredients: Idea["ingredients"];
+  status: Idea["productsStatus"];
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const messages = {
+    unavailable: {
+      title: "Сільпо зараз не відповідає",
+      description: "Спробуй підібрати товари пізніше. А поки купи інгредієнти окремо.",
+    },
+    empty: {
+      title: "У Сільпо не знайшлося товарів",
+      description: "Купи ці інгредієнти окремо.",
+    },
+    not_connected: {
+      title: "Потрібно підключити Сільпо",
+      description: "Перепідключи Сільпо в меню профілю або купи інгредієнти окремо.",
+    },
+    needs_address: {
+      title: "Для товарів потрібна адреса",
+      description: "Вкажи адресу доставки у формі або купи інгредієнти окремо.",
+    },
+  };
+  const { title, description } = status
+    ? messages[status]
+    : {
+        title: "Товари Сільпо ще не підібрано",
+        description: "Купи ці інгредієнти окремо.",
+      };
+
+  return (
+    <section className="products-empty" aria-label={title}>
+      {!imageFailed && (
+        <img src="/images/ingredients-basket.webp" alt="" onError={() => setImageFailed(true)} />
+      )}
+      <div className={imageFailed ? "products-empty-text-only" : undefined}>
+        <h4>{title}</h4>
+        <p>{description}</p>
+      </div>
+      <ul className="missing-ingredients-list">
+        {ingredients.map((ingredient, index) => (
+          <li key={`${ingredient.name}-${index}`}>
+            <span>{ingredient.name}</span>
+            {ingredient.amount && <span>{ingredient.amount}</span>}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -208,6 +454,7 @@ export type IdeaVersions = Readonly<{
   onSelect: (index: number) => void;
   onRestore: () => void;
   restoring: boolean;
+  restoreError: string | null;
 }>;
 
 // "Версія N з M": older versions are read-only until restored.
@@ -243,96 +490,60 @@ function VersionNav({ versions }: { versions: IdeaVersions }) {
       >
         <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={1.5} aria-hidden />
       </Button>
-      {!latest && (
+      <div className="version-restore" data-available={!latest}>
         <Button
           type="button"
           variant="outline"
           size="chip"
-          disabled={versions.restoring}
+          disabled={latest || versions.restoring}
+          tabIndex={latest ? -1 : undefined}
+          aria-hidden={latest || undefined}
           aria-busy={versions.restoring}
           onClick={versions.onRestore}
         >
           <HugeiconsIcon icon={UndoIcon} strokeWidth={1.5} aria-hidden />
           {versions.restoring ? "Повертаємо…" : "Повернути цю версію"}
         </Button>
-      )}
+      </div>
     </nav>
   );
 }
 
 export function IdeaPane({
   idea,
-  fullscreen,
   canAddToCart,
   versions,
-  onToggleFullscreen,
   onAddToCart,
-  onCookServings,
+  onCookCount,
 }: {
   idea: Idea;
-  fullscreen: boolean;
   canAddToCart: boolean;
   versions: IdeaVersions;
-  onToggleFullscreen: () => void;
   onAddToCart: () => void;
-  onCookServings: (servings: number) => Promise<void> | void;
+  onCookCount: (count: number) => Promise<void> | void;
 }) {
   return (
     <article className="idea-pane chrome" aria-label={idea.title}>
       <VersionNav versions={versions} />
-      <IdeaPhoto idea={idea} />
+      {versions.restoreError && (
+        <Alert variant="destructive" className="idea-image-error">
+          <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
+          <AlertDescription>{versions.restoreError}</AlertDescription>
+        </Alert>
+      )}
+      <IdeaPhoto key={idea.imageUrl ?? idea._id} idea={idea} />
       <header className="idea-head">
         <div className="plate plate-sm">
           <h2>{idea.title}</h2>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="chip"
-          className="idea-fullscreen"
-          aria-pressed={fullscreen}
-          onClick={onToggleFullscreen}
-        >
-          <HugeiconsIcon
-            icon={fullscreen ? ArrowLeft02Icon : FullScreenIcon}
-            strokeWidth={1.5}
-            aria-hidden
-          />
-          {fullscreen ? "Назад" : "На весь екран"}
-        </Button>
       </header>
       <IdeaMeta idea={idea} />
       <p className="idea-summary">{idea.summary}</p>
       <Markdown text={idea.body} className="idea-body" />
-      <h3 className="idea-section">Інгредієнти</h3>
-      <ul className="ingredients">
-        {idea.ingredients.map((ingredient, index) => (
-          <li key={`${ingredient.name}-${index}`}>
-            <span>{ingredient.name}</span>
-            {ingredient.amount && <span className="ingredient-amount">{ingredient.amount}</span>}
-          </li>
-        ))}
-      </ul>
       <IdeaProducts idea={idea} canAddToCart={canAddToCart} onAddToCart={onAddToCart} />
       <div className="idea-actions">
-        <CookTogether
-          defaultServings={idea.servings}
-          savedServings={idea.cookServings}
-          onGenerate={onCookServings}
-        />
+        <CookTogether savedCount={idea.cookCount} onGenerate={onCookCount} />
       </div>
     </article>
-  );
-}
-
-export function IdeaWaiting() {
-  return (
-    <div className="idea-pane chrome idea-waiting" aria-label="Ідея готується">
-      <Skeleton className="h-9 w-3/5 rounded-[12px]" />
-      <Skeleton className="h-4 w-2/5" />
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-11/12" />
-      <Skeleton className="h-4 w-4/5" />
-    </div>
   );
 }

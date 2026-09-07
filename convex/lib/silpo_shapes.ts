@@ -22,7 +22,11 @@ export type ProductMatch = Readonly<{
   branchId?: string;
   title?: string;
   price?: number;
+  oldPrice?: number;
   unit?: string;
+  imageUrl?: string;
+  slug?: string;
+  productUrl?: string;
 }>;
 
 export const DELIVERY_TYPE_PREFERENCE = [
@@ -179,13 +183,21 @@ function describeValidation(code: string) {
   );
 }
 
+export type CartSummary = Readonly<{
+  productsTotal?: number;
+  subtotal?: number;
+  discount?: number;
+  deliveryTotal?: number;
+  total?: number;
+  warnings: string[];
+}>;
+
 // Totals and error-level validations from silpo_get_shopping_cart_by_id.
 export function readCartSummary(payload: unknown) {
   const cart = isRecord(payload) && isRecord(payload.cart) ? payload.cart : undefined;
   const calculation = cart && isRecord(cart.calculation) ? cart.calculation : undefined;
-  const total = calculation
-    ? pickNumber(calculation, ["totalAfterDiscounts", "total", "productsTotal"])
-    : undefined;
+  const total = calculation ? pickNumber(calculation, ["totalAfterDiscounts", "total"]) : undefined;
+  const delivery = calculation && isRecord(calculation.delivery) ? calculation.delivery : undefined;
   const validations = calculation ? findObjectArray(calculation.validations ?? []) : [];
   const warnings = validations
     .filter((entry) => {
@@ -199,7 +211,14 @@ export function readCartSummary(payload: unknown) {
     .filter((message, index, all) => all.indexOf(message) === index)
     .slice(0, 3);
 
-  return { total, warnings };
+  return {
+    productsTotal: calculation ? pickNumber(calculation, ["productsTotal"]) : undefined,
+    subtotal: calculation ? pickNumber(calculation, ["subTotal"]) : undefined,
+    discount: calculation ? pickNumber(calculation, ["subDiscount"]) : undefined,
+    deliveryTotal: delivery ? pickNumber(delivery, ["total"]) : undefined,
+    total,
+    warnings,
+  } satisfies CartSummary;
 }
 
 export function readCheckoutLink(payload: unknown) {
@@ -234,16 +253,20 @@ export type ProductCandidate = Readonly<{
   branchId?: string;
   title: string;
   price?: number;
+  oldPrice?: number;
   unit?: string;
   stock?: number;
   weighted?: boolean;
   step?: number;
+  imageUrl?: string;
+  slug?: string;
+  productUrl?: string;
 }>;
 
 export type IngredientCandidates = Readonly<{
   ingredient: string;
   quantity: number;
-  candidates: ProductCandidate[];
+  candidates: readonly ProductCandidate[];
 }>;
 
 export const CANDIDATES_PER_INGREDIENT = 3;
@@ -251,6 +274,9 @@ export const CANDIDATES_PER_INGREDIENT = 3;
 function shapeCandidate(record: Record<string, unknown>): ProductCandidate | null {
   const productId = pickString(record, ["productId", "id"]);
   const title = pickString(record, ["name", "title", "productName"]);
+  const price = pickNumber(record, ["price", "currentPrice", "priceValue"]);
+  const oldPrice = pickNumber(record, ["oldPrice"]);
+  const slug = pickString(record, ["slug"]);
 
   if (!productId || !title || record.available === false) {
     return null;
@@ -261,12 +287,34 @@ function shapeCandidate(record: Record<string, unknown>): ProductCandidate | nul
     companyId: pickString(record, ["companyId"]),
     branchId: pickString(record, ["branchId"]),
     title,
-    price: pickNumber(record, ["price", "currentPrice", "priceValue"]),
+    price,
+    oldPrice:
+      oldPrice !== undefined && price !== undefined && oldPrice > price ? oldPrice : undefined,
     unit: pickString(record, ["displayRatio", "unit", "measure"]),
     stock: pickNumber(record, ["stock"]),
     weighted: record.weighted === true ? true : undefined,
     step: pickNumber(record, ["step"]),
+    imageUrl: pickHttpUrl(record, ["image", "imageUrl"]),
+    slug,
+    // Verified against silpo_get_product_details: product.url is this route for the returned slug.
+    productUrl: slug ? `https://silpo.ua/product/${encodeURIComponent(slug)}` : undefined,
   };
+}
+
+function pickHttpUrl(record: Record<string, unknown>, keys: readonly string[]) {
+  const value = pickString(record, keys);
+
+  if (!value) {
+    return undefined;
+  }
+
+  try {
+    const url = new URL(value);
+
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 // Maps a batch result back onto the requested ingredients, by query first and by index second,

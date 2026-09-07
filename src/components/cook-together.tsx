@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -17,46 +16,49 @@ import {
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/lib/use-media-query";
 
-const minServings = 1;
-const maxServings = 12;
+const minCooks = 1;
+const maxCooks = 12;
 
-function servingsLabel(count: number) {
+function countLabel(count: number) {
   if (count === 1) {
-    return "1 порція";
+    return "1 кухар";
   }
 
   if (count >= 2 && count <= 4) {
-    return `${count} порції`;
+    return `${count} кухарі`;
   }
 
-  return `${count} порцій`;
+  return `${count} кухарів`;
 }
 
-function ServingsForm({
+function CooksForm({
   initial,
   saved,
   onGenerate,
 }: {
   initial: number;
   saved: number | undefined;
-  onGenerate: (servings: number) => void;
+  onGenerate: (count: number) => Promise<void> | void;
 }) {
-  const [servings, setServings] = useState(saved ?? initial);
+  const [count, setCooks] = useState(saved ?? initial);
   const [busy, setBusy] = useState(false);
-  const done = saved !== undefined && !busy;
+  const [error, setError] = useState<string | null>(null);
+  const done = saved === count && !busy;
 
   async function generate() {
     setBusy(true);
+    setError(null);
 
     try {
-      await onGenerate(servings);
+      await onGenerate(count);
+    } catch {
+      setError("Не вдалося зберегти кількість кухарів. Спробуй ще раз.");
     } finally {
       setBusy(false);
     }
@@ -64,54 +66,56 @@ function ServingsForm({
 
   return (
     <div className="cook-form">
-      <div className="servings-stepper" role="group" aria-label="Кількість порцій">
+      <div className="servings-stepper" role="group" aria-label="Кількість кухарів">
         <Button
           type="button"
           variant="outline"
           size="icon-lg"
-          aria-label="Менше порцій"
-          disabled={servings <= minServings}
-          onClick={() => setServings((count) => Math.max(minServings, count - 1))}
+          aria-label="Менше кухарів"
+          disabled={count <= minCooks}
+          onClick={() => setCooks((count) => Math.max(minCooks, count - 1))}
         >
           <HugeiconsIcon icon={MinusSignIcon} strokeWidth={2} aria-hidden />
         </Button>
         <output className="servings-value" aria-live="polite">
-          {servingsLabel(servings)}
+          {countLabel(count)}
         </output>
         <Button
           type="button"
           variant="outline"
           size="icon-lg"
-          aria-label="Більше порцій"
-          disabled={servings >= maxServings}
-          onClick={() => setServings((count) => Math.min(maxServings, count + 1))}
+          aria-label="Більше кухарів"
+          disabled={count >= maxCooks}
+          onClick={() => setCooks((count) => Math.min(maxCooks, count + 1))}
         >
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden />
         </Button>
       </div>
+      {error && (
+        <p role="alert" className="address-error">
+          {error}
+        </p>
+      )}
       {done ? (
         <p className="cook-soon">
-          Скоро. Покроковий план для {saved === 1 ? "1 порції" : `${saved} порцій`} готується в
-          наступній версії.
+          Збережено: {countLabel(count)}. Покроковий план з розподілом роботи з’явиться в наступній
+          версії.
         </p>
       ) : (
         <Button type="button" size="xl" aria-busy={busy} disabled={busy} onClick={generate}>
-          {busy ? "Зберігаємо…" : "Згенерувати інструкції"}
+          {busy ? "Зберігаємо…" : "Зберегти кількість кухарів"}
         </Button>
       )}
     </div>
   );
 }
 
-// "Готуємо разом": a dialog on desktop, a drawer on mobile, with the servings stepper.
 export function CookTogether({
-  defaultServings,
-  savedServings,
+  savedCount,
   onGenerate,
 }: {
-  defaultServings: number;
-  savedServings: number | undefined;
-  onGenerate: (servings: number) => Promise<void> | void;
+  savedCount: number | undefined;
+  onGenerate: (count: number) => Promise<void> | void;
 }) {
   const [open, setOpen] = useState(false);
   const desktop = useMediaQuery("(min-width: 1024px)");
@@ -121,20 +125,16 @@ export function CookTogether({
       Готуємо разом
     </Button>
   );
-  const title = "Готуємо разом";
-  const description = "На скільки людей готуємо? Від цього залежать кроки і таймери.";
-  const form = (
-    <ServingsForm initial={defaultServings} saved={savedServings} onGenerate={onGenerate} />
-  );
+  const title = "Скільки вас готує?";
+  const form = <CooksForm initial={1} saved={savedCount} onGenerate={onGenerate} />;
 
   if (desktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
-        <DialogContent className="cook-dialog">
+        <DialogContent className="cook-dialog" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
           {form}
         </DialogContent>
@@ -145,10 +145,9 @@ export function CookTogether({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-      <DrawerContent className="cook-dialog">
+      <DrawerContent className="cook-dialog" aria-describedby={undefined}>
         <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
         {form}
       </DrawerContent>

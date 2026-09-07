@@ -6,6 +6,18 @@ const AXIOM_REQUEST_TIMEOUT_MS = 1_500;
 
 export type AiTelemetryEvent =
   | Readonly<{
+      event: "ai.image";
+      outcome: "error" | "success";
+      model: string;
+      durationMs: number;
+      cost?: number;
+      threadId: string;
+      userId: string;
+      errorName?: string;
+      httpStatus?: number;
+      retryable?: boolean;
+    }>
+  | Readonly<{
       event: "ai.usage";
       model: string;
       provider: string;

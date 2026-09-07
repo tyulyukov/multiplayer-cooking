@@ -1,35 +1,14 @@
 export const WEB_TIMEOUT_MS = 8_000;
 export const WEB_SEARCH_MAX_RESULTS = 6;
 export const READ_PAGE_MAX_CHARACTERS = 6_000;
-export const IMAGE_MAX_BYTES = 4 * 1024 * 1024;
 export const PAGE_MAX_BYTES = 1024 * 1024;
 
-// Free-licence sources first; the order is the ranking.
-export const IMAGE_ENGINES = ["unsplash", "openverse", "wikicommons.images", "pexels"] as const;
-
-const imageSourceLabels: Record<(typeof IMAGE_ENGINES)[number], string> = {
-  unsplash: "Unsplash",
-  openverse: "Openverse",
-  "wikicommons.images": "Wikimedia Commons",
-  pexels: "Pexels",
-};
-
 export type WebResult = Readonly<{ title: string; url: string; snippet: string }>;
-
-export type ImageCandidate = Readonly<{
-  imageUrl: string;
-  pageUrl: string;
-  title: string;
-  credit: string;
-}>;
 
 type SearxResult = Readonly<{
   url?: unknown;
   title?: unknown;
   content?: unknown;
-  img_src?: unknown;
-  engine?: unknown;
-  author?: unknown;
 }>;
 
 function readString(value: unknown) {
@@ -113,48 +92,6 @@ export function parseWebResults(payload: unknown, limit = WEB_SEARCH_MAX_RESULTS
   }
 
   return results;
-}
-
-function engineRank(engine: string) {
-  const index = IMAGE_ENGINES.indexOf(engine as (typeof IMAGE_ENGINES)[number]);
-
-  return index === -1 ? IMAGE_ENGINES.length : index;
-}
-
-export function rankImageCandidates(payload: unknown): ImageCandidate[] {
-  const candidates: Array<ImageCandidate & { rank: number }> = [];
-
-  for (const item of readResults(payload)) {
-    const imageUrl = readString(item.img_src);
-    const pageUrl = readString(item.url);
-    const engine = readString(item.engine);
-    const rank = engineRank(engine);
-
-    if (rank === IMAGE_ENGINES.length || !isPublicHttpUrl(imageUrl) || !isPublicHttpUrl(pageUrl)) {
-      continue;
-    }
-
-    // Unsplash+ photos are paid; the free API still lists them.
-    if (new URL(imageUrl).hostname === "plus.unsplash.com") {
-      continue;
-    }
-
-    const source = imageSourceLabels[engine as (typeof IMAGE_ENGINES)[number]];
-    const author = readString(item.author);
-    const title = readString(item.title) || "Фото страви";
-
-    candidates.push({
-      imageUrl,
-      pageUrl,
-      title,
-      credit: author ? `Фото: ${author}, ${source}` : `Фото: ${source}`,
-      rank,
-    });
-  }
-
-  return candidates
-    .sort((a, b) => a.rank - b.rank)
-    .map(({ rank: _rank, ...candidate }) => candidate);
 }
 
 const entities: Record<string, string> = {

@@ -101,23 +101,27 @@ Each component below has one job. Reuse them before drawing anything new.
 
 **Idea plate.** The sign plate at 22px (`.plate.plate-sm`) naming the current idea inside the idea pane or the compact idea card. It is the one magenta element in chat mode.
 
-**Dish photo.** One landscape photo above the idea plate, radius 14px, 2px `--border`, `object-fit: cover`. The full pane uses a 16:10 frame, the compact card 16:9. A credit line in Golos 12px `--muted-foreground` sits under the photo and links to the source page. No photo means no frame: the plate moves to the top.
+**Dish photo.** One landscape photo above the idea plate, radius 14px, 2px `--border`, `object-fit: cover`. The full pane uses a 16:10 frame, the compact card 16:9. Older sourced photos show a credit line in Golos 12px `--muted-foreground` with a link to the source page. Generated photos have no source credit. No photo means no frame: the plate moves to the top. A failed generation or image load shows a compact inline error while the recipe remains readable.
 
 **Connect card.** The gate before the first idea. A chrome frame, radius 22px, padding 20px, with one paragraph, the lime CTA "Підключити Сільпо" with the store icon, and a Golos 14px `--muted-foreground` note on what is stored where. The sign plate above it reads "Підключи Сільпо, щоб почати".
 
-**Profile menu.** An ink tag in the top right with the user icon and the person's name or phone, opening a shadcn dropdown: 2px ink border, radius 14px, items in Golos 600 15px with teal icons. "Від'єднати" is the destructive item and sits last after a separator.
+**Profile menu.** An ink tag in the top right with the user icon and the person's name, with "Профіль" as the fallback, opening a shadcn dropdown: 2px ink border, radius 14px, items in Golos 600 15px with teal icons. Under the name, "Телефон:" and "Пошта:" rows in Golos 13px show the value blurred as scrambled characters of the same length, so the row does not change width when a tap reveals it. "Вийти на цьому пристрої" is the destructive item and sits last after a separator.
 
-**Question card.** The agent's question with 2 to 5 options, rendered with the shadcn Questionnaire inside a chrome frame, radius 18px. Options are ink tags stacked in a column; a chosen option fills ink with white text. An optional text field "Або напиши свій варіант" sits below, then one lime "Відповісти". After the answer the card collapses to the question and the chosen answer in `--teal-deep`.
+**Topbar.** The brand and the menu sit in the same 1200px frame on every screen, so nothing in the header moves between the home screen and a conversation.
+
+**Question card.** One to four questions in a shadcn Questionnaire inside the chrome composer. A collapsible header shows the current question number and total. Options are ink tags stacked in a column; a chosen option fills ink with white text. Each question may allow several choices or a custom answer. Navigation uses "Назад", "Далі", and the final "Надіслати" action. Number shortcuts select options. Keyboard focus can move through the choices before the person commits an answer. Answered questions collapse to their labels and selected answers.
 
 **Version nav.** "Версія N з M" in Oswald 600 15px between two ghost arrow buttons at the top of the idea pane. Older versions show an ink tag "Повернути цю версію" on the right. Hidden when there is one version.
 
-**History panel.** A shadcn Sheet from the right on desktop and a Drawer from the bottom on mobile, opened by the "Історія" ink tag. Each row has up to three overlapping 40px photos with 10px radius, the title in Oswald 600 16px or "Без назви", the date in Golos 13px `--muted-foreground`, and a ghost delete button. The open thread has a 25% teal background.
+**Dialog titles.** Every Dialog, Sheet, and Drawer opens with one Oswald 600 24px title that names what the person can do there ("Історія розмов", "Скільки вас готує?", "Що агент пам'ятає про тебе") and no description line under it. If the title needs a second sentence to be understood, the title is wrong.
+
+**History panel.** A 560px shadcn Sheet from the right on desktop and a Drawer from the bottom on mobile, opened by the "Історія" ink tag. Each row has up to three overlapping 40px photos with 10px radius, the title in Oswald 600 17px on up to two lines or "Без назви", the time in Golos 13px `--muted-foreground`, and a ghost delete button. Time is relative and refreshes each minute: "щойно", "5 хвилин тому", "3 години тому", "вчора, 14:30", then the full localized date with time. The whole row is one surface: `--muted` on hover and press, 25% teal for the open thread. Only the list scrolls.
 
 **Photo attachments.** The composer has a ghost image button on the left of its action row; up to four photos show above it as 72px shadcn Attachment tiles with a 2px ink border and a round ink-bordered remove button. In a person's bubble the photos sit in a grid of square thumbnails with 10px radius above the text; tapping one opens the shadcn Dialog as a lightbox on an ink background.
 
-**Servings dialog.** "Готуємо разом" opens a shadcn Dialog on desktop and a Drawer on mobile. A stepper with two ink icon buttons and the count in Oswald 700 28px, then the lime "Згенерувати інструкції". After saving, a bordered "Скоро" note replaces the button.
+**Servings dialog.** "Готуємо разом" opens a shadcn Dialog on desktop and a Drawer on mobile titled "Скільки вас готує?". A stepper with two ink icon buttons and the count in Oswald 700 28px, then the lime "Зберегти кількість кухарів". After saving, a bordered note replaces the button.
 
-**Chat bubbles.** A person's message is an ink fill with white text, radius 14px with a 4px bottom-right corner, at most 88% wide and right-aligned. The agent's text is a white card with 2px `--border` and a 4px bottom-left corner. Tool activity above it is one Golos 13px `--muted-foreground` line per call with a 6px `--teal-deep` dot. Waiting text uses the shimmer from transitions.dev.
+**Chat bubbles.** A person's message is an ink fill with white text, radius 14px with a 4px bottom-right corner, at most 88% wide and right-aligned. The agent's text is a white card with 2px `--border` and a 4px bottom-left corner. A single generation status names the current activity in Golos 13px `--muted-foreground`. Waiting text uses the shimmer from transitions.dev.
 
 **Card.** White, 2px `--border`, radius 14px, padding 12px 14px. The active card ("now") switches the border to `--foreground`. Done cards drop to 50% opacity with struck-through text.
 
@@ -131,6 +135,18 @@ Each component below has one job. Reuse them before drawing anything new.
 
 **Error.** The `Alert` destructive variant: cherry text and icon on `--destructive-soft`, 2px cherry border at 30%.
 
+## Empty states and service failures
+
+Product search is optional to a saved recipe. When Сільпо is unavailable or returns no matching products, the idea still shows its recipe and shopping list. The products section holds a small illustration, a short status heading, and one sentence explaining that the ingredients below can be bought independently. Ingredient names and recipe amounts remain visible. Partial matches show the available products followed by the missing ingredients. The cart action appears only when products can be added.
+
+Empty-state illustrations are custom image-generated artwork or Blender renders in the same soft 3D style. Use rounded miniature grocery or kitchen objects, matte clay or enamel, cream surfaces, teal as the main colour, and small chrome or ink checker details. Natural food colours are limited to small ingredient accents. Keep the composition isolated on transparency, with soft studio lighting and restrained contact shading inside the artwork. The illustration has no text, logo, embedded UI, or decorative backdrop. CSS surfaces retain the existing no-shadow rule.
+
+The reference asset is `public/images/ingredients-basket.webp`: a teal basket, cream handles, a blank shopping list, and two vegetables. It was made with the built-in image generator. Its prompt describes a compact three-quarter orthographic product render, retro diner materials, a mostly empty basket, a transparent background, and legibility at 160px. New empty-state artwork follows this reference rather than mixing illustration styles. Export optimized WebP with alpha and render at 96px wide in the compact mobile layout. Use empty alt text when the adjacent status conveys the meaning. A failed illustration load leaves the heading and shopping list intact.
+
+Expected absence uses ink and muted text. A blocking service failure uses the cherry error treatment beside the affected content. Unavailable product search uses the illustrated neutral state because the ingredient list remains usable. Persistent failures belong inline: image generation beside the recipe, product search above the shopping list, and cart errors beside the cart action. Transient action errors can use an existing toast only when no persistent context is needed. Never use a toast as the only record of a failed generation.
+
+Errors name what failed and the next useful action in Ukrainian. Provider names, stack traces, and raw API responses stay out of product copy. A failed AI reply keeps the conversation and tells the person to retry from the composer. An image failure keeps the saved recipe. A product failure keeps the ingredient list. Each failure releases its loading state; retry remains an explicit user action.
+
 ## Shape and depth
 
 Radii scale with size: 22px for the composer and timer box, 18px for the sign plate, 14px for cards, 12px for buttons, 10px for tags, full round for avatars and dots. Depth comes from outlines, frames, and inset bottom shades, the way painted signage does. Drop shadows appear nowhere. Gradients appear only in `--chrome`.
@@ -138,6 +154,8 @@ Radii scale with size: 22px for the composer and timer box, 18px for the sign pl
 ## Motion
 
 Motion tokens live at the top of `src/index.css` and follow the transitions.dev scale. The `.tactile` class gives every button the press feedback. Neon glows and chrome are static. Screens have no load animation. Skeletons pulse in `--muted`. Add motion only when a user action changes something on screen, and pick the transition with the transitions.dev decision rules. The pot icon on the generate button rocks on hover and for as long as a request runs; it stops under reduced motion.
+
+The desktop history Sheet slides from the right and fades its backdrop on open, then reverses on close. Use motion tokens, a faster exit, and Radix state attributes so the closing animation finishes before unmount. Reduced motion removes the slide. Keep the mobile Drawer's existing gesture motion.
 
 ## Icons
 
@@ -147,11 +165,13 @@ Hugeicons Stroke Rounded at `strokeWidth={1.5}`. 20px inside buttons and tags, 1
 
 Ukrainian, addressed as "ти". Buttons name the action: "Згенерувати", "Готово, далі", "Помінятися". Labels stay short enough to sit in a sign plate on one or two lines. Empty states show the next action instead of a placeholder line. The composer placeholder is "Опиши страву або напиши, що є вдома". Errors say what happened and what to do: "Відповідь не прийшла вчасно. Спробуй ще раз."
 
+Empty states and errors may use one sentence to explain the next action, as specified above. Other titles, totals, and buttons have no explanatory line beneath them. A number gets one label ("Разом, без доставки"), a list gets one heading ("Немає в Сільпо, купи окремо"), and the button text says what happens. If a screen needs a paragraph to explain a control, the control is wrong. Copy that could sit under any product's title ("Переглянь і повернися до розмови") says nothing about this one and is cut.
+
 ## Adding a screen
 
 1. Start with the checker band, the brand row, and a sign plate that names the screen.
 2. Put the main content in a chrome frame or in cards. Pick the frame when the content has state.
 3. Place one lime CTA. Everything else is an ink tag or a ghost button.
 4. Check the colour budget: magenta once, lime once, teal for identity, blue for neon lines only.
-5. Build in `design/mocks/` first when the screen adds a new component. Copy `c-checker-signage.html`, screenshot at 390px wide, and keep the PNG next to it.
+5. Build in `design/mocks/` first when the screen adds a new component. Use `c-checker-signage.html` for static layouts or render the actual React components as in `service-fallback.html`. Screenshot at 390px wide and keep the PNG next to the mock.
 6. Test at 390px wide, with keyboard focus visible, and with reduced motion on.

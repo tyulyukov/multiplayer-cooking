@@ -8,7 +8,7 @@ The app today: you connect your Сільпо account, describe what you want to 
 
 - **Convex** holds the data, the realtime state, and every server-side integration. Secrets live only in Convex environment variables.
 - **@convex-dev/agent** runs the cooking agent on **AI SDK 7** with an **OpenRouter** model. Each person has one active thread; older threads stay in the history.
-- **Tools** the agent can call: `save_idea`, `find_dish_image`, `web_search`, `read_page`, `ask_user`, and `silpo_find_products`. Web search and dish photos go through a private **SearXNG** instance. Photos come from free-licence sources first and are re-hosted in Convex file storage with a credit line.
+- The agent can call `save_idea`, `web_search`, `read_page`, `ask_user`, `silpo_find_products`, and memory tools. SearXNG provides read-only recipe research. Saving an idea generates a dish image from its final ingredients through OpenRouter with `google/gemini-3.1-flash-lite-image`, then stores the image in Convex. Image failure leaves the idea usable without a picture.
 - **Сільпо MCP** is the official `https://mcp.silpo.ua/mcp` server. The app registers itself with dynamic client registration, logs the shopper in with OAuth 2.1 and PKCE, and keeps the tokens in Convex. The delivery address is typed into a masked form and stored on the server; the model never sees it. Cart writes happen only from the "Додати в кошик" button.
 - **Frontend** is React, Vite, TanStack Router, shadcn/ui, and Hugeicons. `DESIGN.md` owns the visual system.
 - **Sessions** are anonymous device sessions from `convex-helpers`, kept in `localStorage`.
@@ -55,13 +55,13 @@ The Сільпо OAuth callback is served by Convex at `<CONVEX_SITE_URL>/silpo/
 
 ## Environment variables
 
-| Variable                                     | Where         | Purpose                                                                                                                               |
-| -------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_CONVEX_URL`                            | Browser build | Convex deployment URL. `bunx convex dev` sets it locally; the Railway build takes it as a build argument.                             |
-| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`     | Convex        | The agent model. Use a dedicated key with a spending limit.                                                                           |
-| `SEARXNG_URL`                                | Convex        | Base URL of the SearXNG instance for `web_search` and `find_dish_image`. Without it those tools answer that search is not configured. |
-| `APP_URL`                                    | Convex        | Where the OAuth callback sends the browser back. Without it the callback shows a plain text page.                                     |
-| `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_EDGE` | Convex        | Optional telemetry. Records run outcome, duration, and token counts. Never prompts or responses.                                      |
+| Variable                                     | Where         | Purpose                                                                                                      |
+| -------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------ |
+| `VITE_CONVEX_URL`                            | Browser build | Convex deployment URL. `bunx convex dev` sets it locally; the Railway build takes it as a build argument.    |
+| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`     | Convex        | The agent model. Use a dedicated key with a spending limit.                                                  |
+| `SEARXNG_URL`                                | Convex        | Base URL of the SearXNG instance for `web_search`. Without it, web search reports that it is not configured. |
+| `APP_URL`                                    | Convex        | Where the OAuth callback sends the browser back. Without it the callback shows a plain text page.            |
+| `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_EDGE` | Convex        | Optional telemetry. Records run outcome, duration, and token counts. Never prompts or responses.             |
 
 Rate limits are per person: 5 messages per minute and 40 per day.
 

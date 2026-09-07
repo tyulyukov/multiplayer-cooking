@@ -1,0 +1,227 @@
+.personal-settings {
+  height: min(650px, calc(100dvh - 2rem));
+  max-width: min(100% - 2rem, 620px);
+  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px;
+}
+.personal-settings__header {
+  flex: none;
+  min-height: 58px;
+  padding-right: 34px;
+}
+.personal-settings__tabs {
+  flex: none;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 6px;
+  border-bottom: 2px solid var(--border);
+}
+.personal-settings__tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  padding: 9px 8px 7px;
+  color: var(--muted-foreground);
+  font: 600 0.9375rem var(--font-sans);
+  cursor: pointer;
+}
+.personal-settings__tabs button svg {
+  color: var(--teal-deep);
+}
+.personal-settings__tabs button[aria-pressed="true"] {
+  border-color: var(--foreground);
+  color: var(--foreground);
+}
+.personal-settings__tabs button:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+.personal-settings__body {
+  flex: 1 1 0;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 4px;
+}
+.personal-settings__memories,
+.personal-settings__form,
+.personal-settings__interface {
+  display: grid;
+  gap: 10px;
+}
+.personal-settings__memory {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  padding: 12px;
+}
+.personal-settings__memory > div {
+  min-width: 0;
+}
+.personal-settings__memory p {
+  margin: 7px 0 4px;
+  overflow-wrap: anywhere;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.personal-settings__memory time,
+.personal-settings__form small,
+.personal-settings__interface fieldset > small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+.personal-settings__memory-kind {
+  display: inline-flex;
+  border-radius: 999px;
+  background: var(--muted);
+  padding: 2px 7px;
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.personal-settings__memory-kind--allergy {
+  background: var(--destructive-soft);
+  color: var(--destructive);
+}
+.personal-settings__memory-kind--preference {
+  background: color-mix(in oklch, var(--teal) 28%, var(--card));
+  color: var(--teal-deep);
+}
+.personal-settings__quiet,
+.personal-settings__empty {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+.personal-settings__form > label,
+.personal-settings__form fieldset,
+.personal-settings__interface fieldset {
+  display: grid;
+  gap: 7px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--foreground);
+  font-weight: 600;
+}
+.personal-settings__form legend {
+  margin-bottom: 7px;
+}
+.personal-settings__interface legend {
+  margin-bottom: 7px;
+}
+.personal-settings__form textarea {
+  font-weight: 400;
+  resize: vertical;
+}
+.personal-settings__form > label small {
+  justify-self: end;
+  font-weight: 400;
+}
+.personal-settings__tone-options {
+  display: grid;
+  gap: 7px;
+}
+.personal-settings__tone-options label,
+.personal-settings__shortcut-options label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 9px;
+  align-items: center;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 9px 10px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.personal-settings__tone-options label[data-selected="true"],
+.personal-settings__shortcut-options label[data-selected="true"] {
+  border-color: var(--foreground);
+  background: var(--muted);
+}
+.personal-settings__tone-options input,
+.personal-settings__shortcut-options input {
+  accent-color: var(--foreground);
+}
+.personal-settings__tone-options small,
+.personal-settings__shortcut-options small {
+  grid-column: 2;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.personal-settings__error {
+  margin: 0;
+  color: var(--destructive);
+  font-size: 0.875rem;
+}
+.personal-settings__shortcut-options {
+  display: grid;
+  gap: 7px;
+}
+.personal-settings__save-status {
+  flex: none;
+  min-height: 40px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+.personal-settings__save-status[data-state="saved"] {
+  color: var(--teal-deep);
+}
+.personal-settings__save-status[data-state="error"] {
+  color: var(--destructive);
+}
+@media (max-width: 639px) {
+  .personal-settings {
+    max-width: calc(100% - 1rem);
+    padding: 16px;
+  }
+}
+@media (max-width: 380px) {
+  .personal-settings__tabs button {
+    padding-inline: 4px;
+    font-size: 0.875rem;
+  }
+  .personal-settings__tabs button svg {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .personal-settings__memory {
+    transition:
+      border-color 150ms ease,
+      transform 150ms ease;
+  }
+  .personal-settings__memory:has(button:hover) {
+    border-color: var(--foreground);
+  }
+}
+
+@media (min-width: 640px) {
+  .personal-settings {
+    height: min(600px, calc(100dvh - 2rem));
+  }
+  .personal-settings__tone-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .personal-settings__tone-options label {
+    align-content: start;
+    row-gap: 4px;
+  }
+}

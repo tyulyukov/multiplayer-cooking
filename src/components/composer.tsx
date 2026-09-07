@@ -3,8 +3,9 @@ import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import CookingPotIcon from "@hugeicons/core-free-icons/CookingPotIcon";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useRef } from "react";
-import type { FormEvent } from "react";
+import { Tooltip } from "radix-ui";
+import { useEffect, useRef, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 import { AI_MAX_IMAGES, AI_REQUEST_MAX_CHARACTERS } from "../../convex/lib/ai_config";
 import {
@@ -16,6 +17,9 @@ import {
 } from "@/components/ui/attachment";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { shouldSubmitComposerShortcut } from "@/lib/composer-shortcut";
+import { useComposerShortcut } from "@/lib/use-composer-shortcut";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 export type ComposerAttachment = Readonly<{
   id: string;
@@ -40,7 +44,11 @@ export function Composer({
   onSubmit,
   onAttach,
   onRemoveAttachment,
+  questionnaire,
+  questionnaireKey,
 }: {
+  questionnaire?: ReactNode;
+  questionnaireKey?: string;
   mode: "home" | "chat";
   value: string;
   busy: boolean;
@@ -54,6 +62,10 @@ export function Composer({
   const composerRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const submittedWithShortcutRef = useRef(false);
+  const [dismissedQuestionnaireKey, setDismissedQuestionnaireKey] = useState<string>();
+  const [shortcut] = useComposerShortcut();
+  const desktopKeyboard = useMediaQuery("(min-width: 1024px) and (pointer: fine)");
   const overLimit = isOverLimit(value);
   const showCounter = value.length >= counterThreshold;
   const readyAttachments = attachments.filter((item) => item.state === "done");
@@ -92,6 +104,8 @@ export function Composer({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const submittedWithShortcut = submittedWithShortcutRef.current;
+    submittedWithShortcutRef.current = false;
 
     if (busy) {
       return;
@@ -110,9 +124,27 @@ export function Composer({
       return;
     }
 
-    textareaRef.current?.blur();
+    if (!submittedWithShortcut) {
+      textareaRef.current?.blur();
+    }
     onSubmit(text);
   }
+
+  function submitWithShortcut() {
+    const form = textareaRef.current?.form;
+
+    if (!form) {
+      return;
+    }
+
+    submittedWithShortcutRef.current = true;
+    form.requestSubmit();
+  }
+
+  const shortcutDescription =
+    shortcut === "enter"
+      ? ["Enter · надіслати", "Shift + Enter · новий рядок"]
+      : ["Shift + Enter · надіслати", "Enter · новий рядок"];
 
   function pickFiles(list: FileList | null) {
     const files = Array.from(list ?? []).filter((file) => file.type.startsWith("image/"));
@@ -124,6 +156,22 @@ export function Composer({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  }
+
+  if (questionnaire && questionnaireKey !== dismissedQuestionnaireKey) {
+    return (
+      <div className="composer chrome" data-mode={mode}>
+        {questionnaire}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setDismissedQuestionnaireKey(questionnaireKey)}
+        >
+          Написати повідомлення
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -151,9 +199,9 @@ export function Composer({
         className="request-textarea"
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+          if (shouldSubmitComposerShortcut(event.nativeEvent, shortcut, desktopKeyboard)) {
             event.preventDefault();
-            event.currentTarget.form?.requestSubmit();
+            submitWithShortcut();
           }
         }}
       />
@@ -204,35 +252,61 @@ export function Composer({
           {showCounter ? `${value.length}/${AI_REQUEST_MAX_CHARACTERS}` : null}
           {overLimit && <span className="sr-only">, забагато знаків</span>}
         </span>
-        {mode === "home" ? (
-          <Button
-            type="submit"
-            size="xl"
-            disabled={overLimit || uploading}
-            aria-busy={busy}
-            aria-disabled={busy}
-            className="generate-button"
+        <Tooltip.Provider delayDuration={300}>
+          <Tooltip.Root
+            key={desktopKeyboard ? "desktop" : "touch"}
+            open={desktopKeyboard ? undefined : false}
           >
-            <HugeiconsIcon
-              icon={CookingPotIcon}
-              className="size-5 pot-icon"
-              strokeWidth={1.5}
-              aria-hidden
-            />
-            {busy ? "Генеруємо…" : "Згенерувати"}
-          </Button>
-        ) : (
-          <Button
-            type="submit"
-            variant="ghost"
-            size="icon-lg"
-            disabled={overLimit || busy || uploading}
-            aria-label="Надіслати"
-            className="send-button"
-          >
-            <HugeiconsIcon icon={ArrowUp02Icon} className="size-5" strokeWidth={2} aria-hidden />
-          </Button>
-        )}
+            <Tooltip.Trigger asChild>
+              {mode === "home" ? (
+                <Button
+                  type="submit"
+                  size="xl"
+                  disabled={overLimit || uploading}
+                  aria-busy={busy}
+                  aria-disabled={busy}
+                  className="generate-button"
+                >
+                  <HugeiconsIcon
+                    icon={CookingPotIcon}
+                    className="size-5 pot-icon"
+                    strokeWidth={1.5}
+                    aria-hidden
+                  />
+                  {busy ? "Генеруємо…" : "Згенерувати"}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="icon-lg"
+                  disabled={overLimit || busy || uploading}
+                  aria-label="Надіслати"
+                  className="send-button"
+                >
+                  <HugeiconsIcon
+                    icon={ArrowUp02Icon}
+                    className="size-5"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                </Button>
+              )}
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content
+                className="rounded-md border-2 border-foreground bg-card px-3 py-2 text-xs text-foreground"
+                side="top"
+                sideOffset={8}
+              >
+                <p>{shortcutDescription[0]}</p>
+                <p>{shortcutDescription[1]}</p>
+                <p className="mt-1 text-muted-foreground">Можна змінити в налаштуваннях</p>
+                <Tooltip.Arrow className="fill-card" />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Tooltip.Provider>
       </div>
     </form>
   );

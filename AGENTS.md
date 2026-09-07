@@ -17,7 +17,7 @@ idea
 
 ## Current state
 
-Steps `idea → recipe → Сільпо products → cart` work. The cooking agent (`convex/cookingAgent.ts`) runs on `@convex-dev/agent` with OpenRouter and these tools: `save_idea`, `find_dish_image`, `web_search`, `read_page`, `ask_user`, `silpo_find_products`. Сільпо MCP OAuth lives in `convex/silpoAuth.ts`, `convex/lib/silpo_oauth.ts`, and the callback in `convex/http.ts`; cart setup and cart writes are server-side actions in `convex/silpoCart.ts`. The cooking plan and multiplayer cooking are not built; "Готуємо разом" only stores the servings.
+Steps `idea → recipe → Сільпо products → cart` work. The cooking agent (`convex/cookingAgent.ts`) runs on `@convex-dev/agent` with OpenRouter and these tools: `save_idea`, `web_search`, `read_page`, `ask_user`, `silpo_find_products`, `add_memory`, `remove_memory`. Сільпо MCP OAuth lives in `convex/silpoAuth.ts`, `convex/lib/silpo_oauth.ts`, and the callback in `convex/http.ts`; cart setup and cart writes are server-side actions in `convex/silpoCart.ts`. Saving an idea generates an image from its final dish data through OpenRouter and stores it in Convex. The cooking plan and multiplayer cooking are not built; "Готуємо разом" only stores the number of cooks.
 
 Constraints that are not visible in the code:
 

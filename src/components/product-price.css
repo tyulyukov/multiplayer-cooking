@@ -1,0 +1,26 @@
+.product-price-sale {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.product-price-current {
+  color: var(--foreground);
+}
+
+.product-price-original {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.product-price-discount {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--foreground);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 5px;
+}

@@ -5,7 +5,6 @@ import {
   listUIMessages,
   saveMessage,
   syncStreams,
-  updateThreadMetadata,
   vStreamArgs,
 } from "@convex-dev/agent";
 import { RateLimiter } from "@convex-dev/rate-limiter";
@@ -17,8 +16,20 @@ import { components, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type QueryCtx } from "./_generated/server";
 import { admitAiGeneration } from "./lib/ai_admission";
-import { AI_MAX_IMAGES, AI_RATE_LIMITS, AI_REQUEST_MAX_CHARACTERS } from "./lib/ai_config";
-import { findUser, getOrCreateUser } from "./lib/users";
+import {
+  AI_MAX_IMAGES,
+  AI_RATE_LIMITS,
+  AI_REQUEST_MAX_CHARACTERS,
+  DRAFT_MAX_CHARACTERS,
+} from "./lib/ai_config";
+import { readQuestionInput, validateQuestionSubmission } from "./lib/questions";
+import {
+  findUser,
+  findSession,
+  getOrCreateUser,
+  resolveUserId,
+  setActiveThread,
+} from "./lib/users";
 
 const rateLimiter = new RateLimiter(components.rateLimiter, AI_RATE_LIMITS);
 
@@ -37,7 +48,10 @@ export const activeThread = query({
   handler: async (ctx, { sessionId }) => {
     const user = await findUser(ctx, sessionId);
 
-    return user?.activeThreadId ? { threadId: user.activeThreadId } : null;
+    if (!user) return null;
+    const session = await findSession(ctx, sessionId);
+    const threadId = session ? session.activeThreadId : user.activeThreadId;
+    return threadId && (await ownsThread(ctx, user, threadId)) ? { threadId } : null;
   },
 });
 
@@ -60,6 +74,88 @@ export const listMessages = query({
     const streams = await syncStreams(ctx, components.agent, { threadId, streamArgs });
 
     return { ...paginated, streams };
+  },
+});
+
+const draftValidator = v.object({
+  text: v.string(),
+  images: v.array(v.object({ storageId: v.id("_storage"), url: v.string() })),
+});
+
+async function findDraft(ctx: QueryCtx, userId: Id<"users">, threadId: string | undefined) {
+  return ctx.db
+    .query("drafts")
+    .withIndex("by_user_thread", (q) => q.eq("userId", userId).eq("threadId", threadId))
+    .unique();
+}
+
+async function ownsUpload(ctx: QueryCtx, userId: Id<"users">, storageId: Id<"_storage">) {
+  const upload = await ctx.db
+    .query("uploads")
+    .withIndex("by_storage", (q) => q.eq("storageId", storageId))
+    .unique();
+
+  return upload?.userId === userId;
+}
+
+// Returns an empty draft, not null, when nothing is saved: the client treats null as "not loaded yet".
+export const draft = query({
+  args: { ...SessionIdArg, threadId: v.optional(v.string()) },
+  returns: v.union(v.null(), draftValidator),
+  handler: async (ctx, { sessionId, threadId }) => {
+    const user = await findUser(ctx, sessionId);
+
+    if (!user) return null;
+
+    const saved = await findDraft(ctx, user._id, threadId);
+    const images: { storageId: Id<"_storage">; url: string }[] = [];
+
+    for (const storageId of saved?.imageIds ?? []) {
+      const url = await ctx.storage.getUrl(storageId);
+
+      if (url) images.push({ storageId, url });
+    }
+
+    return { text: saved?.text ?? "", images };
+  },
+});
+
+export const saveDraft = mutation({
+  args: {
+    ...SessionIdArg,
+    threadId: v.optional(v.string()),
+    text: v.string(),
+    imageIds: v.array(v.id("_storage")),
+  },
+  // false means nothing was written; the client keeps the text and tries again later.
+  returns: v.boolean(),
+  handler: async (ctx, { sessionId, threadId, text, imageIds }) => {
+    const user = await findUser(ctx, sessionId);
+
+    if (!user || (threadId && !(await ownsThread(ctx, user, threadId)))) return false;
+
+    const { ok } = await rateLimiter.limit(ctx, "draftBurst", { key: user._id });
+
+    if (!ok) return false;
+
+    const ownImageIds: Id<"_storage">[] = [];
+
+    for (const storageId of imageIds.slice(0, AI_MAX_IMAGES)) {
+      if (await ownsUpload(ctx, user._id, storageId)) ownImageIds.push(storageId);
+    }
+
+    const value = { text: text.slice(0, DRAFT_MAX_CHARACTERS), imageIds: ownImageIds };
+    const existing = await findDraft(ctx, user._id, threadId);
+
+    if (!value.text.trim() && value.imageIds.length === 0) {
+      if (existing) await ctx.db.delete(existing._id);
+    } else if (existing) {
+      await ctx.db.patch(existing._id, value);
+    } else {
+      await ctx.db.insert("drafts", { userId: user._id, threadId, ...value });
+    }
+
+    return true;
   },
 });
 
@@ -93,11 +189,9 @@ export const sendMessage = mutation({
     const imageUrls: string[] = [];
 
     for (const imageId of imageIds) {
-      const upload = await ctx.db
-        .query("uploads")
-        .withIndex("by_storage", (q) => q.eq("storageId", imageId))
-        .unique();
-      const url = upload?.userId === user._id ? await ctx.storage.getUrl(imageId) : null;
+      const url = (await ownsUpload(ctx, user._id, imageId))
+        ? await ctx.storage.getUrl(imageId)
+        : null;
 
       if (!url) {
         return { ok: false as const, message: "Фото не завантажилось. Спробуй ще раз." };
@@ -118,11 +212,16 @@ export const sendMessage = mutation({
       return { ok: false as const, message: "Забагато запитів. Спробуй трохи пізніше." };
     }
 
+    // The draft for this composer is sent now; a stale copy must not reappear on another device.
+    const savedDraft = await findDraft(ctx, user._id, requestedThreadId);
+
+    if (savedDraft) await ctx.db.delete(savedDraft._id);
+
     let threadId = requestedThreadId;
 
     if (!threadId) {
       threadId = await createThread(ctx, components.agent, { userId: user._id });
-      await ctx.db.patch(user._id, { activeThreadId: threadId });
+      await setActiveThread(ctx, sessionId, threadId);
     }
 
     const { messageId } = await saveMessage(ctx, components.agent, {
@@ -155,16 +254,7 @@ export const newThread = mutation({
   args: SessionIdArg,
   returns: v.null(),
   handler: async (ctx, { sessionId }) => {
-    const user = await getOrCreateUser(ctx, sessionId);
-
-    if (user.activeThreadId) {
-      await updateThreadMetadata(ctx, components.agent, {
-        threadId: user.activeThreadId,
-        patch: { status: "archived" },
-      });
-      await ctx.db.patch(user._id, { activeThreadId: undefined });
-    }
-
+    await setActiveThread(ctx, sessionId, undefined);
     return null;
   },
 });
@@ -173,7 +263,10 @@ export const newThread = mutation({
 export const followUp = internalMutation({
   args: { userId: v.id("users"), threadId: v.string(), text: v.string() },
   returns: v.null(),
-  handler: async (ctx, { userId, threadId, text }) => {
+  handler: async (ctx, { userId: requestedUserId, threadId, text }) => {
+    const userId = await resolveUserId(ctx, requestedUserId);
+    const user = await ctx.db.get(userId);
+    if (!user || !(await ownsThread(ctx, user, threadId))) return null;
     const { messageId } = await saveMessage(ctx, components.agent, {
       threadId,
       userId,
@@ -191,12 +284,12 @@ export const followUp = internalMutation({
 });
 
 // An answer is accepted only for an ask_user call in this thread that has no result yet.
-async function hasPendingQuestion(ctx: QueryCtx, threadId: string, toolCallId: string) {
+async function pendingQuestionInput(ctx: QueryCtx, threadId: string, toolCallId: string) {
   const recent = await listThreadMessages(ctx, components.agent, {
     threadId,
     paginationOpts: { cursor: null, numItems: 40 },
   });
-  let called = false;
+  let input: unknown;
 
   for (const doc of recent.page) {
     const content = doc.message?.content;
@@ -207,16 +300,17 @@ async function hasPendingQuestion(ctx: QueryCtx, threadId: string, toolCallId: s
 
     for (const part of content) {
       if (part.type === "tool-call" && part.toolCallId === toolCallId) {
-        called = part.toolName === "ask_user";
+        if (part.toolName !== "ask_user") return null;
+        input = "input" in part ? part.input : part.args;
       }
 
       if (part.type === "tool-result" && part.toolCallId === toolCallId) {
-        return false;
+        return null;
       }
     }
   }
 
-  return called;
+  return input === undefined ? null : readQuestionInput(input);
 }
 
 export const answerQuestion = mutation({
@@ -225,9 +319,13 @@ export const answerQuestion = mutation({
     threadId: v.string(),
     toolCallId: v.string(),
     answer: v.object({
-      optionIds: v.array(v.string()),
-      labels: v.array(v.string()),
-      custom: v.optional(v.string()),
+      answers: v.array(
+        v.object({
+          questionId: v.string(),
+          optionIds: v.array(v.string()),
+          custom: v.optional(v.string()),
+        }),
+      ),
     }),
   },
   returns: v.union(
@@ -241,8 +339,14 @@ export const answerQuestion = mutation({
       return { ok: false as const, message: "Ця розмова недоступна. Почни нову." };
     }
 
-    if (!(await hasPendingQuestion(ctx, threadId, toolCallId))) {
+    const input = await pendingQuestionInput(ctx, threadId, toolCallId);
+    if (!input) {
       return { ok: false as const, message: "Це питання вже закрите." };
+    }
+
+    const value = validateQuestionSubmission(input, answer);
+    if (!value) {
+      return { ok: false as const, message: "Перевір відповіді та спробуй ще раз." };
     }
 
     const admitted = await admitAiGeneration({
@@ -252,12 +356,6 @@ export const answerQuestion = mutation({
     if (!admitted) {
       return { ok: false as const, message: "Забагато запитів. Спробуй трохи пізніше." };
     }
-
-    const custom = answer.custom?.trim().slice(0, 200);
-    const value = {
-      selected: answer.labels.slice(0, 5),
-      ...(custom ? { custom } : {}),
-    };
 
     const { messageId } = await saveMessage(ctx, components.agent, {
       threadId,
@@ -330,6 +428,8 @@ export const history = query({
       return [];
     }
 
+    const session = await findSession(ctx, sessionId);
+    const activeThreadId = session ? session.activeThreadId : user.activeThreadId;
     const threads = await ctx.runQuery(components.agent.threads.listThreadsByUserId, {
       userId: user._id,
       order: "desc",
@@ -341,7 +441,7 @@ export const history = query({
         threadId: thread._id,
         title: thread.title,
         createdAt: thread._creationTime,
-        active: thread._id === user.activeThreadId,
+        active: thread._id === activeThreadId,
         photos: await threadPhotos(ctx, thread._id),
       })),
     );
@@ -352,22 +452,9 @@ export const openThread = mutation({
   args: { ...SessionIdArg, threadId: v.string() },
   returns: v.null(),
   handler: async (ctx, { sessionId, threadId }) => {
-    const user = await getOrCreateUser(ctx, sessionId);
-
-    if (!(await ownsThread(ctx, user, threadId)) || user.activeThreadId === threadId) {
-      return null;
-    }
-
-    if (user.activeThreadId) {
-      await updateThreadMetadata(ctx, components.agent, {
-        threadId: user.activeThreadId,
-        patch: { status: "archived" },
-      });
-    }
-
-    await updateThreadMetadata(ctx, components.agent, { threadId, patch: { status: "active" } });
-    await ctx.db.patch(user._id, { activeThreadId: threadId });
-
+    const user = await findUser(ctx, sessionId);
+    if (!user || !(await ownsThread(ctx, user, threadId))) return null;
+    await setActiveThread(ctx, sessionId, threadId);
     return null;
   },
 });
@@ -397,8 +484,13 @@ export const deleteThread = mutation({
       await ctx.storage.delete(storageId);
     }
 
-    if (user.activeThreadId === threadId) {
-      await ctx.db.patch(user._id, { activeThreadId: undefined });
+    const savedDraft = await findDraft(ctx, user._id, threadId);
+
+    if (savedDraft) await ctx.db.delete(savedDraft._id);
+
+    const session = await findSession(ctx, sessionId);
+    if ((session ? session.activeThreadId : user.activeThreadId) === threadId) {
+      await setActiveThread(ctx, sessionId, undefined);
     }
 
     await ctx.runMutation(components.agent.threads.deleteAllForThreadIdAsync, { threadId });

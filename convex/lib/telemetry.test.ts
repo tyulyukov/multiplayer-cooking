@@ -60,4 +60,24 @@ describe("recordAiEvent", () => {
       "https://eu-central-1.aws.edge.axiom.co/v1/ingest/multiplayer-cooking-test",
     );
   });
+
+  test("swallows an Axiom HTTP outage", async () => {
+    process.env.AXIOM_TOKEN = "xaat-test";
+    process.env.AXIOM_DATASET = "multiplayer-cooking-test";
+    process.env.AXIOM_EDGE = "eu-central-1.aws.edge.axiom.co";
+    globalThis.fetch = Object.assign(async () => new Response("unavailable", { status: 503 }), {
+      preconnect: () => undefined,
+    });
+
+    await expect(
+      recordAiEvent({
+        event: "ai.run",
+        outcome: "error",
+        durationMs: 1,
+        model: "test",
+        threadId: "thread",
+        userId: "user",
+      }),
+    ).resolves.toBeUndefined();
+  });
 });

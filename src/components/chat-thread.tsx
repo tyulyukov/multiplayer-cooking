@@ -1,22 +1,17 @@
+import { generationStatus } from "@/lib/generation-status";
+import { collectAnswers, isToolPart } from "@/lib/question-messages";
 import type { UIMessage } from "@convex-dev/agent";
 import { useSmoothText } from "@convex-dev/agent/react";
-import type { ToolUIPart } from "ai";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
+import { readMemoryEvent } from "@/lib/memory-event";
 import { Markdown } from "@/components/markdown";
 import { PhotoStrip } from "@/components/photo-lightbox";
-import { QuestionCard } from "@/components/question-card";
-import { readQuestionAnswer, readQuestionInput, type QuestionAnswer } from "@/lib/question";
+import { QuestionSummary, type QuestionResponse } from "@/components/question-card";
+import { readQuestionInput, type QuestionAnswer } from "@/lib/question";
 
-export type QuestionSubmit = (
-  toolCallId: string,
-  answer: { optionIds: string[]; labels: string[]; custom?: string },
-) => void;
-
-function isToolPart(part: UIMessage["parts"][number]): part is ToolUIPart {
-  return part.type.startsWith("tool-");
-}
+export type QuestionSubmit = (toolCallId: string, answer: QuestionResponse) => void;
 
 function imageUrls(message: UIMessage) {
   return message.parts.flatMap((part) =>
@@ -36,39 +31,6 @@ function UserMessage({ message }: { message: UIMessage }) {
   );
 }
 
-// Tool results saved later live in their own message; map them back by call id.
-function collectAnswers(messages: readonly UIMessage[]) {
-  const answers = new Map<string, QuestionAnswer>();
-
-  for (const message of messages) {
-    for (const part of message.parts) {
-      if (isToolPart(part) && part.type === "tool-ask_user" && "output" in part) {
-        const answer = readQuestionAnswer(part.output);
-
-        if (answer) {
-          answers.set(part.toolCallId, answer);
-        }
-      }
-    }
-  }
-
-  return answers;
-}
-
-const toolLabels: Record<string, string> = {
-  web_search: "Шукаю в інтернеті",
-  read_page: "Читаю сторінку",
-  find_dish_image: "Підбираю фото страви",
-  silpo_find_products: "Підбираю продукти в Сільпо",
-  save_idea: "Зберігаю ідею",
-};
-
-function toolLabel(type: string) {
-  const name = type.replace(/^tool-/, "");
-
-  return toolLabels[name] ?? "Працюю над відповіддю";
-}
-
 function AssistantText({ text, streaming }: { text: string; streaming: boolean }) {
   const [visibleText] = useSmoothText(text, { startStreaming: streaming });
 
@@ -78,23 +40,27 @@ function AssistantText({ text, streaming }: { text: string; streaming: boolean }
 function AssistantMessage({
   message,
   answers,
-  isLast,
-  answering,
-  onAnswer,
+  onOpenMemories,
 }: {
   message: UIMessage;
   answers: ReadonlyMap<string, QuestionAnswer>;
-  isLast: boolean;
-  answering: boolean;
-  onAnswer: QuestionSubmit;
+  onOpenMemories: () => void;
 }) {
   const streaming = message.status === "streaming";
   const toolParts = message.parts.filter(isToolPart);
-  const activity = toolParts.filter((part) => part.type !== "tool-ask_user");
+  const memories = toolParts.flatMap((part) => {
+    if (
+      !["tool-add_memory", "tool-remove_memory"].includes(part.type) ||
+      part.state !== "output-available"
+    )
+      return [];
+    const event = readMemoryEvent(part.output);
+    return event ? [{ ...event, toolCallId: part.toolCallId }] : [];
+  });
   const questions = toolParts.filter((part) => part.type === "tool-ask_user");
   const text = message.text.trim();
 
-  if (activity.length === 0 && questions.length === 0 && !text && message.status !== "failed") {
+  if (memories.length === 0 && questions.length === 0 && !text && message.status !== "failed") {
     return null;
   }
 
@@ -109,28 +75,20 @@ function AssistantMessage({
 
         const answer = answers.get(part.toolCallId) ?? null;
 
-        // Only the latest unanswered question is live; older ones stay as summaries.
-        if (!answer && !isLast) {
-          return null;
-        }
-
-        return (
-          <QuestionCard
-            key={part.toolCallId}
-            input={input}
-            answer={answer}
-            pending={answering}
-            onSubmit={(value) => onAnswer(part.toolCallId, value)}
-          />
-        );
+        if (!answer) return null;
+        return <QuestionSummary key={part.toolCallId} input={input} answer={answer} />;
       })}
-      {activity.length > 0 && (
-        <ul className="activity" aria-label="Що робить агент">
-          {activity.map((part, index) => (
-            <li key={`${message.key}-${index}`}>{toolLabel(part.type)}</li>
-          ))}
-        </ul>
-      )}
+      {memories.map((part) => (
+        <button
+          type="button"
+          className="memory-event"
+          key={part.toolCallId}
+          onClick={onOpenMemories}
+        >
+          {part.action === "added" ? "Запам’ятав" : "Забув"}: {part.text}
+          <span>Переглянути спогади ↗</span>
+        </button>
+      ))}
       {text && <AssistantText text={text} streaming={streaming} />}
       {message.status === "failed" && (
         <p className="msg-error">Відповідь не вдалася. Спробуй надіслати ще раз.</p>
@@ -142,20 +100,17 @@ function AssistantMessage({
 export function ChatThread({
   messages,
   working,
-  answering,
-  onAnswer,
+  onOpenMemories,
   children,
 }: {
   messages: readonly UIMessage[];
   working: boolean;
-  answering: boolean;
-  onAnswer: QuestionSubmit;
+  onOpenMemories: () => void;
   children?: ReactNode;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const pinnedRef = useRef(true);
   const answers = collectAnswers(messages);
-  const lastAssistantKey = messages.filter((message) => message.role === "assistant").at(-1)?.key;
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -185,20 +140,44 @@ export function ChatThread({
               <AssistantMessage
                 message={message}
                 answers={answers}
-                isLast={message.key === lastAssistantKey}
-                answering={answering}
-                onAnswer={onAnswer}
+                onOpenMemories={onOpenMemories}
               />
             )}
           </li>
         ))}
-        {working && messages.at(-1)?.role === "user" && (
+        {working && (
           <li>
-            <p className="thinking t-shimmer">Думаю над стравою</p>
+            <GenerationStatus messages={messages} />
           </li>
         )}
         {children && <li>{children}</li>}
       </ol>
+    </div>
+  );
+}
+
+export function GenerationStatus({ messages }: { messages: readonly UIMessage[] }) {
+  const { activity, label } = generationStatus(messages);
+  return (
+    <div className="generation-status" role="status" data-activity={activity}>
+      <svg
+        className="generation-pot"
+        width="32"
+        height="32"
+        viewBox="0 0 40 40"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path className="pot-steam" d="M15 12c-2-2 2-3 0-5m10 5c-2-2 2-3 0-5" />
+        <circle className="pot-bubble" cx="20" cy="25" r="1" />
+        <path d="M8 17h24v10a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V17Z" />
+        <path d="M8 19H5a2 2 0 0 0 0 4h3m24-4h3a2 2 0 0 1 0 4h-3M11 36h18" />
+      </svg>
+      <span className="t-shimmer">{label}</span>
     </div>
   );
 }

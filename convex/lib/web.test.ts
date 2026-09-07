@@ -1,12 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  htmlToText,
-  isPublicHttpUrl,
-  parseWebResults,
-  rankImageCandidates,
-  READ_PAGE_MAX_CHARACTERS,
-} from "./web";
+import { htmlToText, isPublicHttpUrl, parseWebResults, READ_PAGE_MAX_CHARACTERS } from "./web";
 
 describe("isPublicHttpUrl", () => {
   test("accepts public http and https hosts", () => {
@@ -67,61 +61,6 @@ describe("parseWebResults", () => {
     };
 
     expect(parseWebResults(payload, 2)).toHaveLength(2);
-  });
-});
-
-describe("rankImageCandidates", () => {
-  test("orders free-licence engines first and builds a credit line", () => {
-    const payload = {
-      results: [
-        {
-          engine: "pexels",
-          img_src: "https://img.pexels.example/p.jpg",
-          url: "https://pexels.example/p",
-          title: "Pasta",
-        },
-        {
-          engine: "bing images",
-          img_src: "https://bing.example/b.jpg",
-          url: "https://bing.example/b",
-          title: "Bing",
-        },
-        {
-          engine: "unsplash",
-          img_src: "https://img.unsplash.example/u.jpg",
-          url: "https://unsplash.example/u",
-          title: "Pasta on a plate",
-          author: "Ann Cook",
-        },
-        {
-          engine: "openverse",
-          img_src: "http://10.0.0.5/private.jpg",
-          url: "https://openverse.example/o",
-          title: "Private",
-        },
-        {
-          engine: "unsplash",
-          img_src: "https://plus.unsplash.com/premium_photo-1?w=1080",
-          url: "https://unsplash.example/premium",
-          title: "Paid",
-        },
-      ],
-    };
-
-    expect(rankImageCandidates(payload)).toEqual([
-      {
-        imageUrl: "https://img.unsplash.example/u.jpg",
-        pageUrl: "https://unsplash.example/u",
-        title: "Pasta on a plate",
-        credit: "Фото: Ann Cook, Unsplash",
-      },
-      {
-        imageUrl: "https://img.pexels.example/p.jpg",
-        pageUrl: "https://pexels.example/p",
-        title: "Pasta",
-        credit: "Фото: Pexels",
-      },
-    ]);
   });
 });
 

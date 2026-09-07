@@ -1,5 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
 
 import type { Id } from "../_generated/dataModel";
 import type { ActionCtx } from "../_generated/server";
@@ -15,6 +17,12 @@ export const SILPO_CALL_TIMEOUT_MS = 30_000;
 export type SilpoClient = Readonly<{
   callTool: (name: string, args: Record<string, unknown>) => Promise<unknown>;
   listTools: () => Promise<unknown>;
+}>;
+
+export type SilpoClientAuthOptions = Readonly<{
+  provider?: OAuthClientProvider;
+  stagedTokens?: OAuthTokens;
+  saveStagedTokens?: (tokens: OAuthTokens) => Promise<void>;
 }>;
 
 function parseToolResult(result: Awaited<ReturnType<Client["callTool"]>>): unknown {
@@ -40,8 +48,9 @@ export async function withSilpoClient<T>(
   ctx: ActionCtx,
   userId: Id<"users">,
   run: (client: SilpoClient) => Promise<T>,
+  authOptions: SilpoClientAuthOptions = {},
 ): Promise<T> {
-  const provider = createSilpoAuthProvider(ctx, { userId });
+  const provider = authOptions.provider ?? createSilpoAuthProvider(ctx, { userId, ...authOptions });
   const transport = new StreamableHTTPClientTransport(new URL(SILPO_MCP_URL), {
     authProvider: provider,
   });
@@ -121,7 +130,35 @@ function readString(source: unknown, keys: readonly string[]) {
   return undefined;
 }
 
-// The profile schema is owned by Сільпо; keep only a display name and a phone.
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export type VerifiedSilpoProfile = Readonly<{
+  accountSubject: string;
+  profile: { name?: string; phone?: string; email?: string };
+}>;
+
+// Identity only comes from the verified profile response, never from a phone number or token claim.
+export function parseVerifiedSilpoProfile(raw: unknown): VerifiedSilpoProfile | null {
+  if (!isRecord(raw) || raw.success !== true || !isRecord(raw.profile)) {
+    return null;
+  }
+
+  const rawAccountSubject = raw.profile.id;
+  const accountSubject =
+    typeof rawAccountSubject === "string" && rawAccountSubject.trim()
+      ? rawAccountSubject.trim()
+      : undefined;
+
+  if (!accountSubject) {
+    return null;
+  }
+
+  return { accountSubject, profile: shapeProfile(raw) };
+}
+
+// The profile schema is owned by Сільпо; retain only fields useful in the account UI.
 export function shapeProfile(raw: unknown) {
   const source =
     typeof raw === "object" && raw !== null && "profile" in raw ? Reflect.get(raw, "profile") : raw;
@@ -131,8 +168,9 @@ export function shapeProfile(raw: unknown) {
   const joined = [firstName, lastName].filter(Boolean).join(" ");
   const name = fullName ?? (joined || undefined);
   const phone = readString(source, ["phone", "phoneNumber", "phone_number", "mobile", "msisdn"]);
+  const email = readString(source, ["email"]);
 
-  return { name, phone: phone ? formatPhone(phone) : undefined };
+  return { name, phone: phone ? formatPhone(phone) : undefined, email };
 }
 
 // 380505080405 → +380 50 508 04 05; other lengths are shown as given.
