@@ -589,7 +589,9 @@
 }
 
 .profile-menu {
-  min-width: 240px;
+  width: max-content;
+  min-width: min(260px, calc(100vw - 24px));
+  max-width: min(360px, calc(100vw - 24px));
   border: 2px solid var(--foreground);
   border-radius: 14px;
   padding: 6px;
@@ -628,7 +630,7 @@
   font-size: 0.8125rem;
 }
 
-.profile-contact {
+.profile-menu .profile-contact {
   display: flex;
   align-items: baseline;
   gap: 6px;
@@ -636,6 +638,19 @@
   font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
   text-align: left;
+}
+
+.profile-contact > span:first-child {
+  flex-shrink: 0;
+}
+
+.profile-contact > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-contact[data-kind="phone"] > span:last-child {
+  white-space: nowrap;
 }
 
 .profile-contact span[data-hidden="true"] {

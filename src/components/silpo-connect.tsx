@@ -1,5 +1,4 @@
 import Location01Icon from "@hugeicons/core-free-icons/Location01Icon";
-import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import Store01Icon from "@hugeicons/core-free-icons/Store01Icon";
 import Unlink01Icon from "@hugeicons/core-free-icons/Unlink01Icon";
 import UserCircleIcon from "@hugeicons/core-free-icons/UserCircleIcon";
@@ -44,13 +43,11 @@ export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () 
 
 export function ProfileMenu({
   connection,
-  onReconnect,
   onForgetAddress,
   onDisconnect,
   onOpenSettings,
 }: {
   connection: SilpoConnection;
-  onReconnect: () => void;
   onForgetAddress: () => void;
   onDisconnect: () => void;
   onOpenSettings?: () => void;
@@ -77,10 +74,6 @@ export function ProfileMenu({
           Налаштування
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={onReconnect}>
-          <HugeiconsIcon icon={RefreshIcon} strokeWidth={1.5} aria-hidden />
-          Перепідключити
-        </DropdownMenuItem>
         <DropdownMenuItem disabled={!connection.hasAddress} onSelect={onForgetAddress}>
           <HugeiconsIcon icon={Location01Icon} strokeWidth={1.5} aria-hidden />
           Забути адресу
@@ -88,7 +81,7 @@ export function ProfileMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onSelect={onDisconnect}>
           <HugeiconsIcon icon={Unlink01Icon} strokeWidth={1.5} aria-hidden />
-          Вийти на цьому пристрої
+          Вийти
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -116,6 +109,7 @@ function RedactedContact({ value, kind }: { value: string; kind: "phone" | "emai
   return (
     <DropdownMenuItem
       className="profile-contact"
+      data-kind={kind}
       aria-label={revealed ? `Сховати ${label}: ${value}` : `Показати ${label}`}
       onSelect={(event) => {
         event.preventDefault();
