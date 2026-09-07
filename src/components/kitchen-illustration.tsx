@@ -7,6 +7,7 @@ export function KitchenIllustration({
   className,
 }: {
   name:
+    | "starter-sign"
     | "recipe-box"
     | "memory-fridge"
     | "bag-pot"
@@ -25,7 +26,7 @@ export function KitchenIllustration({
       src={`/images/${name}.webp`}
       alt=""
       width={384}
-      height={384}
+      height={name === "starter-sign" ? 394 : 384}
       decoding="async"
       onError={() => setFailed(true)}
     />

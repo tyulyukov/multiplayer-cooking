@@ -1,5 +1,9 @@
+import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
+
+import { Alert, AlertDescription } from "../../src/components/ui/alert";
 
 import { IdeaPane } from "../../src/components/idea-card";
 import { HistoryPanel } from "../../src/components/history-panel";
@@ -31,9 +35,9 @@ const baseIdea = {
   productsStatus: "empty",
 };
 
-export function FixtureShell({ children }) {
+export function FixtureShell({ children, starter = false }) {
   return (
-    <main className="app-shell">
+    <main className={starter ? "app-shell starter-screen" : "app-shell"}>
       <div className="checker-band" aria-hidden />
       <div className="page-frame">
         <header className="topbar">
@@ -89,9 +93,12 @@ export function MemoriesFixture() {
 }
 
 export function ConnectFixture() {
+  const [busy, setBusy] = useState(false);
+  const error = new URLSearchParams(location.search).has("error");
   return (
-    <FixtureShell>
-      <ConnectCard busy={false} onConnect={() => {}} />
+    <FixtureShell starter>
+      <ConnectCard busy={busy} onConnect={() => setBusy(true)} />
+      {error && <Alert variant="destructive" className="home-error rounded-[14px] border-2 px-[18px] py-4 has-[>svg]:gap-x-2.5"><HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden /><AlertDescription className="text-[0.9375rem] leading-[1.375rem] font-medium">Не вдалося відкрити Сільпо. Спробуй ще раз.</AlertDescription></Alert>}
     </FixtureShell>
   );
 }

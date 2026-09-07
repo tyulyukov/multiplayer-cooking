@@ -361,7 +361,7 @@ function ConnectScreen({
   onConnect: () => void;
 }) {
   return (
-    <main className="app-shell">
+    <main className="app-shell starter-screen">
       <div className="checker-band" aria-hidden />
       <div className="page-frame">
         <header className="topbar">

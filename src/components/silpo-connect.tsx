@@ -24,10 +24,8 @@ export type SilpoConnection = NonNullable<FunctionReturnType<typeof api.silpo.co
 export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () => void }) {
   return (
     <section className="connect-card" aria-label="Підключення Сільпо">
-      <KitchenIllustration name="bag-pot" className="connect-illustration" />
-      <div className="sign">
-        <h1>Готуємо з Сільпо</h1>
-      </div>
+      <KitchenIllustration name="starter-sign" className="connect-illustration" />
+      <h1>Що приготуємо сьогодні?</h1>
       <Button
         type="button"
         size="xl"
