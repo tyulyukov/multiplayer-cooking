@@ -23,12 +23,11 @@ export type SilpoConnection = NonNullable<FunctionReturnType<typeof api.silpo.co
 
 export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () => void }) {
   return (
-    <section className="connect-card chrome" aria-label="Підключення Сільпо">
+    <section className="connect-card" aria-label="Підключення Сільпо">
       <KitchenIllustration name="bag-pot" className="connect-illustration" />
-      <p>
-        Ідеї страв, продукти з цінами і кошик працюють через твій акаунт Сільпо. Вхід за номером
-        телефону на auth.silpo.ua.
-      </p>
+      <div className="sign">
+        <h1>Готуємо з Сільпо</h1>
+      </div>
       <Button
         type="button"
         size="xl"
@@ -40,10 +39,7 @@ export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () 
         <HugeiconsIcon icon={Store01Icon} className="size-5" strokeWidth={1.5} aria-hidden />
         {busy ? "Відкриваємо Сільпо…" : "Підключити Сільпо"}
       </Button>
-      <p className="connect-note">
-        Токени зберігаються лише на сервері. Адресу доставки ми запитаємо окремо, коли знадобиться
-        кошик.
-      </p>
+      <p className="connect-note">Вхід за номером телефону на сайті Сільпо.</p>
     </section>
   );
 }

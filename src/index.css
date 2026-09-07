@@ -429,17 +429,18 @@
 
 .illustrated-empty {
   display: grid;
+  align-content: center;
   justify-items: center;
   gap: 12px;
   text-align: center;
 }
 
 .illustrated-empty p {
+  max-width: 32ch;
   margin: 0;
 }
 
 .connect-illustration {
-  justify-self: center;
   width: 128px;
   height: 128px;
 }
@@ -472,25 +473,20 @@
 .connect-card {
   display: grid;
   gap: 16px;
-  margin-top: 22px;
-  padding: 20px;
-  border-radius: 22px;
+  justify-items: center;
+  margin-top: clamp(32px, 8vh, 72px);
+  text-align: center;
 }
 
-.connect-card p {
-  margin: 0;
-  font-size: 1.0625rem;
-  line-height: 1.5;
+.connect-card .sign {
+  margin: 0 0 12px;
 }
 
 .connect-card .connect-note {
+  margin: 0;
   color: var(--muted-foreground);
   font-size: 0.875rem;
   line-height: 1.25rem;
-}
-
-.connect-card .generate-button {
-  justify-self: start;
 }
 
 .profile-trigger {
@@ -1087,6 +1083,8 @@
 }
 
 .history-empty {
+  flex: 1;
+  min-height: min(280px, 40dvh);
   margin: 0;
   padding: 8px;
   color: var(--muted-foreground);

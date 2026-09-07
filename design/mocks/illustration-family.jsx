@@ -91,7 +91,6 @@ export function MemoriesFixture() {
 export function ConnectFixture() {
   return (
     <FixtureShell>
-      <div className="sign"><h1>Підключи Сільпо, щоб почати</h1></div>
       <ConnectCard busy={false} onConnect={() => {}} />
     </FixtureShell>
   );

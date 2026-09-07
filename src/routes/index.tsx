@@ -369,10 +369,6 @@ function ConnectScreen({
         </header>
       </div>
       <div className="home-layout">
-        <div className="sign">
-          <h1>Підключи Сільпо, щоб почати</h1>
-        </div>
-
         <ConnectCard busy={busy} onConnect={onConnect} />
 
         {error && <SendError message={error} />}

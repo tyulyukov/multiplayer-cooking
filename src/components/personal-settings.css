@@ -56,6 +56,10 @@
   display: grid;
   gap: 10px;
 }
+.personal-settings__memories:has(> .personal-settings__empty) {
+  min-height: 100%;
+  align-content: center;
+}
 .personal-settings__memory {
   display: flex;
   justify-content: space-between;
