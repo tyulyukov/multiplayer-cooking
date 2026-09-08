@@ -29,6 +29,8 @@ import { Button } from "@/components/ui/button";
 import { isConvexConfigured } from "@/lib/convex";
 import { resizeImage, uploadImage } from "@/lib/images";
 import { pickQuickPrompts, type QuickPrompt } from "@/lib/quick-prompts";
+import type { CookingSetup } from "@/components/cook-together";
+import { createCookingCredential, saveCookingCredential } from "@/lib/cooking-session";
 
 type PromptSelection = Readonly<{
   promptId: string;
@@ -487,7 +489,7 @@ function ChatScreen({
   onSaveAddress: (address: string) => void;
   onAddToCart: () => void;
   onAnswer: QuestionSubmit;
-  onCookCount: (count: number) => Promise<void>;
+  onCookCount: (setup: CookingSetup) => Promise<void>;
   onOpenMemories: () => void;
   onOpenIdea: (ideaId: Idea["_id"]) => void;
 }) {
@@ -774,6 +776,7 @@ const defaultAgentSettings: AgentSettings = { tone: "friendly", customInstructio
 
 function ConnectedHome() {
   const [sessionId] = useSessionId();
+  const navigate = useNavigate();
   const status = useQuery(api.status.current);
   const silpo = useSilpoConnection(sessionId);
   const connected = silpo.connection != null;
@@ -793,6 +796,10 @@ function ConnectedHome() {
     select: selectVersion,
   } = useIdeaVersions(sessionId, threadId, latestIdea);
   const history = useQuery(api.chat.history, sessionId && connected ? { sessionId } : "skip");
+  const cookingHistory = useQuery(
+    api.cookingRooms.listOwned,
+    sessionId && connected ? { sessionId } : "skip",
+  );
   const sendMessage = useMutation(api.chat.sendMessage);
   const newThread = useMutation(api.chat.newThread);
   const openThread = useMutation(api.chat.openThread);
@@ -800,7 +807,7 @@ function ConnectedHome() {
   const answerQuestion = useMutation(api.chat.answerQuestion);
   const saveAddress = useMutation(api.silpo.saveAddress);
   const addToCart = useMutation(api.ideas.addToCart);
-  const setCookCount = useMutation(api.ideas.setCookCount);
+  const createCookingRoom = useMutation(api.cookingRooms.create);
   const uploadUrl = useMutation(api.files.uploadUrl);
   const registerUpload = useMutation(api.files.register);
   const saveDraft = useMutation(api.chat.saveDraft);
@@ -901,9 +908,19 @@ function ConnectedHome() {
     }
   }
 
-  async function cookCount(count: number) {
+  async function cookCount(setup: CookingSetup) {
     if (sessionId && idea) {
-      await setCookCount({ sessionId, ideaId: idea._id, count });
+      const credential = createCookingCredential(createCookingCredential().participantToken);
+      const result = await createCookingRoom({
+        sessionId,
+        sourceIdeaId: idea._id,
+        participantToken: credential.participantToken,
+        inviteToken: credential.inviteToken!,
+        ...setup,
+      });
+      if (!result) throw new Error("Не вдалося створити кухню.");
+      saveCookingCredential(result.roomId, credential);
+      await navigate({ to: "/cook/$roomId", params: { roomId: result.roomId } });
     }
   }
 
@@ -1008,7 +1025,15 @@ function ConnectedHome() {
 
   const menu = (
     <>
-      <HistoryPanel items={history} onOpen={openFromHistory} onDelete={removeFromHistory} />
+      <HistoryPanel
+        items={history}
+        onOpen={openFromHistory}
+        onDelete={removeFromHistory}
+        cookingRooms={cookingHistory}
+        onOpenCooking={(roomId) => {
+          void navigate({ to: "/cook/$roomId", params: { roomId } });
+        }}
+      />
       <PersonalSettings
         open={personalTab !== null}
         onOpenChange={(open) => {

@@ -51,6 +51,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
+    "convex-test": "0.0.56",
     "oxfmt": "^0.66.0",
     "oxlint": "^1.79.0",
     "shadcn": "^4.20.1",

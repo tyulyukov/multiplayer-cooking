@@ -13,7 +13,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 
 import type { api } from "../../convex/_generated/api";
-import { CookTogether } from "@/components/cook-together";
+import { CookTogether, type CookingSetup } from "@/components/cook-together";
 import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Markdown } from "@/components/markdown";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -527,7 +527,7 @@ export function IdeaPane({
   canAddToCart: boolean;
   versions: IdeaVersions;
   onAddToCart: () => void;
-  onCookCount: (count: number) => Promise<void> | void;
+  onCookCount: (setup: CookingSetup) => Promise<void> | void;
 }) {
   return (
     <article className="idea-pane chrome" aria-label={idea.title}>
@@ -550,7 +550,11 @@ export function IdeaPane({
         <Markdown text={idea.body} className="idea-body" />
         <IdeaProducts idea={idea} canAddToCart={canAddToCart} onAddToCart={onAddToCart} />
         <div className="idea-actions">
-          <CookTogether savedCount={idea.cookCount} onGenerate={onCookCount} />
+          <CookTogether
+            servings={idea.servings}
+            cookCount={idea.cookCount ?? 1}
+            onGenerate={onCookCount}
+          />
         </div>
       </div>
     </article>

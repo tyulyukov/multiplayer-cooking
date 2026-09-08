@@ -38,28 +38,56 @@ function countLabel(count: number) {
   return `${count} кухарів`;
 }
 
-function CooksForm({
+export type CookingSetup = Readonly<{
+  cookCount: number;
+  servings: number;
+  name: string;
+  constraints: string;
+}>;
+
+export function CooksForm({
   initial,
-  saved,
+  initialServings = 2,
+  initialName = "",
+  initialConstraints = "",
+  disabled = false,
   onGenerate,
 }: {
   initial: number;
-  saved: number | undefined;
-  onGenerate: (count: number) => Promise<void> | void;
+  initialServings?: number;
+  initialName?: string;
+  initialConstraints?: string;
+  disabled?: boolean;
+  onGenerate: (setup: CookingSetup) => Promise<void> | void;
 }) {
-  const [count, setCooks] = useState(saved ?? initial);
+  const [count, setCooks] = useState(initial);
+  const [servings, setServings] = useState(initialServings);
+  const [name, setName] = useState(initialName);
+  const [constraints, setConstraints] = useState(initialConstraints);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const done = saved === count && !busy;
-
   async function generate() {
+    if (disabled || busy) return;
+    if (!Number.isInteger(servings)) {
+      setError("Вкажи цілу кількість порцій від 1 до 24.");
+      return;
+    }
+    if (!name.trim()) {
+      setError("Напиши, як тебе називати на кухні.");
+      return;
+    }
     setBusy(true);
     setError(null);
 
     try {
-      await onGenerate(count);
+      await onGenerate({
+        cookCount: count,
+        servings,
+        name: name.trim(),
+        constraints: constraints.trim(),
+      });
     } catch {
-      setError("Не вдалося зберегти кількість кухарів. Спробуй ще раз.");
+      setError("Не вдалося створити кухню. Спробуй ще раз.");
     } finally {
       setBusy(false);
     }
@@ -93,31 +121,64 @@ function CooksForm({
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden />
         </Button>
       </div>
+      <label className="cook-setup-field">
+        <span>Твоє ім’я</span>
+        <input
+          value={name}
+          maxLength={80}
+          autoComplete="name"
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Наприклад, Аня"
+        />
+      </label>
+      <label className="cook-setup-field">
+        <span>Порцій</span>
+        <input
+          type="number"
+          min={1}
+          max={24}
+          value={servings}
+          onChange={(event) =>
+            setServings(Math.max(1, Math.min(24, Number(event.target.value) || 1)))
+          }
+        />
+      </label>
+      <label className="cook-setup-field">
+        <span>Обладнання або досвід (необов’язково)</span>
+        <textarea
+          value={constraints}
+          maxLength={500}
+          rows={2}
+          onChange={(event) => setConstraints(event.target.value)}
+          placeholder="Є одна велика пательня, я новачок"
+        />
+      </label>
       {error && (
         <p role="alert" className="address-error">
           {error}
         </p>
       )}
-      {done ? (
-        <p className="cook-soon">
-          Збережено: {countLabel(count)}. Покроковий план з розподілом роботи з’явиться в наступній
-          версії.
-        </p>
-      ) : (
-        <Button type="button" size="xl" aria-busy={busy} disabled={busy} onClick={generate}>
-          {busy ? "Зберігаємо…" : "Зберегти кількість кухарів"}
-        </Button>
-      )}
+      <Button
+        type="button"
+        size="xl"
+        aria-busy={busy}
+        disabled={disabled || busy}
+        onClick={generate}
+      >
+        {busy ? "Створюємо кухню…" : "Створити кухню"}
+      </Button>
     </div>
   );
 }
 
 export function CookTogether({
-  savedCount,
   onGenerate,
+  servings = 2,
+  cookCount = 1,
 }: {
-  savedCount: number | undefined;
-  onGenerate: (count: number) => Promise<void> | void;
+  servings?: number;
+  cookCount?: number;
+  onGenerate: (setup: CookingSetup) => Promise<void> | void;
 }) {
   const [open, setOpen] = useState(false);
   const desktop = useMediaQuery("(min-width: 1024px)");
@@ -128,7 +189,7 @@ export function CookTogether({
     </Button>
   );
   const title = "Скільки вас готує?";
-  const form = <CooksForm initial={1} saved={savedCount} onGenerate={onGenerate} />;
+  const form = <CooksForm initial={cookCount} initialServings={servings} onGenerate={onGenerate} />;
 
   if (desktop) {
     return (
@@ -145,7 +206,7 @@ export function CookTogether({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer autoFocus open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
       <DrawerContent className="cook-dialog" aria-describedby={undefined}>
         <DrawerHeader>

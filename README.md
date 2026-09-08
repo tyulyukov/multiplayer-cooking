@@ -2,7 +2,7 @@
 
 Multiplayer Cooking is a mobile-first cooking companion for people making one meal together. It began as an entry for the [Сільпо AI Factory](https://ai-factory.silpo.ua/) contest.
 
-The app today: you connect your Сільпо account, describe what you want to cook or what you have at home, and a cooking agent proposes one dish with a photo, a recipe, and an ingredient list. You refine it in a chat, answer the agent's questions in a form, and go back to earlier versions. When you want groceries, the agent matches ingredients to Сільпо products with prices, and one click puts them in your Сільпо cart. Photos of your fridge can go into the chat. "Готуємо разом" saves the number of servings for the upcoming cooking plan.
+The app today: you connect your Сільпо account, describe what you want to cook or what you have at home, and a cooking agent proposes one dish with a photo, a recipe, and an ingredient list. You refine it in a chat, answer the agent's questions in a form, and go back to earlier versions. When you want groceries, the agent matches ingredients to Сільпо products with prices, and one click puts them in your Сільпо cart. Photos of your fridge can go into the chat. "Готуємо разом" opens setup for 1–12 cooks and generates an interactive recipe. Guests join by link without a Сільпо account. Each cook follows their assigned work in a shared timeline with synchronized timers, readiness, handoffs, checklists, and visual references.
 
 ## How it works
 
@@ -63,7 +63,7 @@ The Сільпо OAuth callback is served by Convex at `<CONVEX_SITE_URL>/silpo/
 | `APP_URL`                                    | Convex        | Where the OAuth callback sends the browser back. Without it the callback shows a plain text page.            |
 | `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_EDGE` | Convex        | Optional telemetry. Records run outcome, duration, and token counts. Never prompts or responses.             |
 
-Rate limits are per person: 5 messages per minute and 40 per day.
+AI requests share the host’s existing budget of 5 requests per minute and 40 per day. A cooking plan includes up to six automatic reference images. Extra images and helper requests from guests also use that host budget.
 
 ## Deploy
 

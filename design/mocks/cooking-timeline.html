@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Паста з креветками · готуємо разом</title>
+    <link rel="stylesheet" href="/src/index.css" />
+    <link rel="stylesheet" href="cooking-timeline.css" />
+  </head>
+  <body class="ct-page">
+    <div class="ct-checker" aria-hidden="true"></div>
+    <header class="ct-topbar">
+      <span class="ct-brand"><i></i> Multiplayer Cooking</span>
+      <button class="ct-icon-button" data-open="people" aria-label="Учасники">М + А</button>
+    </header>
+    <main class="ct-main">
+      <div class="ct-heading">
+        <h1 class="ct-sign">Паста з креветками</h1>
+        <div class="ct-meta"><span>Ти й Аня</span><span>2 порції</span><button data-open="tools">Інструменти</button></div>
+      </div>
+
+      <div class="ct-layout">
+        <div class="ct-timeline">
+          <details class="ct-finished"><summary>1 крок готово</summary><p>Дістали продукти й підготували посуд.</p></details>
+
+          <article class="ct-timer-row">
+            <div class="ct-order">2</div>
+            <button class="ct-timer" data-open="timer" aria-label="Таймер пасти: 6 хвилин 42 секунди">
+              <span><strong>Паста вариться</strong><small>Твій таймер</small></span>
+              <span class="ct-time" data-countdown>6:42</span>
+            </button>
+          </article>
+
+          <article class="ct-current" id="current-step">
+            <div class="ct-current-heading"><span class="ct-step-number">3</span><span class="ct-me">Твій крок</span></div>
+            <h2>Дрібно наріж часник</h2>
+            <p>Наріж 2 зубчики дрібними шматочками.</p>
+            <button class="ct-photo" data-open="photo" aria-label="Збільшити приклад нарізання часнику"><img src="/images/cooking-prep-3d.webp" alt="Приклад дрібно нарізаного часнику" /></button>
+            <div class="ct-card-actions"><button class="ct-secondary" data-open="help">Є питання</button><button class="ct-primary" id="complete">Часник готовий</button></div>
+          </article>
+
+          <article class="ct-other"><span class="ct-order">4</span><div><span class="ct-owner">Аня · готує зараз</span><h3>Почистити креветки</h3></div></article>
+          <article class="ct-future"><span class="ct-order">5</span><div><h3>Передати часник Ані</h3><p>Після нарізання часнику й очищення креветок</p></div></article>
+          <article class="ct-future"><span class="ct-order">6</span><div><h3>Обсмажити креветки</h3><p>Аня</p></div></article>
+          <article class="ct-future"><span class="ct-order">7</span><div><h3>Змішати пасту із соусом</h3><p>Разом · коли паста й креветки готові</p></div></article>
+          <article class="ct-future"><span class="ct-order">8</span><div><h3>Додати лимон і пармезан</h3><p>Розкласти на дві тарілки</p></div></article>
+        </div>
+        <aside class="ct-sidebar">
+          <details open><summary>Що знадобиться</summary><div class="ct-ingredients">
+            <label><input type="checkbox" /> Тальятеле <span>200 г</span></label>
+            <label><input type="checkbox" /> Креветки <span>300 г</span></label>
+            <label><input type="checkbox" /> Часник <span>2 зубчики</span></label>
+            <label><input type="checkbox" /> Вершки <span>150 мл</span></label>
+            <label><input type="checkbox" /> Лимон <span>½ шт.</span></label>
+            <label><input type="checkbox" /> Пармезан <span>30 г</span></label>
+          </div></details>
+          <button class="ct-secondary ct-full" data-open="help">Запитати помічника</button>
+        </aside>
+      </div>
+      <p class="ct-demo">Демонстрація з прикладом рецепта. Зміни зберігаються лише на цьому екрані.</p>
+    </main>
+
+    <dialog class="ct-dialog" id="panel"><header><h2 id="panel-title"></h2><button class="ct-icon-button" id="close" aria-label="Закрити">×</button></header><div id="panel-body"></div></dialog>
+    <script type="module" src="cooking-timeline.js"></script>
+  </body>
+</html>
