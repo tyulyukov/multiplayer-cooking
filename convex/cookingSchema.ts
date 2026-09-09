@@ -54,6 +54,7 @@ export const cookingTables = {
     requestedServings: v.number(),
     constraints: v.string(),
     state: roomStateValidator,
+    lobbyCompletedAt: v.optional(v.number()),
     plan: v.optional(cookingPlanValidator),
     planVersion: v.number(),
     checkedIngredientIds: v.array(v.string()),

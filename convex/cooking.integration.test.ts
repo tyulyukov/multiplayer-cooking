@@ -123,9 +123,7 @@ test("stale timer callbacks cannot override a paused timer or finish its step", 
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 3600 }] }),
   ]);
   const args = { ...host, stepKey: "boil", timerKey: "pasta" };
-  await expect(t.mutation(api.cookingTimers.start, args)).rejects.toThrow("почни");
-  await t.mutation(api.cookingSteps.start, { ...host, stepKey: "boil" });
-  await t.mutation(api.cookingTimers.start, args);
+  expect(await t.mutation(api.cookingTimers.start, args)).toBe(true);
   const running = (await t.query(api.cookingRooms.read, host))!.timers[0];
   await expect(
     t.mutation(api.cookingSteps.complete, { ...host, stepKey: "boil", confirmed: true }),

@@ -63,6 +63,7 @@ export function publicRoom(room: Doc<"cookingRooms">) {
     requestedServings: room.requestedServings,
     constraints: room.constraints,
     state: room.state,
+    lobbyCompletedAt: room.lobbyCompletedAt,
     plan: room.plan,
     planVersion: room.planVersion,
     inviteOpen: room.inviteOpen,

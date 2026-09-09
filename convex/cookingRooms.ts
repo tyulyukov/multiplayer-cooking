@@ -61,6 +61,7 @@ const publicRoomValidator = v.object({
   requestedServings: v.number(),
   constraints: v.string(),
   state: roomStateValidator,
+  lobbyCompletedAt: v.optional(v.number()),
   plan: v.optional(cookingPlanValidator),
   planVersion: v.number(),
   inviteOpen: v.boolean(),
@@ -70,6 +71,13 @@ const publicRoomValidator = v.object({
   helperBusy: v.optional(v.boolean()),
   helperError: v.optional(v.string()),
   checkedIngredientIds: v.array(v.string()),
+  dishImage: v.optional(
+    v.object({
+      url: v.string(),
+      credit: v.optional(v.string()),
+      sourceUrl: v.optional(v.string()),
+    }),
+  ),
 });
 const publicStepValidator = v.object({
   stepKey: v.string(),
@@ -116,7 +124,8 @@ export const read = query({
     const member = await activeMember(ctx, roomId, participantToken);
     const room = await ctx.db.get(roomId);
     if (!member || !room) return null;
-    const [members, steps, timers] = await Promise.all([
+    const [idea, members, steps, timers] = await Promise.all([
+      ctx.db.get(room.sourceIdeaId),
       ctx.db
         .query("cookingMembers")
         .withIndex("by_room_status", (q) => q.eq("roomId", roomId).eq("status", "active"))
@@ -130,9 +139,23 @@ export const read = query({
         .withIndex("by_room_status", (q) => q.eq("roomId", roomId))
         .take(24),
     ]);
+    const imageUrl = idea?.image ? await ctx.storage.getUrl(idea.image.storageId) : null;
     return {
       serverNow: Date.now(),
-      room: publicRoom(room),
+      room: {
+        ...publicRoom(room),
+        ...(imageUrl
+          ? {
+              dishImage: {
+                url: imageUrl,
+                ...(idea?.image?.credit !== undefined ? { credit: idea.image.credit } : {}),
+                ...(idea?.image?.sourceUrl !== undefined
+                  ? { sourceUrl: idea.image.sourceUrl }
+                  : {}),
+              },
+            }
+          : {}),
+      },
       me: publicMember(member),
       members: members.map(publicMember),
       steps: await Promise.all(
@@ -163,6 +186,9 @@ export const listOwned = query({
     v.object({
       _id: v.id("cookingRooms"),
       source: v.object({ title: v.string() }),
+      sourceIdeaId: v.id("ideas"),
+      sourceThreadId: v.union(v.string(), v.null()),
+      sourceImageUrl: v.union(v.string(), v.null()),
       state: roomStateValidator,
       requestedServings: v.number(),
       createdAt: v.number(),
@@ -176,13 +202,24 @@ export const listOwned = query({
       .withIndex("by_host_created", (q) => q.eq("hostUserId", user._id))
       .order("desc")
       .take(20);
-    return rooms.map((room) => ({
-      _id: room._id,
-      source: { title: room.source.title },
-      state: room.state,
-      requestedServings: room.requestedServings,
-      createdAt: room.createdAt,
-    }));
+    const ideas = await Promise.all(rooms.map((room) => ctx.db.get(room.sourceIdeaId)));
+    return Promise.all(
+      rooms.map(async (room, index) => {
+        const idea = ideas[index]?.userId === user._id ? ideas[index] : null;
+        return {
+          _id: room._id,
+          source: { title: room.source.title },
+          sourceIdeaId: room.sourceIdeaId,
+          sourceThreadId: idea?.threadId ?? null,
+          sourceImageUrl: idea?.image
+            ? ((await ctx.storage.getUrl(idea.image.storageId)) ?? null)
+            : null,
+          state: room.state,
+          requestedServings: room.requestedServings,
+          createdAt: room.createdAt,
+        };
+      }),
+    );
   },
 });
 
@@ -435,8 +472,17 @@ export const startSession = mutation({
   handler: async (ctx, args) => {
     requireHost(await requireActiveMember(ctx, args.roomId, args.participantToken));
     const room = await ctx.db.get(args.roomId);
-    if (!room || room.state !== "ready") return false;
-    await ctx.db.patch(args.roomId, { state: "cooking" });
+    if (!room || (room.state !== "ready" && room.state !== "generating")) return false;
+    if (room.lobbyCompletedAt !== undefined) return true;
+    const members = await ctx.db
+      .query("cookingMembers")
+      .withIndex("by_room_status", (q) => q.eq("roomId", args.roomId).eq("status", "active"))
+      .take(ROOM_MEMBER_LIMIT);
+    if (members.length < room.cookCount) throw new ConvexError("Спершу дочекайся всіх кухарів.");
+    await ctx.db.patch(args.roomId, {
+      lobbyCompletedAt: Date.now(),
+      state: room.state === "ready" ? "cooking" : "generating",
+    });
     return true;
   },
 });
@@ -549,7 +595,7 @@ export const savePlan = internalMutation({
     await ctx.db.patch(args.roomId, {
       plan,
       planVersion: room.planVersion + 1,
-      state: "ready",
+      state: room.lobbyCompletedAt !== undefined ? "cooking" : "ready",
       generationError: undefined,
     });
     let referenceCount = 0;

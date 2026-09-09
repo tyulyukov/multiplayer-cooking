@@ -1,0 +1,34 @@
+{
+  "method": "Blender 5.2.1 LTS; imagegen concept followed by modeled bell because both raster attempts were opaque.",
+  "reference": "design/mocks/cooking-completion/b-diner-ticket.png",
+  "imagegenPrompt": "Extract and recreate ONLY the small teal diner service bell shown at the bottom-right of the supplied completion-screen concept. Supporting UI illustration asset, NOT a screen. One single rounded teal enamel bell dome, subtle chrome base rim, cream push button and metal stem. Match the reference's slightly elevated three-quarter camera, proportions, soft studio lighting and warm retro kitchen styling. Isolated on a genuinely transparent alpha background, square composition, object occupies 78% width, fully visible with margins. No writing, logo, motion lines, confetti, food, ticket, controls, background surface, checkerboard, or UI. Preserve a restrained small contact shadow immediately under the bell only. Clean silhouette legible at 88px mobile and 128px desktop. Output a transparent PNG.",
+  "recipe": "Blender --background --factory-startup --python-exit-code 1 --python design/assets/serving-bell/render.py",
+  "render": {
+    "resolution": [
+      384,
+      384
+    ],
+    "format": "RGBA PNG",
+    "engine": "Cycles",
+    "samples": 48,
+    "camera": "orthographic"
+  },
+  "export": {
+    "command": "cwebp -q 88 -m 6 -alpha_q 100 design/assets/serving-bell/serving-bell.png -o public/images/serving-bell.webp",
+    "bytes": 7108
+  },
+  "alpha": {
+    "range": [
+      0,
+      255
+    ],
+    "transparentFraction": 0.679321,
+    "cornerAlpha": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "placement": "Decorative completion bell, 88px mobile / 128px desktop. Real saved idea photo remains separate."
+}

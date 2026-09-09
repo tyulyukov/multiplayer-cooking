@@ -1242,6 +1242,7 @@
   display: flex;
   flex: 1;
   min-width: 0;
+  min-height: 56px;
   align-items: center;
   gap: 12px;
   padding: 8px;
@@ -1260,6 +1261,8 @@
 
 .history-photos {
   display: flex;
+  justify-content: center;
+  align-items: center;
   flex: none;
   width: 72px;
   height: 40px;
@@ -2334,13 +2337,30 @@ button.question-progress[aria-expanded="true"] > svg {
   color: var(--muted-foreground);
 }
 
-.history-sections {
-  min-height: 0;
-  overflow-y: auto;
+.history-cooking-menu {
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  border: 2px solid var(--foreground);
+  border-radius: 14px;
+  box-shadow: none;
 }
-.history-sections > section > h3 {
-  margin: 12px 18px;
+
+.history-cooking-menu [data-slot="dropdown-menu-item"] {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
 }
-.history-sections .history-row {
-  min-height: 56px;
+
+.history-cooking-menu [data-slot="dropdown-menu-item"]:focus {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.history-cooking-menu [data-slot="dropdown-menu-item"]:focus > span {
+  color: var(--foreground);
+}
+
+.history-cooking-state {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
 }

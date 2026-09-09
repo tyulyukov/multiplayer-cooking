@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import type { Doc, Id } from "../_generated/dataModel";
 import { isReauthRequired, withSilpoClient } from "./silpo_client";
+import { findSilpoProducts } from "./silpo_products";
 import {
   shapeProductCandidates,
   type IngredientCandidates,
@@ -83,14 +84,7 @@ export function createSilpoTools(
 
       try {
         const raw = await withSilpoClient(ctx, userId, (client) =>
-          client.callTool("silpo_find_products_batch", {
-            products: items.map((item) => item.query),
-            branchId: cart.branchId,
-            deliveryType: cart.deliveryType,
-            timeslotStart: cart.timeslot.start,
-            timeslotEnd: cart.timeslot.end,
-            limit: 5,
-          }),
+          findSilpoProducts(client, cart, items),
         );
 
         const ingredients = shapeProductCandidates(items, raw);

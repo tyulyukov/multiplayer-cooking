@@ -1,11 +1,10 @@
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import HistoryIcon from "@hugeicons/core-free-icons/HistoryIcon";
+import CookingPotIcon from "@hugeicons/core-free-icons/CookingPotIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { FunctionReturnType } from "convex/server";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
-import type { api } from "../../convex/_generated/api";
 import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,10 +15,22 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  mergeHistory,
+  type HistoryEntry,
+  type HistoryItem,
+  type CookingHistoryItem,
+} from "@/lib/history";
 import { formatRelativeTime } from "@/lib/relative-time";
 import { useMediaQuery } from "@/lib/use-media-query";
 
-export type HistoryItem = FunctionReturnType<typeof api.chat.history>[number];
+export type { HistoryItem } from "@/lib/history";
 
 const title = "Історія";
 
@@ -39,10 +50,12 @@ function HistoryList({
   items,
   onOpen,
   onDelete,
+  onOpenCooking,
 }: {
-  items: readonly HistoryItem[] | undefined;
+  items: readonly HistoryEntry[] | undefined;
   onOpen: (threadId: string) => void;
   onDelete: (threadId: string) => void;
+  onOpenCooking?: (roomId: CookingHistoryItem["_id"]) => void;
 }) {
   const now = useNow();
 
@@ -62,8 +75,15 @@ function HistoryList({
   return (
     <ul className="history-list">
       {items.map((item) => (
-        <li key={item.threadId} data-active={item.active}>
-          <button type="button" className="history-row" onClick={() => onOpen(item.threadId)}>
+        <li key={item.key} data-active={item.active}>
+          <button
+            type="button"
+            className="history-row"
+            onClick={() => {
+              if (item.threadId) onOpen(item.threadId);
+              else if (item.rooms[0]) onOpenCooking?.(item.rooms[0]._id);
+            }}
+          >
             <span className="history-photos" aria-hidden>
               {item.photos.map((url) => (
                 <img key={url} src={url} alt="" loading="lazy" />
@@ -79,18 +99,85 @@ function HistoryList({
               </span>
             </span>
           </button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={`Видалити розмову ${item.title ?? "без назви"}`}
-            onClick={() => onDelete(item.threadId)}
-          >
-            <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.5} aria-hidden />
-          </Button>
+          {item.rooms.length > 0 && onOpenCooking && (
+            <HistoryCooking
+              rooms={item.rooms}
+              title={item.title ?? "Без назви"}
+              onOpen={onOpenCooking}
+            />
+          )}
+          {item.threadId && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Видалити розмову ${item.title ?? "без назви"}`}
+              onClick={() => {
+                if (item.threadId) onDelete(item.threadId);
+              }}
+            >
+              <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.5} aria-hidden />
+            </Button>
+          )}
         </li>
       ))}
     </ul>
+  );
+}
+
+function HistoryCooking({
+  rooms,
+  title,
+  onOpen,
+}: {
+  rooms: readonly CookingHistoryItem[];
+  title: string;
+  onOpen: (roomId: CookingHistoryItem["_id"]) => void;
+}) {
+  const firstRoom = rooms[0];
+  if (!firstRoom) return null;
+  const button = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label={`Відкрити кухню: ${title}`}
+      title="Відкрити кухню"
+      onClick={rooms.length === 1 ? () => onOpen(firstRoom._id) : undefined}
+    >
+      <HugeiconsIcon icon={CookingPotIcon} strokeWidth={1.5} aria-hidden />
+    </Button>
+  );
+  if (rooms.length === 1) {
+    return button;
+  }
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{button}</DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="history-cooking-menu">
+        {rooms.map((room) => (
+          <DropdownMenuItem key={room._id} onSelect={() => onOpen(room._id)}>
+            <span>
+              {new Date(room.createdAt).toLocaleString("uk-UA", {
+                day: "numeric",
+                month: "long",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+            <span className="history-cooking-state">
+              {room.state === "done"
+                ? "Приготовано"
+                : room.state === "cooking"
+                  ? "Готуємо"
+                  : room.state === "error"
+                    ? "Потрібна повторна спроба"
+                    : "Підготовка"}
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -105,10 +192,8 @@ export function HistoryPanel({
   items: readonly HistoryItem[] | undefined;
   onOpen: (threadId: string) => void;
   onDelete: (threadId: string) => void;
-  cookingRooms?: readonly FunctionReturnType<typeof api.cookingRooms.listOwned>[number][];
-  onOpenCooking?: (
-    roomId: FunctionReturnType<typeof api.cookingRooms.listOwned>[number]["_id"],
-  ) => void;
+  cookingRooms?: readonly CookingHistoryItem[];
+  onOpenCooking?: (roomId: CookingHistoryItem["_id"]) => void;
 }) {
   const [open, setOpen] = useState(false);
   const desktop = useMediaQuery("(min-width: 1024px)");
@@ -120,50 +205,22 @@ export function HistoryPanel({
     </Button>
   );
   const list = (
-    <div className="history-sections">
-      {cookingRooms.length > 0 && (
-        <section>
-          <h3 className="sign-text">Готування</h3>
-          <ul className="history-list">
-            {cookingRooms.map((room) => (
-              <li key={room._id}>
-                <button
-                  className="history-row"
-                  onClick={() => {
-                    setOpen(false);
-                    onOpenCooking?.(room._id);
-                  }}
-                >
-                  <span className="history-text">
-                    <strong>{room.source.title}</strong>
-                    <span>
-                      {room.state === "done"
-                        ? "Вечеря готова"
-                        : room.state === "cooking"
-                          ? "Готуємо"
-                          : room.state === "error"
-                            ? "План потребує повторної спроби"
-                            : "Підготовка"}{" "}
-                      · {room.requestedServings} порцій
-                    </span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {(cookingRooms.length === 0 || Boolean(items?.length)) && (
-        <HistoryList
-          items={items}
-          onOpen={(threadId) => {
-            setOpen(false);
-            onOpen(threadId);
-          }}
-          onDelete={onDelete}
-        />
-      )}
-    </div>
+    <HistoryList
+      items={items === undefined ? undefined : mergeHistory(items, cookingRooms)}
+      onOpen={(threadId) => {
+        setOpen(false);
+        onOpen(threadId);
+      }}
+      onDelete={onDelete}
+      onOpenCooking={
+        onOpenCooking
+          ? (roomId) => {
+              setOpen(false);
+              onOpenCooking(roomId);
+            }
+          : undefined
+      }
+    />
   );
 
   if (desktop) {

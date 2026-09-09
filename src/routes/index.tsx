@@ -468,6 +468,7 @@ function ChatScreen({
   onAddToCart,
   onAnswer,
   onCookCount,
+  profileName,
   onOpenMemories,
   onOpenIdea,
 }: {
@@ -490,6 +491,7 @@ function ChatScreen({
   onAddToCart: () => void;
   onAnswer: QuestionSubmit;
   onCookCount: (setup: CookingSetup) => Promise<void>;
+  profileName?: string;
   onOpenMemories: () => void;
   onOpenIdea: (ideaId: Idea["_id"]) => void;
 }) {
@@ -513,6 +515,7 @@ function ChatScreen({
       versions={versions}
       onAddToCart={onAddToCart}
       onCookCount={onCookCount}
+      profileName={profileName}
     />
   ) : null;
 
@@ -1095,6 +1098,7 @@ function ConnectedHome() {
       onAddToCart={submitCart}
       onAnswer={answer}
       onCookCount={cookCount}
+      profileName={silpo.connection.name}
       onOpenMemories={() => setPersonalTab("memories")}
       onOpenIdea={selectVersion}
     />

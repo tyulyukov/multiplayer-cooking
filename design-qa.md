@@ -1,49 +1,48 @@
-# Starter kitchen design QA
+**Findings**
+
+No actionable P0, P1, or P2 differences.
+
+The selected layout is `design/mocks/lobby-touch-option-2.png`. The implementation uses the same horizontal intro, with the existing oven-mitts asset on the right and the lobby copy on the left. Minor browser font rasterization differs from the raster reference, but the project’s self-hosted Oswald and Golos fonts, token palette, text hierarchy, and copy match the product rules.
+
+**Comparison evidence**
+
+- Source visual truth: `design/mocks/lobby-touch-option-2.png`, 853 × 1844 pixels.
+- Rendered implementation: `design/mocks/cooking-lobby-selected-390.png`, 390 × 844 pixels at a 390 × 844 CSS viewport and device scale factor 1.
+- Normalization: the source was proportionally normalized to 390 × 844 beside the implementation for full-view comparison. Both showed the waiting state with one of three cooks.
+- The combined full-view comparison covered the important focused region: the intro, mitts, roster rows, invite CTA, and disabled start CTA. A separate crop was unnecessary because those details remained readable at the normalized size.
+- `design/mocks/cooking-lobby-selected-1440.png` records the same waiting state at 1440 × 1000 CSS pixels.
+- `design/mocks/cooking-lobby-selected-12cooks-320.png` records the 12-cook state at 320 × 844 CSS pixels.
+
+**Required fidelity surfaces**
+
+- Fonts and typography: Oswald is used for the title hierarchy and Golos for supporting copy and controls. The two-line lobby title, muted join count, member labels, and CTA text remain legible without clipping.
+- Spacing and layout rhythm: the horizontal intro keeps the title and count aligned left with the existing mitts on the right. Roster rules, CTA gaps, and the 16px mobile frame match the selected composition.
+- Colors and visual tokens: checker band, blue neon rule, magenta sign, teal current-cook avatar, muted empty slots, ink outlines, and lime disabled CTA use the project tokens.
+- Image quality and asset fidelity: the fixture uses the shipped `oven-mitts.webp` through `KitchenIllustration`, with no replacement drawing. Blocking the image removed it and let the copy take the full 358px intro width without a gap.
+- Copy and content: Ukrainian waiting-state copy, host label, invite CTA, and disabled start CTA match the selected layout’s meaning. Lobby states contain no plan status card.
+
+**Interaction and responsive evidence**
+
+- At 390px, the waiting fixture reported `scrollWidth: 390` for a 390px viewport.
+- At 320px, the 12-cook fixture reported `scrollWidth: 320`, rendered all 12 roster rows, and retained the start CTA below the scrollable roster.
+- At 900px and 1440px, the fixture had no horizontal overflow.
+- The roster control `Кухарі: Оля` received visible keyboard focus with a solid outline. The lobby header contained zero player-count buttons.
+- A full lobby can start while the plan generates. The immediate state shows `Складаємо план` with no timeline; mocked plan arrival then renders the recipe timeline.
+- Playwright console check reported no errors or warnings for the final transition run.
+
+**Implementation Checklist**
+
+1. Keep the selected `lobby-touch-option-2` horizontal lobby composition.
+2. Keep the current `KitchenIllustration` fallback behavior when the mitts asset fails.
+3. Preserve the lobby-to-loading-to-timeline transition.
+
+**Follow-up Polish**
+
+The long recipe title in the user's subsequent screenshot exposed a width mismatch between the header and lobby. The lobby now uses a shared 480px maximum column for the brand, recipe sign, and roster, a 28px checker band, and a 24px recipe title. These rules apply only before cooking starts.
+
+- `design/mocks/cooking-lobby-header-847.png` shows the actual component at the screenshot's 847px CSS width. All three columns start at 183.5px and measure 480px wide.
+- `design/mocks/cooking-lobby-header-390.png` shows the long title wrapping to two lines on mobile. Both actions remain visible at 390 × 844.
+- At 320px and 390px, all three columns have 16px gutters. Document width equals viewport width at 320px, 390px, and 847px.
+- `bun run check` passed after the header change, including 141 tests, type checking, lint, formatting, and the production build.
 
 final result: passed
-
-## Target and evidence
-
-The user selected the third concept from the latest exploration. Source visual truth: `design/mocks/starter-kitchen-reference.png`, 1586 × 992 pixels. The implementation uses the actual connection component with local fixture data at `http://127.0.0.1:5174/design/mocks/illustration-family.html?mode=connect`.
-
-Screenshots use device scale factor 1:
-
-- `design/mocks/starter-kitchen-1440.png`, 1440 × 900 CSS and image pixels.
-- `design/mocks/starter-kitchen-900.png`, 900 × 900 CSS and image pixels.
-- `design/mocks/starter-kitchen-390.png`, 390 × 844 CSS and image pixels.
-
-The reference and desktop screenshot were opened together in the same comparison input. Their near-identical 16:10 aspect ratios were normalized by displayed width. The full view includes the sign, heading, button, note, wall, tiles, bag, pot, and counter; a separate region crop was unnecessary. Mobile and tablet use purpose-made compositions rather than stretching the desktop objects. The headline and controls remain live HTML.
-
-## Comparison history
-
-1. Initial captures accidentally used an older server on port 5173. Those captures were discarded and replaced with verified port 5174 captures showing the new heading and artwork.
-2. Desktop and mobile matched the selected composition. Coordinator inspection found a P2 horizontal join in the tablet background, caused by bottom-aligning a landscape image that did not cover the page height.
-3. Added a square tablet scene and switched the background sizing to `cover`. Replaced all three screenshots. The tablet wall is now continuous, both objects remain visible, and the controls remain clear. No actionable P0, P1, or P2 findings remain.
-
-## Interaction and fallback checks
-
-- Tab focuses the connection button. Enter invokes the fixture callback, changes its text to “Відкриваємо Сільпо…”, and sets both `disabled` and `aria-busy`.
-- The connection error fixture displays a persistent alert and survives reload. Production retains its existing authentication callbacks and error component.
-- Blocking every `/images/starter-*.webp` request on fresh mobile and desktop connection pages removes the scene and sign. The heading, button, and note remain visible and keyboard activation still works. Mobile failure capture: `/tmp/starter-no-art.png`.
-- No viewport overflow at the three primary sizes. At 390 × 650, normal vertical scrolling exposes the 760px minimum page; the button remains visible without scrolling.
-- No animation was introduced. Existing focus and reduced-motion behavior remain unchanged.
-- No application JavaScript console errors. A missing favicon and deliberately blocked image requests produced expected 404 messages.
-
-## Limits
-
-The fixture verifies local UI behavior, not a new login with a real account. No authentication, cart, or backend code changed. The regenerated artwork has small material and lighting differences from the concept; the selected composition and product behavior are preserved.
-
-## Retina correction, 2026-09-08
-
-The original 1600 × 1000 desktop export was too small for a Retina laptop. At 1440 × 900 CSS pixels and device scale factor 2, the background needs 2880 × 1800 physical pixels. The earlier 1× screenshots missed this defect.
-
-The replacement comes from a native 5056 × 3392 OpenRouter generation. Desktop now selects a 1920 × 1200 WebP at 1× and a 3840 × 2400 WebP at 2× through `image-set()`. The exports are downsampled, not enlarged. The Retina file is 502,840 bytes. Mobile and tablet retain their existing compositions.
-
-- Fresh Chromium contexts confirmed that 2× desktop requests only the Retina scene and 1× desktop requests only the standard scene.
-- `design/mocks/starter-kitchen-retina-1440.png` captures 1440 × 900 CSS pixels at 2×, producing 2880 × 1800 image pixels.
-- At 1728 × 1000 CSS pixels and 2×, `cover` needs 3456 × 2160 source pixels before cropping. The Retina export covers that size without enlargement.
-- Native-size before and after crops show clearer pot edges, fabric stitching, and tile grout. This is a visual comparison because generation also changed small material details.
-- The 900px tablet and 390px mobile checks select their existing assets and have no horizontal overflow.
-- Keyboard focus reaches the live connection button. The authentication-error fixture retains its visible Ukrainian alert and enabled button.
-- Aborting the actual Retina asset request in a fresh 2× context leaves the Ukrainian heading, note, and button legible on the cream fallback. Tab focuses the button and Enter activates its busy state.
-- No animation or application logic changed.

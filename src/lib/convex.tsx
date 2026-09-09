@@ -1,8 +1,13 @@
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import type { ReactNode } from "react";
 
-const convexUrl = import.meta.env.VITE_CONVEX_URL?.trim();
-const convexClient = convexUrl ? new ConvexReactClient(convexUrl) : null;
+import { convexUrl, useConvexProxy } from "./convex-url";
+
+const convexClient = convexUrl
+  ? new ConvexReactClient(useConvexProxy ? window.location.origin : convexUrl, {
+      skipConvexDeploymentUrlCheck: useConvexProxy,
+    })
+  : null;
 
 export const isConvexConfigured = convexClient !== null;
 

@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalAction } from "./_generated/server";
-import { DISH_IMAGE_MODEL, generateDishImage } from "./lib/dish_image";
+import { generateDishImage } from "./lib/dish_image";
 import { classifyFailure } from "./lib/errors";
 import { recordAiEvent } from "./lib/telemetry";
 
@@ -17,6 +17,7 @@ export const generate = internalAction({
     if (!idea) return { generated: false };
     if (idea.image?.generated) return { generated: true };
     const startedAt = Date.now();
+    const model = process.env.OPENROUTER_IMAGE_MODEL || "unknown";
     try {
       const result = await generateDishImage(idea);
       const storageId = await ctx.storage.store(result.blob);
@@ -27,7 +28,7 @@ export const generate = internalAction({
       await recordAiEvent({
         event: "ai.image",
         outcome: "success",
-        model: DISH_IMAGE_MODEL,
+        model: result.model,
         durationMs: Date.now() - startedAt,
         cost: result.cost,
         threadId: idea.threadId,
@@ -42,7 +43,7 @@ export const generate = internalAction({
       await recordAiEvent({
         event: "ai.image",
         outcome: "error",
-        model: DISH_IMAGE_MODEL,
+        model,
         durationMs: Date.now() - startedAt,
         threadId: idea.threadId,
         userId: idea.userId,

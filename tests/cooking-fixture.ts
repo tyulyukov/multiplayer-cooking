@@ -28,6 +28,7 @@ export async function cookingFixture(
 ) {
   const t = convexTest(schema, {
     "../convex/_generated/server.ts": () => import("../convex/_generated/server"),
+    "../convex/cookingGeneration.ts": () => import("../convex/cookingGeneration"),
     "../convex/cookingRooms.ts": () => import("../convex/cookingRooms"),
     "../convex/cookingSteps.ts": () => import("../convex/cookingSteps"),
     "../convex/cookingTimers.ts": () => import("../convex/cookingTimers"),

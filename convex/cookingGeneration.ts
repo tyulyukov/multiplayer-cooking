@@ -11,7 +11,7 @@ import { AGENT_RUN_TIMEOUT_MS } from "./lib/ai_config";
 import { cookingSessionInstructions } from "./lib/cooking_instructions";
 import { cookingPlanSchema, validateCookingPlan } from "./lib/cooking_plan";
 import { cookingReferencePrompt } from "./lib/cooking_reference";
-import { DISH_IMAGE_MODEL, generateImageFromPrompt } from "./lib/dish_image";
+import { generateImageFromPrompt } from "./lib/dish_image";
 import { classifyFailure } from "./lib/errors";
 import { recordAiEvent } from "./lib/telemetry";
 import { createWebTools } from "./lib/web_tools";
@@ -77,7 +77,7 @@ export const generate = internalAction({
       });
       await agent.generateText(
         ctx,
-        {},
+        { userId: data.hostUserId },
         {
           prompt: JSON.stringify({
             recipe: data.source,
@@ -125,6 +125,7 @@ export const generateReference = internalAction({
     const data = await ctx.runQuery(internal.cookingAssistance.referenceData, args);
     if (!data) return null;
     const startedAt = Date.now();
+    const model = process.env.OPENROUTER_IMAGE_MODEL || "unknown";
     try {
       const result = await generateImageFromPrompt(cookingReferencePrompt(data.title, data.step));
       const storageId = await ctx.storage.store(result.blob);
@@ -132,7 +133,7 @@ export const generateReference = internalAction({
       await recordAiEvent({
         event: "ai.image",
         outcome: "success",
-        model: DISH_IMAGE_MODEL,
+        model: result.model,
         durationMs: Date.now() - startedAt,
         cost: result.cost,
         threadId: args.roomId,
@@ -146,7 +147,7 @@ export const generateReference = internalAction({
       await recordAiEvent({
         event: "ai.image",
         outcome: "error",
-        model: DISH_IMAGE_MODEL,
+        model,
         durationMs: Date.now() - startedAt,
         threadId: args.roomId,
         userId: data.hostUserId,

@@ -291,3 +291,67 @@ test("session lifecycle guards starting, finishing, and retrying generation", as
   await expect(t.mutation(api.cookingRooms.retryGeneration, guest)).rejects.toThrow("господар");
   expect(await t.mutation(api.cookingRooms.retryGeneration, host)).toBe(false);
 });
+
+test("lobby waits for every cook, then shares an early start while the plan generates", async () => {
+  const fixture = await cookingFixture();
+  const { t, host, guest, roomId, guestId, plan } = fixture;
+  await prepareGeneration(fixture);
+  await t.run(async (ctx) => {
+    await ctx.db.patch(guestId, { status: "left" });
+  });
+  await expect(t.mutation(api.cookingRooms.startSession, host)).rejects.toThrow("всіх кухарів");
+  expect((await t.query(api.cookingRooms.read, host))?.room.lobbyCompletedAt).toBeUndefined();
+  await t.run(async (ctx) => {
+    await ctx.db.patch(guestId, { status: "active" });
+  });
+  await expect(t.mutation(api.cookingRooms.startSession, guest)).rejects.toThrow("господар");
+  expect(await t.mutation(api.cookingRooms.startSession, host)).toBe(true);
+  const waiting = await t.query(api.cookingRooms.read, guest);
+  expect(waiting?.room.state).toBe("generating");
+  expect(waiting?.room.lobbyCompletedAt).toBeNumber();
+  expect(waiting?.steps).toEqual([]);
+  expect(await t.mutation(api.cookingRooms.startSession, host)).toBe(true);
+  expect((await t.query(api.cookingRooms.read, host))?.room.lobbyCompletedAt).toBe(
+    waiting?.room.lobbyCompletedAt,
+  );
+  expect(
+    await t.mutation(internal.cookingRooms.savePlan, { roomId, attempt: "attempt", plan }),
+  ).toBe(true);
+  expect((await t.query(api.cookingRooms.read, guest))?.room.state).toBe("cooking");
+});
+
+test("a ready plan stays in the lobby until all requested cooks have joined", async () => {
+  const { t, host, roomId, guestId } = await cookingFixture();
+  await t.run(async (ctx) => {
+    await ctx.db.patch(roomId, { state: "ready" });
+    await ctx.db.patch(guestId, { status: "removed" });
+  });
+  await expect(t.mutation(api.cookingRooms.startSession, host)).rejects.toThrow("всіх кухарів");
+  expect((await t.query(api.cookingRooms.read, host))?.room.state).toBe("ready");
+});
+
+test("a generation retry preserves the shared early start and opens cooking when saved", async () => {
+  const fixture = await cookingFixture();
+  const { t, host, guest, roomId, plan } = fixture;
+  registerRateLimiter(t);
+  await prepareGeneration(fixture);
+  await t.run(async (ctx) => {
+    await ctx.db.patch(roomId, { createdAt: Date.now() - 60_000 });
+  });
+  await t.mutation(api.cookingRooms.startSession, host);
+  await t.mutation(internal.cookingRooms.failGeneration, {
+    roomId,
+    attempt: "attempt",
+    message: "Спробуй ще раз.",
+  });
+  const failed = await t.query(api.cookingRooms.read, guest);
+  expect(failed?.room.state).toBe("error");
+  expect(failed?.room.lobbyCompletedAt).toBeNumber();
+  expect(
+    await withoutScheduledCallbacks(() => t.mutation(api.cookingRooms.retryGeneration, host)),
+  ).toBe(true);
+  const generation = await t.query(internal.cookingRooms.generationData, { roomId });
+  expect(generation).not.toBeNull();
+  await t.mutation(internal.cookingRooms.savePlan, { roomId, attempt: generation!.attempt, plan });
+  expect((await t.query(api.cookingRooms.read, guest))?.room.state).toBe("cooking");
+});

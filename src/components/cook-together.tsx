@@ -21,6 +21,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { normalizeCookName, readSavedCookName, saveCookName } from "@/lib/cook-name";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 const minCooks = 1;
@@ -49,6 +50,7 @@ export function CooksForm({
   initial,
   initialServings = 2,
   initialName = "",
+  suggestedName = "",
   initialConstraints = "",
   disabled = false,
   onGenerate,
@@ -56,23 +58,23 @@ export function CooksForm({
   initial: number;
   initialServings?: number;
   initialName?: string;
+  suggestedName?: string;
   initialConstraints?: string;
   disabled?: boolean;
   onGenerate: (setup: CookingSetup) => Promise<void> | void;
 }) {
   const [count, setCooks] = useState(initial);
-  const [servings, setServings] = useState(initialServings);
-  const [name, setName] = useState(initialName);
+  const [name, setName] = useState(
+    () => normalizeCookName(initialName) || readSavedCookName() || normalizeCookName(suggestedName),
+  );
   const [constraints, setConstraints] = useState(initialConstraints);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function generate() {
     if (disabled || busy) return;
-    if (!Number.isInteger(servings)) {
-      setError("Вкажи цілу кількість порцій від 1 до 24.");
-      return;
-    }
-    if (!name.trim()) {
+    const cookName = normalizeCookName(name);
+
+    if (!cookName) {
       setError("Напиши, як тебе називати на кухні.");
       return;
     }
@@ -82,10 +84,11 @@ export function CooksForm({
     try {
       await onGenerate({
         cookCount: count,
-        servings,
-        name: name.trim(),
+        servings: initialServings,
+        name: cookName,
         constraints: constraints.trim(),
       });
+      saveCookName(cookName);
     } catch {
       setError("Не вдалося створити кухню. Спробуй ще раз.");
     } finally {
@@ -132,18 +135,6 @@ export function CooksForm({
         />
       </label>
       <label className="cook-setup-field">
-        <span>Порцій</span>
-        <input
-          type="number"
-          min={1}
-          max={24}
-          value={servings}
-          onChange={(event) =>
-            setServings(Math.max(1, Math.min(24, Number(event.target.value) || 1)))
-          }
-        />
-      </label>
-      <label className="cook-setup-field">
         <span>Обладнання або досвід (необов’язково)</span>
         <textarea
           value={constraints}
@@ -175,9 +166,11 @@ export function CookTogether({
   onGenerate,
   servings = 2,
   cookCount = 1,
+  profileName = "",
 }: {
   servings?: number;
   cookCount?: number;
+  profileName?: string;
   onGenerate: (setup: CookingSetup) => Promise<void> | void;
 }) {
   const [open, setOpen] = useState(false);
@@ -189,7 +182,14 @@ export function CookTogether({
     </Button>
   );
   const title = "Скільки вас готує?";
-  const form = <CooksForm initial={cookCount} initialServings={servings} onGenerate={onGenerate} />;
+  const form = (
+    <CooksForm
+      initial={cookCount}
+      initialServings={servings}
+      suggestedName={profileName}
+      onGenerate={onGenerate}
+    />
+  );
 
   if (desktop) {
     return (

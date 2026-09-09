@@ -9,7 +9,6 @@
 .cooking-title,
 .cooking-tools-row,
 .cooking-timeline,
-.cooking-ready,
 .cooking-finish,
 .cooking-offline,
 .cooking-action-error,
@@ -55,11 +54,7 @@
   font: 700 34px/1 var(--font-sign);
   overflow-wrap: anywhere;
 }
-.cooking-title p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted-foreground);
-}
+
 .cooking-tools-row {
   display: flex;
   gap: 8px;
@@ -82,16 +77,6 @@
   border-color: var(--destructive);
   color: var(--destructive);
   background: var(--destructive-soft);
-}
-.cooking-ready {
-  display: grid;
-  gap: 12px;
-  margin-top: 20px;
-  padding: 16px;
-  border-radius: 14px;
-}
-.cooking-ready p {
-  margin: 0;
 }
 .cooking-progress {
   display: flex;
@@ -404,6 +389,20 @@
   display: grid;
   gap: 12px;
 }
+.cooking-invite p {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+.cooking-invite p[role="alert"] {
+  color: var(--destructive);
+}
+.cooking-invite summary {
+  padding-block: 12px;
+  cursor: pointer;
+}
+.cooking-invite details p {
+  margin-bottom: 12px;
+}
 .cooking-tool-menu,
 .cooking-tool-panel {
   display: grid;
@@ -512,7 +511,6 @@
   .cooking-title,
   .cooking-tools-row,
   .cooking-timeline,
-  .cooking-ready,
   .cooking-finish,
   .cooking-offline {
     width: min(100% - 56px, 760px);
@@ -536,4 +534,167 @@
   .cooking-tool-menu {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+.cooking-lobby {
+  width: min(100% - 32px, 480px);
+  margin: 24px auto 0;
+  display: grid;
+  gap: 16px;
+}
+.cooking-shell[data-lobby="true"] .checker-band {
+  height: calc(28px + env(safe-area-inset-top));
+  background-size: 28px 28px;
+}
+.cooking-shell[data-lobby="true"] .cooking-header,
+.cooking-shell[data-lobby="true"] .cooking-title {
+  width: min(100% - 32px, 480px);
+}
+.cooking-shell[data-lobby="true"] .cooking-header {
+  min-height: 56px;
+}
+.cooking-shell[data-lobby="true"] .cooking-brand {
+  font-size: 17px;
+}
+.cooking-shell[data-lobby="true"] .cooking-title .sign {
+  border-radius: 14px;
+}
+.cooking-shell[data-lobby="true"] .cooking-title h1 {
+  padding: 8px 12px 10px;
+  border-radius: 11px;
+  font-size: 24px;
+  line-height: 1.15;
+}
+.cooking-lobby-intro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.cooking-lobby-copy {
+  flex: 1;
+  min-width: 0;
+}
+.cooking-lobby-art {
+  width: clamp(88px, 28vw, 112px);
+  height: auto;
+  flex-shrink: 0;
+}
+.cooking-lobby h2 {
+  margin: 0;
+  font: 600 28px/1.15 var(--font-sign);
+}
+.cooking-lobby-count {
+  margin-top: 8px;
+  color: var(--muted-foreground);
+}
+.cooking-lobby-cooks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cooking-lobby-cooks li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  border-bottom: 1px solid var(--border);
+}
+.cooking-lobby-cooks li > span:nth-child(2),
+.cooking-lobby-member > span:nth-child(2) {
+  flex: 1;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.cooking-lobby-cooks small,
+.cooking-lobby-empty,
+.cooking-lobby-wait {
+  color: var(--muted-foreground);
+}
+.cooking-lobby-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--muted);
+  color: var(--foreground);
+  font-weight: 700;
+}
+.cooking-lobby-avatar[data-mine="true"] {
+  background: var(--teal);
+}
+.cooking-lobby-plan {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  padding: 14px;
+}
+
+.cooking-lobby-plan p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+.cooking-lobby-plan[role="alert"] {
+  border-color: var(--destructive);
+  background: var(--destructive-soft);
+  color: var(--destructive);
+}
+.cooking-generation-spinner {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 12px;
+  color: var(--teal-deep);
+}
+.cooking-lobby-wait {
+  margin: 0;
+  text-align: center;
+}
+
+.cooking-lobby-member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.cooking-lobby-member:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.cooking-timer[data-ended="true"] {
+  background: var(--muted);
+  border-color: var(--border);
+  color: var(--muted-foreground);
+}
+.cooking-timer[data-ended="true"] strong,
+.cooking-timer[data-ended="true"] svg {
+  color: var(--muted-foreground);
+}
+.cooking-timer strong small {
+  display: block;
+  margin-top: 8px;
+  font: 500 14px/1.4 var(--font-sans);
+}
+.cooking-timer-dock button[data-mine="true"] {
+  border-color: var(--teal-deep);
+}
+.cooking-timer-dock small {
+  display: block;
+  color: var(--teal);
+  font-size: 12px;
+  text-align: left;
 }

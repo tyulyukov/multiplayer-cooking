@@ -1,0 +1,173 @@
+.cooking-shell[data-completion="true"] {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+
+.cooking-completion {
+  position: relative;
+  width: min(100% - 40px, 560px);
+  margin: 52px auto 24px;
+}
+
+.completion-ticket {
+  position: relative;
+  padding-top: 54px;
+  border: 2px solid var(--foreground);
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+  background: var(--card);
+}
+
+.completion-ticket > .completion-sign {
+  position: absolute;
+  top: -42px;
+  left: 50%;
+  margin: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.completion-ticket .completion-sign h1 {
+  padding: 12px 30px 16px;
+  font-size: 42px;
+}
+
+.completion-dish {
+  padding: 0 16px 20px;
+  text-align: center;
+}
+
+.completion-photo {
+  margin: 0 0 16px;
+}
+
+.completion-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+}
+
+.completion-photo figcaption {
+  margin-top: 6px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.completion-photo figcaption a {
+  text-decoration: underline;
+}
+
+.completion-dish h2 {
+  margin: 0;
+  font: 600 28px/1.15 var(--font-sign);
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.completion-meta {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+.completion-photo-error {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--destructive);
+}
+
+.completion-actions {
+  display: grid;
+  gap: 12px;
+  padding: 20px 18px 24px;
+  border-top: 2px dashed var(--border);
+}
+
+.completion-actions button {
+  width: 100%;
+}
+
+.completion-ticket-edge {
+  position: absolute;
+  right: -2px;
+  bottom: -11px;
+  left: -2px;
+  height: 12px;
+  background: radial-gradient(
+      circle at 12px 0,
+      var(--card) 10px,
+      var(--foreground) 10.5px 12px,
+      transparent 12.5px
+    )
+    0 0 / 24px 12px repeat-x;
+}
+
+.cooking-completion .completion-bell {
+  position: absolute;
+  right: -8px;
+  bottom: -74px;
+  width: 88px;
+  height: 88px;
+}
+
+.completion-confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .cooking-completion {
+    margin-top: 68px;
+  }
+
+  .completion-ticket {
+    padding-top: 56px;
+  }
+
+  .completion-ticket > .completion-sign {
+    top: -46px;
+  }
+
+  .completion-ticket .completion-sign h1 {
+    padding: 14px 44px 18px;
+    font-size: 52px;
+  }
+
+  .completion-dish {
+    padding: 0 22px 24px;
+  }
+
+  .completion-dish h2 {
+    font-size: 32px;
+  }
+
+  .completion-actions {
+    padding: 20px 30px 30px;
+  }
+
+  .cooking-completion .completion-bell {
+    right: -32px;
+    bottom: -32px;
+    width: 128px;
+    height: 128px;
+  }
+}
+
+@media (min-width: 800px) {
+  .cooking-completion .completion-bell {
+    right: -108px;
+    bottom: -16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .completion-confetti {
+    display: none;
+  }
+}

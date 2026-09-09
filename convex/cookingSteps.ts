@@ -1,3 +1,4 @@
+import { loadStep, ensureResources, ensureStepStarted } from "./lib/cooking_step_access";
 import { resetUnstartedReadiness } from "./lib/cooking_readiness";
 import { ConvexError, v } from "convex/values";
 
@@ -58,11 +59,14 @@ export const markReady = mutation({
   returns: v.boolean(),
   handler: async (ctx, args) => {
     const member = await requireActiveMember(ctx, args.roomId, args.participantToken);
-    const loaded = await loadStep(ctx, args.roomId, args.stepKey);
+    let loaded = await loadStep(ctx, args.roomId, args.stepKey);
     if (!loaded) return false;
-    if (!member.slots.some((slot) => loaded.runtime.slots.includes(slot)))
+    const assignedSlots = loaded.runtime.slots;
+    if (!member.slots.some((slot) => assignedSlots.includes(slot)))
       throw new ConvexError("Цей крок призначено іншому кухарю.");
     if (loaded.planStep.kind === "together") return markReadyForTogether(ctx, loaded, member._id);
+    if (loaded.planStep.kind === "handoff" && loaded.runtime.status === "pending")
+      loaded = await ensureStepStarted(ctx, member, args.roomId, args.stepKey);
     if (loaded.planStep.kind !== "handoff" || loaded.runtime.status !== "active") return false;
     if (!member.slots.includes(loaded.runtime.slots[0]!))
       throw new ConvexError("Передачу підтверджує кухар, який її розпочав.");
@@ -81,7 +85,9 @@ export const complete = mutation({
   returns: v.boolean(),
   handler: async (ctx, args) => {
     const member = await requireActiveMember(ctx, args.roomId, args.participantToken);
-    const loaded = await loadStep(ctx, args.roomId, args.stepKey);
+    let loaded = await loadStep(ctx, args.roomId, args.stepKey);
+    if (loaded?.runtime.status === "pending" && loaded.planStep.kind === "task")
+      loaded = await ensureStepStarted(ctx, member, args.roomId, args.stepKey);
     if (
       !loaded ||
       loaded.room.state !== "cooking" ||
@@ -236,6 +242,7 @@ export const toggleChecklist = mutation({
     )
       return false;
     if (!loaded.planStep.checklist.some((item) => item.id === args.itemId)) return false;
+    await ensureStepStarted(ctx, member, args.roomId, args.stepKey);
     const checkedIds = args.checked
       ? [...new Set([...loaded.runtime.checkedIds, args.itemId])]
       : loaded.runtime.checkedIds.filter((item) => item !== args.itemId);
@@ -293,60 +300,4 @@ async function markReadyForTogether(
     await ctx.db.patch(runtime._id, { status: "waiting", readyMemberIds });
   }
   return true;
-}
-
-async function loadStep(ctx: MutationCtx, roomId: Doc<"cookingRooms">["_id"], stepKey: string) {
-  const [room, runtime, runtimes] = await Promise.all([
-    ctx.db.get(roomId),
-    ctx.db
-      .query("cookingSteps")
-      .withIndex("by_room_step", (q) => q.eq("roomId", roomId).eq("stepKey", stepKey))
-      .unique(),
-    ctx.db
-      .query("cookingSteps")
-      .withIndex("by_room_step", (q) => q.eq("roomId", roomId))
-      .take(80),
-  ]);
-  if (!room?.plan || !runtime) return null;
-  const planStep = room.plan.steps.find((step) => step.id === stepKey);
-  if (!planStep) return null;
-  return {
-    room,
-    runtime,
-    plan: room.plan,
-    planStep,
-    stepsByKey: new Map(runtimes.map((step) => [step.stepKey, step])),
-  };
-}
-
-function ensureResources(
-  loaded: NonNullable<Awaited<ReturnType<typeof loadStep>>>,
-  member: Doc<"cookingMembers">,
-): void {
-  if (loaded.planStep.activeMinutes > 0) {
-    for (const runtime of loaded.stepsByKey.values()) {
-      const other = loaded.plan.steps.find((step) => step.id === runtime.stepKey);
-      if (
-        runtime._id !== loaded.runtime._id &&
-        runtime.status === "active" &&
-        other &&
-        other.activeMinutes > 0 &&
-        other.slots.some((slot) => member.slots.includes(slot))
-      )
-        throw new ConvexError("Спершу завершіть активний крок, що потребує вашої уваги.");
-    }
-  }
-  for (const equipmentId of loaded.planStep.equipment) {
-    const capacity = loaded.plan.equipment.find((item) => item.id === equipmentId)?.capacity ?? 0;
-    const inUse = [...loaded.stepsByKey.values()].filter((runtime) => {
-      const other = loaded.plan.steps.find((step) => step.id === runtime.stepKey);
-      return (
-        runtime._id !== loaded.runtime._id &&
-        Boolean(runtime.startedAt) &&
-        ["active", "waiting"].includes(runtime.status) &&
-        other?.equipment.includes(equipmentId)
-      );
-    }).length;
-    if (inUse >= capacity) throw new ConvexError("Потрібне обладнання зараз зайняте.");
-  }
 }

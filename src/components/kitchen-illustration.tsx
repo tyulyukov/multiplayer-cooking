@@ -12,6 +12,7 @@ export function KitchenIllustration({
     | "memory-fridge"
     | "bag-pot"
     | "serving-dome"
+    | "serving-bell"
     | "basket-filled"
     | "oven-mitts";
   className?: string;

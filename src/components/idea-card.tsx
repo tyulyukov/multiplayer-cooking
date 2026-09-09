@@ -18,6 +18,7 @@ import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Markdown } from "@/components/markdown";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { proxyConvexStorageUrl } from "@/lib/convex-url";
 import "./product-price.css";
 
 export type Idea = NonNullable<FunctionReturnType<typeof api.ideas.latest>>;
@@ -79,7 +80,7 @@ function IdeaPhoto({ idea }: { idea: Idea }) {
   return (
     <figure className="idea-photo">
       <img
-        src={idea.imageUrl}
+        src={proxyConvexStorageUrl(idea.imageUrl)}
         alt={idea.title}
         loading="lazy"
         decoding="async"
@@ -141,7 +142,11 @@ export function IdeaCompact({ idea, onOpen }: { idea: Idea; onOpen: () => void }
       aria-label={`Відкрити ідею: ${idea.title}`}
     >
       {idea.imageUrl && !imageFailed && (
-        <img src={idea.imageUrl} alt="" onError={() => setImageFailed(true)} />
+        <img
+          src={proxyConvexStorageUrl(idea.imageUrl)}
+          alt=""
+          onError={() => setImageFailed(true)}
+        />
       )}
       <span>
         <small>Ідея готова</small>
@@ -522,12 +527,14 @@ export function IdeaPane({
   versions,
   onAddToCart,
   onCookCount,
+  profileName,
 }: {
   idea: Idea;
   canAddToCart: boolean;
   versions: IdeaVersions;
   onAddToCart: () => void;
   onCookCount: (setup: CookingSetup) => Promise<void> | void;
+  profileName?: string;
 }) {
   return (
     <article className="idea-pane chrome" aria-label={idea.title}>
@@ -553,6 +560,7 @@ export function IdeaPane({
           <CookTogether
             servings={idea.servings}
             cookCount={idea.cookCount ?? 1}
+            profileName={profileName}
             onGenerate={onCookCount}
           />
         </div>

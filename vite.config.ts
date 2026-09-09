@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+const convexProxyEnabled = process.env.VITE_CONVEX_PROXY === "true";
+const tunnelHost = process.env.VITE_TUNNEL_HOST;
+
 export default defineConfig({
   plugins: [
     tanstackRouter({
@@ -55,4 +58,17 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  server: convexProxyEnabled
+    ? {
+        host: "127.0.0.1",
+        allowedHosts: tunnelHost ? [tunnelHost] : [],
+        proxy: {
+          "^/api/(?:[0-9]+\\.[0-9]+\\.[0-9]+/sync|debug_event|storage(?:/.*)?)$": {
+            target: "http://127.0.0.1:3210",
+            changeOrigin: true,
+            ws: true,
+          },
+        },
+      }
+    : undefined,
 });

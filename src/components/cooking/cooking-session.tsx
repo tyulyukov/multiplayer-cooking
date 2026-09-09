@@ -3,11 +3,15 @@ import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import type { api } from "../../../convex/_generated/api";
 import { CookingMarkdown } from "./cooking-markdown";
 import { CookingTools } from "./cooking-tools";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { proxyConvexStorageUrl } from "@/lib/convex-url";
+import { CookingLobby } from "./cooking-lobby";
+import { CookingCompletion } from "./cooking-completion";
 
 export type CookingRoomData = NonNullable<FunctionReturnType<typeof api.cookingRooms.read>>;
 type PlanStep = NonNullable<CookingRoomData["room"]["plan"]>["steps"][number];
@@ -16,6 +20,7 @@ export type RoomTimer = CookingRoomData["timers"][number];
 export type CookingActions = Readonly<{
   online: boolean;
   busy: boolean;
+  pendingKeys?: readonly string[];
   start: (stepKey: string) => void;
   wait: (stepKey: string) => void;
   ready: (stepKey: string) => void;
@@ -25,7 +30,7 @@ export type CookingActions = Readonly<{
   toggleIngredient: (ingredientId: string, checked: boolean) => void;
   timer: (
     timer: RoomTimer,
-    action: "start" | "pause" | "resume" | "cancel" | "acknowledge",
+    action: "start" | "pause" | "resume" | "cancel" | "acknowledge" | "restore" | "restart",
   ) => void;
   addTime: (timer: RoomTimer) => void;
   createTimer: (stepKey: string, label: string, seconds: number) => void;
@@ -49,6 +54,14 @@ export function CookingSession({
   const [now, setNow] = useState(Date.now);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sound, setSound] = useState(false);
+  const [instructionsRoom, setInstructionsRoom] = useState<string | null>(null);
+  const instructionsHeading = useRef<HTMLHeadingElement>(null);
+  const showCompletion = data.room.state === "done" && instructionsRoom !== data.room._id;
+  useEffect(() => {
+    if (data.room.state !== "done" || showCompletion) return;
+    window.scrollTo({ top: 0, behavior: "instant" });
+    instructionsHeading.current?.focus({ preventScroll: true });
+  }, [data.room.state, showCompletion]);
   const offset = useRef(0);
   const sounded = useRef(new Set<string>());
   const audio = useRef<AudioContext | null>(null);
@@ -117,6 +130,10 @@ export function CookingSession({
     setSound(!sound);
   };
   const plan = data.room.plan;
+  const inLobby =
+    data.room.lobbyCompletedAt === undefined &&
+    data.room.state !== "cooking" &&
+    data.room.state !== "done";
   const runtimes = new Map(data.steps.map((step) => [step.stepKey, step]));
   const own =
     plan?.steps.filter((step) =>
@@ -132,158 +149,171 @@ export function CookingSession({
   const currentId = current?.id;
   const expanded = expandedId ?? currentId;
   useEffect(() => {
-    if (expandedId !== null || !currentId) return;
+    if (inLobby || expandedId !== null || !currentId) return;
     const element = document.getElementById(`step-${currentId}`);
     const top = element?.getBoundingClientRect().top;
     if (top !== undefined && (top > window.innerHeight * 0.65 || top < 0))
       element?.scrollIntoView({ behavior: "instant", block: "start" });
-  }, [currentId, expandedId]);
+  }, [currentId, expandedId, inLobby]);
   const allDone = Boolean(
     plan &&
     data.steps.length === plan.steps.length &&
     data.steps.every((step) => step.status === "done"),
   );
   const completed = data.steps.filter((step) => step.status === "done").length;
-  const running = data.timers.filter(
-    (timer) => timer.status === "running" || timer.status === "fired",
-  );
+  const orderedTimers = [...data.timers].sort((a, b) => {
+    const stepA = plan?.steps.findIndex((step) => step.id === a.stepKey) ?? -1;
+    const stepB = plan?.steps.findIndex((step) => step.id === b.stepKey) ?? -1;
+    if (stepA !== stepB) return stepA - stepB;
+    const definitions = plan?.steps[stepA]?.timers ?? [];
+    const orderA = definitions.findIndex((timer) => timer.id === a.timerKey);
+    const orderB = definitions.findIndex((timer) => timer.id === b.timerKey);
+    return (
+      (orderA < 0 ? definitions.length : orderA) - (orderB < 0 ? definitions.length : orderB) ||
+      a._id.localeCompare(b._id)
+    );
+  });
+  const isMine = (timer: RoomTimer) =>
+    timer.startedBy
+      ? timer.startedBy === data.me._id
+      : (runtimes.get(timer.stepKey)?.slots ?? []).some((slot) => data.me.slots.includes(slot));
+  const running = orderedTimers
+    .filter(
+      (timer) =>
+        timer.status === "running" || timer.status === "paused" || timer.status === "fired",
+    )
+    .sort((a, b) => Number(isMine(b)) - Number(isMine(a)));
   return (
-    <main className="cooking-shell">
+    <main className="cooking-shell" data-lobby={inLobby} data-completion={showCompletion}>
       <div className="checker-band" aria-hidden />
       <header className="cooking-header">
         <a href="/" className="cooking-brand">
           <span className="brand-dot" aria-hidden /> Готуємо разом
         </a>
-        <Button variant="outline" size="chip" onClick={actions.managePeople} aria-label="Кухарі">
-          <HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.5} aria-hidden />
-          {data.members.length}
-        </Button>
-      </header>
-      <section className="cooking-title">
-        <div className="sign">
-          <h1>{data.room.source.title}</h1>
-        </div>
-        <p>
-          {data.room.requestedServings} порцій · {data.me.name}
-          {data.members
-            .filter((member) => member._id !== data.me._id)
-            .map((member) => `, ${member.name}`)
-            .join("")}
-        </p>
-      </section>
-      {!actions.online && (
-        <p className="cooking-offline" role="status">
-          Немає зв’язку. План і відлік доступні. Спільні дії стануть доступні після підключення.
-        </p>
-      )}
-      <div className="cooking-tools-row">
-        <CookingTools data={data} actions={actions} sound={sound} onSound={toggleSound} />
-        {data.room.inviteOpen && (
-          <Button variant="outline" size="chip" onClick={actions.invite}>
-            Запросити
+        {!inLobby && (
+          <Button variant="outline" size="chip" onClick={actions.managePeople} aria-label="Кухарі">
+            <HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.5} aria-hidden />
+            {data.members.length}
           </Button>
         )}
-      </div>
-      {data.room.state === "generating" ? (
-        <CookingStatus
-          title="Складаємо план"
-          body="Розподіляємо роботу між кухарями."
-          image="cooking-preparing.webp"
+      </header>
+      {showCompletion ? (
+        <CookingCompletion
+          key={data.room._id}
+          data={data}
+          actions={actions}
+          onInstructions={() => setInstructionsRoom(data.room._id)}
         />
-      ) : data.room.state === "error" ? (
-        <CookingStatus
-          title="План не створився"
-          body={data.room.generationError ?? "Спробуй ще раз."}
-          action={data.me.role === "host" ? "Спробувати ще раз" : undefined}
-          onAction={actions.retryGeneration}
-          disabled={!actions.online || actions.busy}
-        />
-      ) : !plan ? (
-        <CookingStatus title="План ще готується" body="Інструкції з’являться тут." />
       ) : (
         <>
-          {data.room.state === "ready" && (
-            <section className="cooking-ready chrome">
-              <strong>План готовий</strong>
-              <span>
-                {data.members.length} з {data.room.cookCount} кухарів приєдналися
-              </span>
-              {data.me.role === "host" ? (
-                <Button
-                  size="xl"
-                  disabled={!actions.online || actions.busy}
-                  onClick={actions.startSession}
-                >
-                  Почати готувати
-                </Button>
-              ) : (
-                <p>Чекаємо, поки господар почне готування.</p>
-              )}
-            </section>
+          <section className="cooking-title">
+            <div className="sign">
+              <h1 ref={instructionsHeading} tabIndex={-1}>
+                {data.room.source.title}
+              </h1>
+            </div>
+          </section>
+          {!actions.online && (
+            <p className="cooking-offline" role="status">
+              Немає зв’язку. План і відлік доступні. Спільні дії стануть доступні після підключення.
+            </p>
           )}
-          {data.room.state === "done" && (
+          {!inLobby && (
+            <div className="cooking-tools-row">
+              {data.room.state === "done" && (
+                <Button variant="outline" size="chip" onClick={() => setInstructionsRoom(null)}>
+                  До завершення
+                </Button>
+              )}
+              <CookingTools data={data} actions={actions} sound={sound} onSound={toggleSound} />
+            </div>
+          )}
+          {inLobby ? (
+            <CookingLobby data={data} actions={actions} />
+          ) : data.room.state === "generating" ? (
             <CookingStatus
-              title="Смачного!"
-              body="Спільна вечеря готова."
-              image="oven-mitts.webp"
-              action="Приготувати ще раз"
-              onAction={actions.cookAgain}
+              loading
+              title="Складаємо план"
+              body="Розподіляємо роботу між кухарями."
+              image="cooking-preparing.webp"
+            />
+          ) : data.room.state === "error" ? (
+            <CookingStatus
+              title="План не створився"
+              body={data.room.generationError ?? "Спробуй ще раз."}
+              action={data.me.role === "host" ? "Спробувати ще раз" : undefined}
+              onAction={actions.retryGeneration}
               disabled={!actions.online || actions.busy}
             />
-          )}
-          <section className="cooking-timeline" aria-label="Увесь рецепт">
-            <div className="cooking-progress">
-              <span>
-                {completed} з {plan.steps.length} кроків
-              </span>
-              <progress value={completed} max={plan.steps.length} aria-label="Спільний прогрес" />
-            </div>
-            {plan.steps.map((step, index) => (
-              <StepCard
-                key={step.id}
-                step={step}
-                runtime={runtimes.get(step.id)}
-                data={data}
-                timers={data.timers.filter((timer) => timer.stepKey === step.id)}
-                now={now}
-                actions={actions}
-                expanded={expanded === step.id}
-                primary={current?.id === step.id && data.room.state === "cooking"}
-                index={index + 1}
-                onExpand={() => setExpandedId(expanded === step.id ? "" : step.id)}
-                onAdvance={() => setExpandedId(null)}
-              />
-            ))}
-          </section>
-          {data.room.state === "cooking" && allDone && (
-            <Button
-              className="cooking-finish"
-              size="xl"
-              disabled={!actions.online || actions.busy}
-              onClick={actions.finish}
-            >
-              Завершити сесію
-            </Button>
-          )}
-          {running.length > 0 && (
-            <aside className="cooking-timer-dock" aria-label="Активні таймери">
-              {running.map((timer) => (
-                <button
-                  key={timer._id}
-                  onClick={() => {
-                    setExpandedId(timer.stepKey);
-                    document
-                      .getElementById(`step-${timer.stepKey}`)
-                      ?.scrollIntoView({ behavior: "instant", block: "center" });
-                  }}
+          ) : !plan ? (
+            <CookingStatus title="План ще готується" body="Інструкції з’являться тут." />
+          ) : (
+            <>
+              <section className="cooking-timeline" aria-label="Увесь рецепт">
+                <div className="cooking-progress">
+                  <span>
+                    {completed} з {plan.steps.length} кроків
+                  </span>
+                  <progress
+                    value={completed}
+                    max={plan.steps.length}
+                    aria-label="Спільний прогрес"
+                  />
+                </div>
+                {plan.steps.map((step, index) => (
+                  <StepCard
+                    key={step.id}
+                    step={step}
+                    runtime={runtimes.get(step.id)}
+                    data={data}
+                    timers={orderedTimers.filter((timer) => timer.stepKey === step.id)}
+                    now={now}
+                    actions={actions}
+                    expanded={expanded === step.id}
+                    primary={current?.id === step.id && data.room.state === "cooking"}
+                    index={index + 1}
+                    onExpand={() => setExpandedId(expanded === step.id ? "" : step.id)}
+                    onAdvance={() => setExpandedId(null)}
+                  />
+                ))}
+              </section>
+              {data.room.state === "cooking" && allDone && (
+                <Button
+                  className="cooking-finish"
+                  size="xl"
+                  disabled={!actions.online || actions.busy}
+                  onClick={actions.finish}
                 >
-                  {timer.label}{" "}
-                  <strong>
-                    {timer.status === "fired" ? "Час перевірити" : timerLabel(timer, now)}
-                  </strong>
-                </button>
-              ))}
-            </aside>
+                  Завершити сесію
+                </Button>
+              )}
+              {running.length > 0 && (
+                <aside className="cooking-timer-dock" aria-label="Активні таймери">
+                  {running.map((timer) => (
+                    <button
+                      key={timer._id}
+                      data-mine={isMine(timer)}
+                      onClick={() => {
+                        setExpandedId(timer.stepKey);
+                        document
+                          .getElementById(`step-${timer.stepKey}`)
+                          ?.scrollIntoView({ behavior: "instant", block: "center" });
+                      }}
+                    >
+                      <span>
+                        {isMine(timer) && <small>Твій таймер</small>}
+                        {timer.label}
+                      </span>{" "}
+                      <strong>
+                        {timer.status === "fired"
+                          ? "Час перевірити"
+                          : `${timerLabel(timer, now)}${timer.status === "paused" ? " · Пауза" : ""}`}
+                      </strong>
+                    </button>
+                  ))}
+                </aside>
+              )}
+            </>
           )}
         </>
       )}
@@ -298,6 +328,7 @@ function CookingStatus({
   action,
   onAction,
   disabled,
+  loading = false,
 }: {
   title: string;
   body: string;
@@ -305,6 +336,7 @@ function CookingStatus({
   action?: string;
   onAction?: () => void;
   disabled?: boolean;
+  loading?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   return (
@@ -318,8 +350,11 @@ function CookingStatus({
           onError={() => setFailed(true)}
         />
       )}
-      <h2>{title}</h2>
-      <p>{body}</p>
+      <div role={loading ? "status" : undefined}>
+        {loading && <Spinner className="cooking-generation-spinner" />}
+        <h2>{title}</h2>
+        <p>{body}</p>
+      </div>
       {action && (
         <Button size="xl" disabled={disabled} onClick={onAction}>
           {action}
@@ -363,11 +398,11 @@ function StepCard({
   const blockers = step.dependsOn
     .filter((id) => data.steps.find((item) => item.stepKey === id)?.status !== "done")
     .map((id) => data.room.plan?.steps.find((item) => item.id === id)?.title ?? id);
-  const canAct = mine && data.room.state === "cooking" && actions.online && !actions.busy;
+  const canAct = mine && data.room.state === "cooking" && actions.online;
   const [confirmed, setConfirmed] = useState(false);
-  const [confirmationVersion, setConfirmationVersion] = useState(runtime?.startedAt);
-  if (confirmationVersion !== runtime?.startedAt) {
-    setConfirmationVersion(runtime?.startedAt);
+  const [confirmationVersion, setConfirmationVersion] = useState(done);
+  if (confirmationVersion !== done) {
+    setConfirmationVersion(done);
     setConfirmed(false);
   }
   const title =
@@ -380,7 +415,15 @@ function StepCard({
           : people.map((member) => member.name).join(", ") || "Місце вільне";
   const recipient = step.kind === "handoff" && data.me.slots.includes(slots[1]);
   const sender = step.kind === "handoff" && data.me.slots.includes(slots[0]);
+  const canInteract =
+    canAct &&
+    !actions.busy &&
+    blockers.length === 0 &&
+    !done &&
+    (step.kind !== "together" || active) &&
+    (!recipient || sender || waiting);
   const canComplete =
+    (step.kind === "task" && runtime?.status === "pending" && blockers.length === 0) ||
     (active && step.kind !== "handoff") ||
     (waiting && step.kind === "task") ||
     (waiting && recipient);
@@ -442,38 +485,58 @@ function StepCard({
                 onRetry={() => actions.requestReference(step.id)}
               />
             )}
-            {step.checklist.length > 0 && (
-              <div className="cooking-checklist">
-                {step.checklist.map((item) => (
-                  <label key={item.id}>
+            <div className="cooking-checklist">
+              {timers
+                .filter(
+                  (timer) =>
+                    !step.timers.find((item) => item.id === timer.timerKey)?.afterChecklistItemId,
+                )
+                .map((timer) => (
+                  <Timer
+                    key={timer._id}
+                    timer={timer}
+                    now={now}
+                    disabled={!canInteract}
+                    actions={actions}
+                  />
+                ))}
+              {step.checklist.map((item) => (
+                <Fragment key={item.id}>
+                  <label>
                     <input
                       type="checkbox"
                       checked={runtime?.checkedIds.includes(item.id) ?? false}
-                      disabled={!canAct || done}
+                      disabled={!canInteract}
                       onChange={(event) =>
                         actions.toggleChecklist(step.id, item.id, event.target.checked)
                       }
                     />
                     {item.label}
                   </label>
-                ))}
-              </div>
-            )}
-            {timers.map((timer) => (
-              <Timer
-                key={timer._id}
-                timer={timer}
-                now={now}
-                disabled={!canAct || !runtime?.startedAt || done}
-                actions={actions}
-              />
-            ))}
+                  {timers
+                    .filter(
+                      (timer) =>
+                        step.timers.find((definition) => definition.id === timer.timerKey)
+                          ?.afterChecklistItemId === item.id,
+                    )
+                    .map((timer) => (
+                      <Timer
+                        key={timer._id}
+                        timer={timer}
+                        now={now}
+                        disabled={!canInteract}
+                        actions={actions}
+                      />
+                    ))}
+                </Fragment>
+              ))}
+            </div>
             {step.confirmation && !done && (
               <label className="cooking-confirm">
                 <input
                   type="checkbox"
                   checked={confirmed}
-                  disabled={!canAct}
+                  disabled={!canInteract}
                   onChange={(event) => setConfirmed(event.target.checked)}
                 />
                 {step.confirmation}
@@ -490,14 +553,14 @@ function StepCard({
               </p>
             )}
             <div className="cooking-step-actions">
-              {runtime?.status === "pending" && canAct && (
+              {runtime?.status === "pending" && step.kind === "together" && canAct && (
                 <Button
                   size="xl"
                   variant={actionVariant}
-                  disabled={blockers.length > 0 || Boolean(recipient && !sender)}
+                  disabled={actions.busy || blockers.length > 0 || Boolean(recipient && !sender)}
                   onClick={() => actions.start(step.id)}
                 >
-                  {step.kind === "together" ? "Я готовий" : "Почати"}
+                  Я готовий
                 </Button>
               )}
               {waiting && step.kind === "together" && canAct && (
@@ -510,8 +573,13 @@ function StepCard({
                   Я готовий
                 </Button>
               )}
-              {active && sender && canAct && (
-                <Button size="xl" variant={actionVariant} onClick={() => actions.ready(step.id)}>
+              {(active || runtime?.status === "pending") && sender && canAct && (
+                <Button
+                  size="xl"
+                  variant={actionVariant}
+                  disabled={!canInteract}
+                  onClick={() => actions.ready(step.id)}
+                >
                   Передаю, забирай
                 </Button>
               )}
@@ -519,7 +587,12 @@ function StepCard({
                 <Button
                   size="xl"
                   variant={actionVariant}
-                  disabled={!checked || Boolean(step.confirmation && !confirmed) || timerPending}
+                  disabled={
+                    actions.busy ||
+                    !checked ||
+                    Boolean(step.confirmation && !confirmed) ||
+                    timerPending
+                  }
                   onClick={() => {
                     actions.complete(step.id, confirmed);
                     onAdvance();
@@ -537,7 +610,7 @@ function StepCard({
                     onAdvance();
                   }}
                 >
-                  Залишити й перейти далі
+                  Поки готується, до іншого кроку
                 </Button>
               )}
               {waiting && step.kind === "task" && canAct && (
@@ -580,11 +653,16 @@ function StepCard({
         )}
         {!expanded &&
           timers
-            .filter((timer) => timer.status === "running" || timer.status === "fired")
+            .filter(
+              (timer) =>
+                timer.status === "running" || timer.status === "paused" || timer.status === "fired",
+            )
             .map((timer) => (
               <p className="cooking-inline-timer" key={timer._id}>
                 {timer.label} ·{" "}
-                {timer.status === "fired" ? "Час перевірити" : timerLabel(timer, now)}
+                {timer.status === "fired"
+                  ? "Час перевірити"
+                  : `${timerLabel(timer, now)}${timer.status === "paused" ? " · Пауза" : ""}`}
               </p>
             ))}
       </div>
@@ -611,7 +689,7 @@ function Reference({
       <figure className="cooking-reference-figure">
         <img
           className="cooking-reference"
-          src={imageUrl}
+          src={proxyConvexStorageUrl(imageUrl)}
           alt={alt}
           loading="lazy"
           width={600}
@@ -650,9 +728,11 @@ function Reference({
 
 function timerLabel(timer: RoomTimer, now: number): string {
   const remaining =
-    timer.status === "running" && timer.deadline
-      ? timer.deadline - now
-      : (timer.remainingMs ?? timer.durationMs);
+    timer.status === "acknowledged"
+      ? 0
+      : timer.status === "running" && timer.deadline
+        ? timer.deadline - now
+        : (timer.remainingMs ?? timer.durationMs);
   const seconds = Math.max(0, Math.ceil(remaining / 1000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
@@ -668,12 +748,8 @@ export function Timer({
   disabled: boolean;
   actions: CookingActions;
 }) {
-  if (timer.status === "cancelled" || timer.status === "acknowledged")
-    return (
-      <p className="cooking-timer-ended">
-        {timer.label}: {timer.status === "cancelled" ? "зупинено" : "перевірено"}
-      </p>
-    );
+  disabled ||= actions.pendingKeys?.includes(`timer:${timer.stepKey}:${timer.timerKey}`) ?? false;
+  const ended = timer.status === "cancelled" || timer.status === "acknowledged";
   const action =
     timer.status === "running"
       ? "pause"
@@ -683,45 +759,70 @@ export function Timer({
           ? "acknowledge"
           : "start";
   return (
-    <div className="cooking-timer" data-fired={timer.status === "fired"}>
+    <div className="cooking-timer" data-fired={timer.status === "fired"} data-ended={ended}>
       <div>
         <HugeiconsIcon icon={Clock01Icon} strokeWidth={1.5} aria-hidden />
         <span>{timer.label}</span>
         <strong role={timer.status === "fired" ? "status" : undefined}>
           {timer.status === "fired" ? "Перевір страву" : timerLabel(timer, now)}
+          {ended && <small>{timer.status === "cancelled" ? "Зупинено" : "Перевірено"}</small>}
         </strong>
       </div>
       <div>
-        <Button
-          size="chip"
-          variant="outline"
-          disabled={disabled}
-          onClick={() => actions.timer(timer, action)}
-        >
-          {timer.status === "fired"
-            ? "Побачив"
-            : action === "pause"
-              ? "Пауза"
-              : action === "resume"
-                ? "Продовжити"
-                : "Старт"}
-        </Button>
-        <Button
-          size="chip"
-          variant="ghost"
-          disabled={disabled}
-          onClick={() => actions.addTime(timer)}
-        >
-          +1 хв
-        </Button>
-        <Button
-          size="chip"
-          variant="ghost"
-          disabled={disabled}
-          onClick={() => actions.timer(timer, "cancel")}
-        >
-          Зупинити
-        </Button>
+        {!ended && (
+          <>
+            <Button
+              size="chip"
+              variant="outline"
+              disabled={disabled || ended}
+              onClick={() => actions.timer(timer, action)}
+            >
+              {timer.status === "fired"
+                ? "Побачив"
+                : action === "pause"
+                  ? "Пауза"
+                  : action === "resume"
+                    ? "Продовжити"
+                    : "Старт"}
+            </Button>
+            <Button
+              size="chip"
+              variant="ghost"
+              disabled={disabled || ended}
+              onClick={() => actions.addTime(timer)}
+            >
+              +1 хв
+            </Button>
+            <Button
+              size="chip"
+              variant="ghost"
+              disabled={disabled || ended}
+              onClick={() => actions.timer(timer, "cancel")}
+            >
+              Зупинити
+            </Button>
+          </>
+        )}
+        {ended && (
+          <>
+            <Button
+              size="chip"
+              variant="outline"
+              disabled={disabled}
+              onClick={() => actions.timer(timer, "restore")}
+            >
+              Повернути
+            </Button>
+            <Button
+              size="chip"
+              variant="ghost"
+              disabled={disabled}
+              onClick={() => actions.timer(timer, "restart")}
+            >
+              Запустити знову
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

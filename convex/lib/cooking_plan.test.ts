@@ -5,9 +5,10 @@ import {
   normalizeSoloPlan,
   topologicalOrder,
   validateCookingPlan,
+  type CookingPlan,
 } from "./cooking_plan";
 
-function validPlan() {
+function validPlan(): CookingPlan {
   return {
     servings: 2,
     summary: "Паста з томатним соусом",
@@ -47,6 +48,28 @@ describe("validateCookingPlan", () => {
     const plan = validateCookingPlan(validPlan(), 2);
 
     expect(plan.steps).toHaveLength(2);
+  });
+
+  test("validates optional timer placement within its own checklist", () => {
+    const anchored = validPlan();
+    anchored.steps[0].timers = [
+      { id: "rest", label: "Відпочинок", durationSeconds: 300, afterChecklistItemId: "wash" },
+    ];
+    expect(() => validateCookingPlan(anchored, 2)).not.toThrow();
+
+    const unknown = validPlan();
+    unknown.steps[0].timers = [
+      { id: "rest", label: "Відпочинок", durationSeconds: 300, afterChecklistItemId: "unknown" },
+    ];
+    expect(() => validateCookingPlan(unknown, 2)).toThrow("same step");
+
+    const crossStep = validPlan();
+    crossStep.steps[1].timers = [
+      { id: "rest", label: "Відпочинок", durationSeconds: 300, afterChecklistItemId: "wash" },
+    ];
+    expect(() => validateCookingPlan(crossStep, 2)).toThrow("same step");
+
+    expect(() => validateCookingPlan(validPlan(), 2)).not.toThrow();
   });
 
   test("rejects cyclic, missing, self, and duplicate dependencies", () => {

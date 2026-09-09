@@ -1,6 +1,5 @@
 import { readBounded } from "./http";
 
-export const DISH_IMAGE_MODEL = "google/gemini-3.1-flash-lite-image";
 export const DISH_IMAGE_TIMEOUT_MS = 25_000;
 const maxImageBytes = 8 * 1024 * 1024;
 
@@ -52,19 +51,26 @@ export async function generateDishImage(dish: DishDescription) {
   return generateImageFromPrompt(dishImagePrompt(dish));
 }
 
+export function dishImageModel() {
+  const model = process.env.OPENROUTER_IMAGE_MODEL;
+  if (!model) throw new Error("Image model is not configured");
+  return model;
+}
+
 export async function generateImageFromPrompt(prompt: string) {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error("Image provider is not configured");
+  const model = dishImageModel();
   const response = await fetch("https://openrouter.ai/api/v1/images", {
     method: "POST",
     headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
     body: JSON.stringify({
-      model: DISH_IMAGE_MODEL,
+      model,
       prompt,
       n: 1,
-      resolution: "1K",
+      quality: "medium",
       aspect_ratio: "3:2",
-      provider: { order: ["google-ai-studio", "google-vertex/global"], allow_fallbacks: true },
+      provider: { order: ["openai"], allow_fallbacks: false },
     }),
     signal: AbortSignal.timeout(DISH_IMAGE_TIMEOUT_MS),
   });
@@ -80,5 +86,5 @@ export async function generateImageFromPrompt(prompt: string) {
     typeof usage?.cost === "number" && Number.isFinite(usage.cost) && usage.cost >= 0
       ? usage.cost
       : undefined;
-  return { blob: decodeDishImage(payload), cost };
+  return { blob: decodeDishImage(payload), cost, model };
 }

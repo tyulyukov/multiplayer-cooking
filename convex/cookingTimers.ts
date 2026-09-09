@@ -1,8 +1,10 @@
 import { ConvexError, v } from "convex/values";
 
 import { internal } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 import { internalMutation, mutation, type MutationCtx } from "./_generated/server";
 import { requireActiveMember } from "./lib/cooking_access";
+import { ensureStepStarted } from "./lib/cooking_step_access";
 
 const tokenValidator = v.string();
 const MAX_TIMERS = 24;
@@ -19,13 +21,8 @@ export const createManual = mutation({
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    const { member, step } = await requireTimerAccess(
-      ctx,
-      args.roomId,
-      args.participantToken,
-      args.stepKey,
-    );
-    if (!member || !step || !validManual(args)) return false;
+    const member = await requireActiveMember(ctx, args.roomId, args.participantToken);
+    if (!validManual(args)) return false;
     const timers = await ctx.db
       .query("cookingTimers")
       .withIndex("by_room_status", (q) => q.eq("roomId", args.roomId))
@@ -38,6 +35,7 @@ export const createManual = mutation({
       )
       .unique();
     if (existing) return false;
+    await requireTimerAccess(ctx, args.roomId, member, args.stepKey);
     await ctx.db.insert("cookingTimers", {
       roomId: args.roomId,
       stepKey: args.stepKey,
@@ -66,6 +64,7 @@ export const start = mutation({
       args.participantToken,
       args.stepKey,
       args.timerKey,
+      ["ready", "paused"],
     );
     if (!member || !timer || !["ready", "paused"].includes(timer.status)) return false;
     const now = Date.now();
@@ -105,6 +104,7 @@ export const pause = mutation({
       args.participantToken,
       args.stepKey,
       args.timerKey,
+      ["running"],
     );
     if (!timer || timer.status !== "running" || !timer.deadline) return false;
     const remainingMs = Math.max(0, timer.deadline - Date.now());
@@ -134,6 +134,7 @@ export const resume = mutation({
       args.participantToken,
       args.stepKey,
       args.timerKey,
+      ["paused"],
     );
     if (!member || !timer || timer.status !== "paused") return false;
     const remainingMs = timer.remainingMs ?? timer.durationMs;
@@ -174,6 +175,7 @@ export const addTime = mutation({
       args.participantToken,
       args.stepKey,
       args.timerKey,
+      ["ready", "running", "paused", "fired"],
     );
     if (!timer || ["cancelled", "acknowledged"].includes(timer.status)) return false;
     const addition = args.seconds * 1000;
@@ -220,12 +222,17 @@ export const cancel = mutation({
       args.participantToken,
       args.stepKey,
       args.timerKey,
+      ["ready", "running", "paused", "fired"],
     );
     if (!timer || ["cancelled", "acknowledged"].includes(timer.status)) return false;
+    const remainingMs =
+      timer.status === "running" && timer.deadline
+        ? Math.max(0, timer.deadline - Date.now())
+        : (timer.remainingMs ?? timer.durationMs);
     await ctx.db.patch(timer._id, {
       status: "cancelled",
       deadline: undefined,
-      remainingMs: undefined,
+      remainingMs,
       version: timer.version + 1,
       jobId: undefined,
     });
@@ -248,6 +255,7 @@ export const acknowledge = mutation({
       args.participantToken,
       args.stepKey,
       args.timerKey,
+      ["fired"],
     );
     if (!timer || timer.status !== "fired") return false;
     await ctx.db.patch(timer._id, {
@@ -256,6 +264,73 @@ export const acknowledge = mutation({
       remainingMs: undefined,
       version: timer.version + 1,
       jobId: undefined,
+    });
+    return true;
+  },
+});
+
+export const restore = mutation({
+  args: {
+    roomId: v.id("cookingRooms"),
+    participantToken: tokenValidator,
+    stepKey: v.string(),
+    timerKey: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const { timer } = await loadTimer(
+      ctx,
+      args.roomId,
+      args.participantToken,
+      args.stepKey,
+      args.timerKey,
+      ["cancelled", "acknowledged"],
+    );
+    if (!timer || !["cancelled", "acknowledged"].includes(timer.status)) return false;
+    await ctx.db.patch(timer._id, {
+      status: timer.status === "cancelled" ? "paused" : "fired",
+      deadline: undefined,
+      remainingMs: timer.status === "cancelled" ? (timer.remainingMs ?? timer.durationMs) : 0,
+      version: timer.version + 1,
+      jobId: undefined,
+    });
+    return true;
+  },
+});
+
+export const restart = mutation({
+  args: {
+    roomId: v.id("cookingRooms"),
+    participantToken: tokenValidator,
+    stepKey: v.string(),
+    timerKey: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const { member, timer } = await loadTimer(
+      ctx,
+      args.roomId,
+      args.participantToken,
+      args.stepKey,
+      args.timerKey,
+      ["cancelled", "acknowledged", "fired"],
+    );
+    if (!member || !timer || !["cancelled", "acknowledged", "fired"].includes(timer.status))
+      return false;
+    const version = timer.version + 1;
+    const deadline = Date.now() + timer.durationMs;
+    const jobId = await ctx.scheduler.runAt(deadline, internal.cookingTimers.expire, {
+      timerId: timer._id,
+      version,
+      deadline,
+    });
+    await ctx.db.patch(timer._id, {
+      status: "running",
+      deadline,
+      remainingMs: undefined,
+      version,
+      startedBy: member._id,
+      jobId,
     });
     return true;
   },
@@ -282,17 +357,21 @@ export const expire = internalMutation({
 async function requireTimerAccess(
   ctx: MutationCtx,
   roomId: Parameters<typeof requireActiveMember>[1],
-  participantToken: string,
+  member: Doc<"cookingMembers">,
   stepKey: string,
 ) {
-  const [member, step, room] = await Promise.all([
-    requireActiveMember(ctx, roomId, participantToken),
+  let [step, room] = await Promise.all([
     ctx.db
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", roomId).eq("stepKey", stepKey))
       .unique(),
     ctx.db.get(roomId),
   ]);
+  if (!step?.startedAt) {
+    const loaded = await ensureStepStarted(ctx, member, roomId, stepKey);
+    step = loaded.runtime;
+    room = loaded.room;
+  }
   if (room?.state !== "cooking" || !step?.startedAt || step.status === "done")
     throw new ConvexError("Спершу почни цей крок.");
   if (!step || (member.role !== "host" && !member.slots.some((slot) => step.slots.includes(slot))))
@@ -306,14 +385,17 @@ async function loadTimer(
   participantToken: string,
   stepKey: string,
   timerKey: string,
+  allowedStatuses: readonly Doc<"cookingTimers">["status"][],
 ) {
-  const { member } = await requireTimerAccess(ctx, roomId, participantToken, stepKey);
+  const member = await requireActiveMember(ctx, roomId, participantToken);
   const timer = await ctx.db
     .query("cookingTimers")
     .withIndex("by_room_step_key", (q) =>
       q.eq("roomId", roomId).eq("stepKey", stepKey).eq("timerKey", timerKey),
     )
     .unique();
+  if (!timer || !allowedStatuses.includes(timer.status)) return { member, timer: null };
+  await requireTimerAccess(ctx, roomId, member, stepKey);
   return { member, timer };
 }
 

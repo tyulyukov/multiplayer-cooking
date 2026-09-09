@@ -19,6 +19,7 @@ const timerSchema = z
     id: idSchema,
     label: shortTextSchema,
     durationSeconds: z.number().int().min(1).max(604_800),
+    afterChecklistItemId: idSchema.optional(),
   })
   .strict();
 
@@ -114,6 +115,18 @@ export const cookingPlanSchema = z
       );
       addDuplicateIdIssues(ctx, step.checklist, `steps.${index}.checklist`);
       addDuplicateIdIssues(ctx, step.timers, `steps.${index}.timers`);
+      for (const [timerIndex, timer] of step.timers.entries()) {
+        if (
+          timer.afterChecklistItemId &&
+          !step.checklist.some((item) => item.id === timer.afterChecklistItemId)
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["steps", index, "timers", timerIndex, "afterChecklistItemId"],
+            message: "Timer placement must reference a checklist item in the same step",
+          });
+        }
+      }
       addDuplicateIdIssues(ctx, step.choices ?? [], `steps.${index}.choices`);
 
       if (step.kind === "task" && step.slots.length !== 1) {
