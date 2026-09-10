@@ -1,5 +1,6 @@
 import "./cooking.css";
 import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
+import Home01Icon from "@hugeicons/core-free-icons/Home01Icon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { FunctionReturnType } from "convex/server";
@@ -198,12 +199,26 @@ export function CookingSession({
         <a href="/" className="brand cooking-brand">
           <i aria-hidden /> Multiplayer Cooking
         </a>
-        {!inLobby && data.room.cookCount > 1 && (
-          <Button variant="outline" size="chip" onClick={actions.managePeople} aria-label="Кухарі">
-            <HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.5} aria-hidden />
-            {data.members.length}
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="chip" className="min-h-12 min-w-12">
+            <a href="/" aria-label="На головну" title="На головну">
+              <HugeiconsIcon icon={Home01Icon} strokeWidth={1.5} aria-hidden />
+              <span className="hidden sm:inline">На головну</span>
+            </a>
           </Button>
-        )}
+          {!inLobby && data.room.cookCount > 1 && (
+            <Button
+              variant="outline"
+              size="chip"
+              className="px-2 sm:px-3"
+              onClick={actions.managePeople}
+              aria-label="Кухарі"
+            >
+              <HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.5} aria-hidden />
+              {data.members.length}
+            </Button>
+          )}
+        </div>
       </header>
       {showCompletion ? (
         <CookingCompletion
