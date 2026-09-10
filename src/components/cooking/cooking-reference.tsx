@@ -114,28 +114,21 @@ function ReferencePlaceholder({ animate }: { animate: boolean }) {
       context.clearRect(0, 0, width, height);
       context.fillStyle = colors.background;
       context.fillRect(0, 0, width, height);
-      const scale = Math.max(14, Math.min(width, height) / 12);
-      for (let index = 0; index < 3; index += 1) {
-        const phase = time / 2500 + index * 2.1;
-        const centerX = width * (0.24 + index * 0.28) + Math.sin(phase) * scale * 0.55;
-        const centerY = height * (0.48 + Math.cos(phase * 0.7) * 0.1);
-        for (let y = -4; y <= 4; y += 1) {
-          for (let x = -5; x <= 5; x += 1) {
-            const distance = Math.hypot(x / 1.25, y);
-            if (distance > 4.5 || (x * 7 + y * 11 + index * 3) % 5 === 0) continue;
-            const drift = Math.sin(phase + x * 0.8 + y * 0.45) * 1.5;
-            context.fillStyle = index === 1 && (x + y) % 4 === 0 ? colors.teal : colors.ink;
-            context.globalAlpha = Math.max(0.16, 0.62 - distance * 0.1);
-            context.beginPath();
-            context.arc(
-              centerX + x * scale * 0.62 + drift,
-              centerY + y * scale * 0.62,
-              1.5,
-              0,
-              Math.PI * 2,
-            );
-            context.fill();
-          }
+      const phase = time / 1800;
+      const focusX = width * (0.5 + Math.sin(phase) * 0.18);
+      const focusY = height * (0.5 + Math.cos(phase * 0.8) * 0.14);
+      const spread = Math.min(width, height) * 0.28;
+      const gap = 8;
+      context.fillStyle = colors.ink;
+      for (let y = (height % gap) / 2; y < height; y += gap) {
+        for (let x = (width % gap) / 2; x < width; x += gap) {
+          const dx = x - focusX;
+          const dy = y - focusY;
+          const intensity = Math.exp(-(dx * dx + dy * dy) / (spread * spread));
+          context.globalAlpha = 0.14 + intensity * 0.7;
+          context.beginPath();
+          context.arc(x, y, 0.65 + intensity * 0.95, 0, Math.PI * 2);
+          context.fill();
         }
       }
       context.globalAlpha = 1;
@@ -143,13 +136,11 @@ function ReferencePlaceholder({ animate }: { animate: boolean }) {
     const colors = {
       background: "",
       ink: "",
-      teal: "",
     };
     const readColors = () => {
       const styles = getComputedStyle(element);
       colors.background = styles.getPropertyValue("--background").trim();
       colors.ink = styles.getPropertyValue("--foreground").trim();
-      colors.teal = styles.getPropertyValue("--teal-deep").trim();
     };
     const loop = (time: number) => {
       draw(time);
