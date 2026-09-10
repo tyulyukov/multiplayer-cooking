@@ -220,7 +220,6 @@ export function Fixture() {
               initial={data.room.cookCount}
               initialServings={data.room.requestedServings}
               initialName={data.me.name}
-              initialConstraints={data.room.constraints}
               onGenerate={async () => {
                 setNotice("Фікстура не створює кухню. У маршруті ця дія запускає наявний cookAgain.");
                 setAgainOpen(false);

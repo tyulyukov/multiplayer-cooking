@@ -390,7 +390,6 @@ function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
               initial={read.room.cookCount}
               initialServings={read.room.requestedServings}
               initialName={read.me.name}
-              initialConstraints={read.room.constraints}
               onGenerate={async (setup) => {
                 if (!online) throw new Error("Немає з’єднання.");
                 const next = createCookingCredential(createCookingCredential().participantToken);

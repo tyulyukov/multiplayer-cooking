@@ -16,6 +16,7 @@ import {
   AttachmentMedia,
 } from "@/components/ui/attachment";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { shouldSubmitComposerShortcut } from "@/lib/composer-shortcut";
 import { useComposerShortcut } from "@/lib/use-composer-shortcut";
@@ -193,7 +194,6 @@ export function Composer({
         name="request"
         variant="ghost"
         value={value}
-        readOnly={busy && mode !== "helper"}
         aria-invalid={overLimit}
         placeholder={
           mode === "home"
@@ -268,9 +268,8 @@ export function Composer({
                 <Button
                   type="submit"
                   size="xl"
-                  disabled={overLimit || uploading}
+                  disabled={busy || overLimit || uploading}
                   aria-busy={busy}
-                  aria-disabled={busy}
                   className="generate-button"
                 >
                   <HugeiconsIcon
@@ -293,15 +292,20 @@ export function Composer({
                     attachmentError ||
                     (mode === "helper" && !value.trim() && readyAttachments.length === 0)
                   }
-                  aria-label="Надіслати"
+                  aria-label={busy ? "Готуємо відповідь…" : "Надіслати"}
+                  aria-busy={busy}
                   className="send-button"
                 >
-                  <HugeiconsIcon
-                    icon={ArrowUp02Icon}
-                    className="size-5"
-                    strokeWidth={2}
-                    aria-hidden
-                  />
+                  {busy ? (
+                    <Spinner className="size-5" />
+                  ) : (
+                    <HugeiconsIcon
+                      icon={ArrowUp02Icon}
+                      className="size-5"
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                  )}
                 </Button>
               )}
             </Tooltip.Trigger>

@@ -56,7 +56,6 @@ export function CooksForm({
   initialServings = 2,
   initialName = "",
   suggestedName = "",
-  initialConstraints = "",
   disabled = false,
   onGenerate,
 }: {
@@ -64,7 +63,6 @@ export function CooksForm({
   initialServings?: number;
   initialName?: string;
   suggestedName?: string;
-  initialConstraints?: string;
   disabled?: boolean;
   onGenerate: (setup: CookingSetup) => Promise<void> | void;
 }) {
@@ -73,7 +71,6 @@ export function CooksForm({
     resolveCookName(initialName, readSavedCookName(), suggestedName),
   );
   const [needsName] = useState(() => !name);
-  const [constraints, setConstraints] = useState(initialConstraints);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function generate() {
@@ -92,7 +89,7 @@ export function CooksForm({
         cookCount: count,
         servings: initialServings,
         name: cookName,
-        constraints: constraints.trim(),
+        constraints: "",
       });
       saveCookName(cookName);
     } catch {
@@ -142,16 +139,6 @@ export function CooksForm({
           />
         </label>
       ) : null}
-      <label className="cook-setup-field">
-        <span>Обладнання (необов’язково)</span>
-        <textarea
-          value={constraints}
-          maxLength={500}
-          rows={2}
-          onChange={(event) => setConstraints(event.target.value)}
-          placeholder="Є одна велика пательня"
-        />
-      </label>
       {error && (
         <p role="alert" className="address-error">
           {error}
