@@ -1,3 +1,4 @@
+import { agentSettingsValidator } from "./schema";
 import { resetUnstartedReadiness } from "./lib/cooking_readiness";
 import { RateLimiter } from "@convex-dev/rate-limiter";
 import { SessionIdArg } from "convex-helpers/server/sessions";
@@ -557,21 +558,26 @@ export const generationData = internalQuery({
       cookCount: v.number(),
       requestedServings: v.number(),
       constraints: v.string(),
+      agentSettings: v.optional(agentSettingsValidator),
       attempt: v.string(),
     }),
   ),
   handler: async (ctx, { roomId }) => {
     const room = await ctx.db.get(roomId);
-    return room?.state === "generating"
-      ? {
-          hostUserId: room.hostUserId,
-          source: room.source,
-          cookCount: room.cookCount,
-          requestedServings: room.requestedServings,
-          constraints: room.constraints,
-          attempt: room.generationAttempt,
-        }
-      : null;
+    if (room?.state !== "generating") return null;
+    const personalization = await ctx.db
+      .query("personalizations")
+      .withIndex("by_user", (q) => q.eq("userId", room.hostUserId))
+      .unique();
+    return {
+      hostUserId: room.hostUserId,
+      source: room.source,
+      cookCount: room.cookCount,
+      requestedServings: room.requestedServings,
+      constraints: room.constraints,
+      agentSettings: personalization?.settings,
+      attempt: room.generationAttempt,
+    };
   },
 });
 
@@ -596,7 +602,8 @@ export const savePlan = internalMutation({
     await ctx.db.patch(args.roomId, {
       plan,
       planVersion: room.planVersion + 1,
-      state: room.lobbyCompletedAt !== undefined ? "cooking" : "ready",
+      state: room.cookCount === 1 || room.lobbyCompletedAt !== undefined ? "cooking" : "ready",
+      lobbyCompletedAt: room.lobbyCompletedAt ?? (room.cookCount === 1 ? Date.now() : undefined),
       generationError: undefined,
     });
     let referenceCount = 0;
@@ -749,6 +756,7 @@ async function createRoom(
     inviteOpen: true,
     inviteExpiresAt: now + INVITE_LIFETIME_MS,
     createdAt: now,
+    lobbyCompletedAt: args.cookCount === 1 ? now : undefined,
     generationAttempt: attempt,
   });
   const ownerMemberId = await ctx.db.insert("cookingMembers", {

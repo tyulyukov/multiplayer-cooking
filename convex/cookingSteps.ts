@@ -81,6 +81,7 @@ export const complete = mutation({
     participantToken: tokenValidator,
     stepKey: v.string(),
     confirmed: v.boolean(),
+    skipChecklist: v.optional(v.boolean()),
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
@@ -101,7 +102,10 @@ export const complete = mutation({
       if (loaded.runtime.status !== "waiting" || !member.slots.includes(loaded.runtime.slots[1]!))
         throw new ConvexError("Отримувач має підтвердити передачу.");
     }
-    if (loaded.planStep.checklist.some((item) => !loaded.runtime.checkedIds.includes(item.id)))
+    if (
+      !args.skipChecklist &&
+      loaded.planStep.checklist.some((item) => !loaded.runtime.checkedIds.includes(item.id))
+    )
       throw new ConvexError("Позначте всі пункти цього кроку.");
     if (loaded.planStep.confirmation && !args.confirmed)
       throw new ConvexError("Потрібне підтвердження результату.");

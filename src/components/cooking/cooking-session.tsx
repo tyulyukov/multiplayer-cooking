@@ -8,6 +8,14 @@ import type { api } from "../../../convex/_generated/api";
 import { CookingMarkdown } from "./cooking-markdown";
 import { CookingTools } from "./cooking-tools";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { proxyConvexStorageUrl } from "@/lib/convex-url";
 import { CookingLobby } from "./cooking-lobby";
@@ -24,7 +32,7 @@ export type CookingActions = Readonly<{
   start: (stepKey: string) => void;
   wait: (stepKey: string) => void;
   ready: (stepKey: string) => void;
-  complete: (stepKey: string, confirmed: boolean) => void;
+  complete: (stepKey: string, confirmed: boolean, skipChecklist?: boolean) => void;
   undo: (stepKey: string) => void;
   toggleChecklist: (stepKey: string, itemId: string, checked: boolean) => void;
   toggleIngredient: (ingredientId: string, checked: boolean) => void;
@@ -186,11 +194,11 @@ export function CookingSession({
   return (
     <main className="cooking-shell" data-lobby={inLobby} data-completion={showCompletion}>
       <div className="checker-band" aria-hidden />
-      <header className="cooking-header">
-        <a href="/" className="cooking-brand">
-          <span className="brand-dot" aria-hidden /> Готуємо разом
+      <header className="page-frame topbar cooking-header">
+        <a href="/" className="brand cooking-brand">
+          <i aria-hidden /> Multiplayer Cooking
         </a>
-        {!inLobby && (
+        {!inLobby && data.room.cookCount > 1 && (
           <Button variant="outline" size="chip" onClick={actions.managePeople} aria-label="Кухарі">
             <HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.5} aria-hidden />
             {data.members.length}
@@ -431,6 +439,11 @@ function StepCard({
   const timerPending = timers.some(
     (timer) => timer.status === "running" || timer.status === "paused",
   );
+  const [skipChecklistOpen, setSkipChecklistOpen] = useState(false);
+  const complete = (skipChecklist = false) => {
+    actions.complete(step.id, confirmed, skipChecklist);
+    onAdvance();
+  };
   const actionVariant = primary ? "default" : "outline";
   return (
     <article
@@ -588,14 +601,14 @@ function StepCard({
                   size="xl"
                   variant={actionVariant}
                   disabled={
-                    actions.busy ||
-                    !checked ||
-                    Boolean(step.confirmation && !confirmed) ||
-                    timerPending
+                    actions.busy || Boolean(step.confirmation && !confirmed) || timerPending
                   }
                   onClick={() => {
-                    actions.complete(step.id, confirmed);
-                    onAdvance();
+                    if (!checked) {
+                      setSkipChecklistOpen(true);
+                      return;
+                    }
+                    complete();
                   }}
                 >
                   {recipient ? "Отримав, далі" : "Готово, далі"}
@@ -645,6 +658,41 @@ function StepCard({
                 {choice.label}
               </Button>
             ))}
+            <Dialog open={skipChecklistOpen} onOpenChange={setSkipChecklistOpen}>
+              <DialogContent
+                className="cooking-skip-dialog"
+                aria-describedby="skip-checklist-description"
+              >
+                <DialogHeader>
+                  <DialogTitle>Пропустити пункти?</DialogTitle>
+                  <DialogDescription id="skip-checklist-description">
+                    Непозначені пункти залишаться без позначки. Перевір, чи крок справді можна
+                    завершити.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button size="xl" variant="outline" onClick={() => setSkipChecklistOpen(false)}>
+                    Повернутися
+                  </Button>
+                  <Button
+                    size="xl"
+                    disabled={
+                      !canComplete ||
+                      !canAct ||
+                      actions.busy ||
+                      timerPending ||
+                      Boolean(step.confirmation && !confirmed)
+                    }
+                    onClick={() => {
+                      setSkipChecklistOpen(false);
+                      complete(true);
+                    }}
+                  >
+                    Пропустити пункти
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
         {!expanded &&
@@ -760,8 +808,18 @@ export function Timer({
         <HugeiconsIcon icon={Clock01Icon} strokeWidth={1.5} aria-hidden />
         <span>{timer.label}</span>
         <strong role={timer.status === "fired" ? "status" : undefined}>
-          {timer.status === "fired" ? "Перевір страву" : timerLabel(timer, now)}
-          {ended && <small>{timer.status === "cancelled" ? "Зупинено" : "Перевірено"}</small>}
+          {timerLabel(timer, now)}
+          <small>
+            {timer.status === "fired"
+              ? "Перевір страву"
+              : timer.status === "cancelled"
+                ? "Зупинено"
+                : timer.status === "acknowledged"
+                  ? "Перевірено"
+                  : timer.status === "paused"
+                    ? "Пауза"
+                    : "\u00a0"}
+          </small>
         </strong>
       </div>
       <div>

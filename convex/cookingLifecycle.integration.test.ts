@@ -110,6 +110,9 @@ test("savePlan persists one generated plan, normalizes solo work, and limits ref
       plan: soloPlan,
     }),
   ).toBe(true);
+  const soloRoom = (await solo.t.query(api.cookingRooms.read, solo.host))?.room;
+  expect(soloRoom?.state).toBe("cooking");
+  expect(soloRoom?.lobbyCompletedAt).toEqual(expect.any(Number));
   expect((await solo.t.query(api.cookingRooms.read, solo.host))?.room.plan?.steps).toMatchObject([
     { id: "first", slots: [1], dependsOn: [] },
     { id: "second", slots: [1], dependsOn: ["first"] },

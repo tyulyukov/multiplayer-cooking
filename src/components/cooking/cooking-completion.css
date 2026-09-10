@@ -1,5 +1,6 @@
 .cooking-shell[data-completion="true"] {
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  overflow-x: clip;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 
 .cooking-completion {
@@ -91,17 +92,11 @@
 
 .completion-ticket-edge {
   position: absolute;
-  right: -2px;
-  bottom: -11px;
+  bottom: -13px;
   left: -2px;
-  height: 12px;
-  background: radial-gradient(
-      circle at 12px 0,
-      var(--card) 10px,
-      var(--foreground) 10.5px 12px,
-      transparent 12.5px
-    )
-    0 0 / 24px 12px repeat-x;
+  width: calc(100% + 4px);
+  height: 14px;
+  overflow: visible;
 }
 
 .cooking-completion .completion-bell {

@@ -215,6 +215,7 @@
 }
 
 .topbar {
+  min-height: 50px;
   margin-top: 18px;
   display: flex;
   align-items: center;
@@ -416,10 +417,28 @@
 }
 
 .quick-prompts {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: 18px;
+}
+
+.quick-prompts .quick-prompt {
+  min-width: 0;
+  height: auto;
+  min-height: 48px;
+  justify-content: flex-start;
+  white-space: normal;
+  text-align: left;
+}
+
+.quick-prompts .quick-prompt span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.quick-prompts .quick-prompt svg {
+  flex-shrink: 0;
 }
 
 .home-error {

@@ -4,8 +4,16 @@ import { api, internal } from "./_generated/api";
 import { cookingFixture } from "../tests/cooking-fixture";
 
 test("generates and saves a cooking plan through the agent without reading the original chat", async () => {
-  const { t, plan, roomId, host } = await cookingFixture();
+  const { t, plan, roomId, host, userId } = await cookingFixture();
   await t.run(async (ctx) => {
+    await ctx.db.insert("personalizations", {
+      userId,
+      settings: {
+        tone: "concise",
+        about: "Я новачок на кухні",
+        customInstructions: "Пояснюй простими кроками",
+      },
+    });
     const steps = await ctx.db
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", roomId))
@@ -62,6 +70,8 @@ test("generates and saves a cooking plan through the agent without reading the o
     expect(requests).toHaveLength(1);
     const body: unknown = await requests[0]!.json();
     expect(body).toMatchObject({ model: "test-model" });
+    expect(JSON.stringify(body)).toContain("Я новачок на кухні");
+    expect(JSON.stringify(body)).toContain("Пояснюй простими кроками");
     expect(JSON.stringify(body)).not.toContain("private-chat");
     expect(JSON.stringify(body)).not.toContain("private-prompt");
   } finally {

@@ -8,7 +8,14 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  clearSavedCookName,
+  normalizeCookName,
+  readSavedCookName,
+  saveCookName,
+} from "@/lib/cook-name";
 import { useComposerShortcut } from "@/lib/use-composer-shortcut";
 import { useMediaQuery } from "@/lib/use-media-query";
 
@@ -70,6 +77,7 @@ export function PersonalSettings({
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [draft, setDraft] = useState<AgentSettings>(settings);
+  const [cookName, setCookName] = useState(() => readSavedCookName());
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -99,6 +107,7 @@ export function PersonalSettings({
     wasOpenRef.current = open;
 
     if (opening) {
+      setCookName(readSavedCookName());
       setTab(!desktopKeyboard && initialTab === "interface" ? "settings" : initialTab);
     }
 
@@ -185,6 +194,17 @@ export function PersonalSettings({
     setSaveState("saving");
     setSaveError(null);
     scheduleSave();
+  }
+
+  function changeCookName(value: string) {
+    setCookName(value);
+    const nextName = normalizeCookName(value);
+
+    if (nextName) {
+      saveCookName(nextName);
+    } else if (!value.trim()) {
+      clearSavedCookName();
+    }
   }
 
   function handleOpenChange(nextOpen: boolean) {
@@ -291,6 +311,17 @@ export function PersonalSettings({
             </section>
           ) : activeTab === "settings" ? (
             <section className="personal-settings__form">
+              <label>
+                Твоє ім’я на кухні
+                <Input
+                  value={cookName}
+                  maxLength={80}
+                  autoComplete="name"
+                  placeholder="Наприклад, Аня"
+                  disabled={loading}
+                  onChange={(event) => changeCookName(event.target.value)}
+                />
+              </label>
               <fieldset>
                 <legend>Тон агента</legend>
                 <div className="personal-settings__tone-options">
