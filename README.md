@@ -56,14 +56,14 @@ The Сільпо OAuth callback is served by Convex at `<CONVEX_SITE_URL>/silpo/
 
 ## Environment variables
 
-| Variable                                     | Where         | Purpose                                                                                                      |
-| -------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------ |
-| `VITE_CONVEX_URL`                            | Browser build | Convex deployment URL. `bunx convex dev` sets it locally; the Railway build takes it as a build argument.    |
-| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`     | Convex        | The agent model. Use a dedicated key with a spending limit.                                                  |
-| `OPENROUTER_IMAGE_MODEL`                     | Convex        | The image model for dish and cooking-reference images.                                                       |
-| `SEARXNG_URL`                                | Convex        | Base URL of the SearXNG instance for `web_search`. Without it, web search reports that it is not configured. |
-| `APP_URL`                                    | Convex        | Where the OAuth callback sends the browser back. Without it the callback shows a plain text page.            |
-| `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_EDGE` | Convex        | Optional telemetry. Records run outcome, duration, and token counts. Never prompts or responses.             |
+| Variable                                     | Where         | Purpose                                                                                                       |
+| -------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------- |
+| `VITE_CONVEX_URL`                            | Browser build | Convex deployment URL. `bunx convex dev` sets it locally; the production build uses the cloud deployment URL. |
+| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`     | Convex        | The agent model. Use a dedicated key with a spending limit.                                                   |
+| `OPENROUTER_IMAGE_MODEL`                     | Convex        | The image model for dish and cooking-reference images.                                                        |
+| `SEARXNG_URL`                                | Convex        | Base URL of the SearXNG instance for `web_search`. Without it, web search reports that it is not configured.  |
+| `APP_URL`                                    | Convex        | Where the OAuth callback sends the browser back. Without it the callback shows a plain text page.             |
+| `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_EDGE` | Convex        | Optional telemetry. Records run outcome, duration, and token counts. Never prompts or responses.              |
 
 AI requests share the host’s existing budget of 5 requests per minute and 40 per day. A cooking plan includes up to six automatic reference images. Extra images and helper requests from guests also use that host budget.
 
@@ -75,19 +75,42 @@ AI requests share the host’s existing budget of 5 requests per minute and 40 p
 railway up infra/searxng --service searxng --path-as-root --ci
 ```
 
-**Convex.** Log in, create the production deployment, and set the same variables as above with the production `APP_URL`:
+**Production links.** The frontend uses [tyulyukov.com](https://tyulyukov.com) on Cloudflare Pages. The backend is [diligent-kingfisher-436](https://dashboard.convex.dev/d/diligent-kingfisher-436).
+
+**Convex.** Production server variables live in the Convex dashboard under **Settings > Environment Variables**. Set `APP_URL=https://tyulyukov.com`. Keep `OPENROUTER_API_KEY` and the Axiom variables on Convex, outside the browser build.
+
+Merge the release PR into `main`, then deploy from that commit:
 
 ```sh
-bunx convex login
-bunx convex deploy
+git switch main
+git pull --ff-only
+bun install --frozen-lockfile
+VITE_CONVEX_URL=https://diligent-kingfisher-436.convex.cloud bun run check
+CONVEX_DEPLOYMENT=prod:diligent-kingfisher-436 bunx convex deploy
 ```
 
-**Frontend.** The root `Dockerfile` builds the Vite app and serves `dist/` with Caddy. Set `VITE_CONVEX_URL` on the Railway service before the build:
+**Cloudflare Pages.** The `multiplayer-cooking` project uses Direct Upload with `main` as its production branch. Deploy the verified `dist/` directory:
 
 ```sh
-railway variables --service web --set 'VITE_CONVEX_URL=https://<deployment>.convex.cloud'
-railway up --service web --ci
+bunx wrangler@4.131.0 login
+bunx wrangler@4.131.0 pages deploy dist --project-name multiplayer-cooking --branch main
 ```
+
+Pages serves React routes through its built-in SPA fallback. The custom domain is `tyulyukov.com`. Direct Upload does not deploy automatically when you push to GitHub. Run the commands above after merging each release PR.
+
+### Change production Axiom credentials
+
+Production initially uses the existing `multiplayer-cooking-events-dev` dataset on `eu-central-1.aws.edge.axiom.co`.
+
+1. Create the production dataset in Axiom and a token with ingest permission for that dataset.
+2. Open [production environment variables](https://dashboard.convex.dev/d/diligent-kingfisher-436/settings/environment-variables).
+3. Update `AXIOM_TOKEN` and `AXIOM_DATASET` together. Set `AXIOM_EDGE` to the new dataset's edge domain if its region differs. Use the hostname without `https://`.
+4. Send a message through the production app. In the new Axiom dataset, filter for `service == "multiplayer-cooking"` and check recent `ai.usage` and `ai.run` events. Convex logs must contain no `Axiom ingestion failed` errors for that request.
+5. Revoke the old token only after verification and after any local deployment that still uses it has been updated.
+
+Convex environment changes apply to subsequent function executions. You do not need to rebuild Cloudflare Pages or redeploy Convex code. Never put `AXIOM_TOKEN` in a `VITE_*` variable.
+
+Axiom records server-side AI outcomes, durations, and token usage. Browser page views and web vitals are not currently sent to Axiom.
 
 ## Design and tests
 
