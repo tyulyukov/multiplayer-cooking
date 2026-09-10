@@ -164,21 +164,62 @@
 .cooking-reference-figure {
   margin: 12px 0;
 }
+.cooking-reference-slot {
+  position: relative;
+  width: min(100%, 345px);
+  max-height: 230px;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--background);
+}
 .cooking-reference {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  height: auto;
-  max-height: 230px;
-  border-radius: 10px;
+  height: 100%;
   object-fit: contain;
-  background: var(--background);
+  opacity: 0;
+  filter: blur(2px);
+  transition:
+    opacity var(--duration-slow) var(--ease-smooth-out),
+    filter var(--duration-slow) var(--ease-smooth-out);
+}
+.cooking-reference-placeholder {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  filter: blur(0);
+  transition:
+    opacity var(--duration-slow) var(--ease-smooth-out),
+    filter var(--duration-slow) var(--ease-smooth-out);
+}
+.cooking-reference-figure.is-revealed .cooking-reference {
+  opacity: 1;
+  filter: blur(0);
+}
+.cooking-reference-figure.is-revealed .cooking-reference-placeholder {
+  opacity: 0;
+  filter: blur(2px);
 }
 .cooking-reference-figure figcaption {
   margin-top: 4px;
   color: var(--muted-foreground);
   font-size: 12px;
 }
-.cooking-reference-pending,
+.cooking-reference-figure figcaption i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+}
 .cooking-image-error {
   margin: 12px 0;
   font-size: 14px;
@@ -472,7 +513,8 @@
   .cooking-step-active .cooking-step-content {
     padding: 20px;
   }
-  .cooking-reference {
+  .cooking-reference-slot {
+    width: min(100%, 450px);
     max-height: 300px;
   }
   .cooking-step-actions > button:first-child {
@@ -625,4 +667,11 @@
 
 .cooking-skip-dialog [data-slot="dialog-title"] {
   font: 600 24px/1.1 var(--font-sign);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cooking-reference,
+  .cooking-reference-placeholder {
+    transition: none !important;
+  }
 }

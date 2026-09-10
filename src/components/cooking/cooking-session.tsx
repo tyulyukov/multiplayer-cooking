@@ -18,9 +18,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { proxyConvexStorageUrl } from "@/lib/convex-url";
 import { CookingLobby } from "./cooking-lobby";
 import { CookingCompletion } from "./cooking-completion";
+import { CookingReference } from "./cooking-reference";
 
 export type CookingRoomData = NonNullable<FunctionReturnType<typeof api.cookingRooms.read>>;
 type PlanStep = NonNullable<CookingRoomData["room"]["plan"]>["steps"][number];
@@ -504,8 +504,8 @@ function StepCard({
               </p>
             )}
             {step.reference && (
-              <Reference
-                key={runtime?.imageUrl ?? step.id}
+              <CookingReference
+                key={`${step.id}:${runtime?.imageUrl ?? "pending"}`}
                 imageUrl={runtime?.imageUrl}
                 status={runtime?.imageStatus}
                 alt={step.reference.alt}
@@ -726,62 +726,6 @@ function StepCard({
             ))}
       </div>
     </article>
-  );
-}
-
-function Reference({
-  imageUrl,
-  status,
-  alt,
-  disabled,
-  onRetry,
-}: {
-  imageUrl?: string;
-  status?: string;
-  alt: string;
-  disabled: boolean;
-  onRetry: () => void;
-}) {
-  const [failed, setFailed] = useState(false);
-  if (imageUrl && !failed)
-    return (
-      <figure className="cooking-reference-figure">
-        <img
-          className="cooking-reference"
-          src={proxyConvexStorageUrl(imageUrl)}
-          alt={alt}
-          loading="lazy"
-          width={600}
-          height={400}
-          onError={() => setFailed(true)}
-        />
-        <figcaption>{alt}</figcaption>
-      </figure>
-    );
-  if (status === "pending")
-    return (
-      <p className="cooking-reference-pending" role="status">
-        Готуємо зображення… Інструкція вже доступна.
-      </p>
-    );
-  if (failed)
-    return (
-      <p className="cooking-image-error">
-        Зображення не завантажилось.{" "}
-        <Button size="chip" variant="ghost" onClick={() => setFailed(false)}>
-          Завантажити ще раз
-        </Button>
-      </p>
-    );
-  return (
-    <p className="cooking-image-error">
-      {status === "error"
-        ? "Не вдалося створити зображення."
-        : "Для цього кроку є візуальна підказка."}{" "}
-      <Button size="chip" variant="ghost" disabled={disabled} onClick={onRetry}>
-        {status === "error" ? "Спробувати ще раз" : "Створити зображення"}
-      </Button>
-    </p>
   );
 }
 
