@@ -75,9 +75,9 @@ AI requests share the host’s existing budget of 5 requests per minute and 40 p
 railway up infra/searxng --service searxng --path-as-root --ci
 ```
 
-**Production links.** The frontend uses [tyulyukov.com](https://tyulyukov.com) on Cloudflare Pages. The backend is [diligent-kingfisher-436](https://dashboard.convex.dev/d/diligent-kingfisher-436).
+**Production links.** The frontend uses [cooking.tyulyukov.com](https://cooking.tyulyukov.com) on Cloudflare Pages. The backend is [diligent-kingfisher-436](https://dashboard.convex.dev/d/diligent-kingfisher-436).
 
-**Convex.** Production server variables live in the Convex dashboard under **Settings > Environment Variables**. Set `APP_URL=https://tyulyukov.com`. Keep `OPENROUTER_API_KEY` and the Axiom variables on Convex, outside the browser build.
+**Convex.** Production server variables live in the Convex dashboard under **Settings > Environment Variables**. Set `APP_URL=https://cooking.tyulyukov.com`. Keep `OPENROUTER_API_KEY` and the Axiom variables on Convex, outside the browser build.
 
 Merge the release PR into `main`, then deploy from that commit:
 
@@ -96,7 +96,7 @@ bunx wrangler@4.131.0 login
 bunx wrangler@4.131.0 pages deploy dist --project-name multiplayer-cooking --branch main
 ```
 
-Pages serves React routes through its built-in SPA fallback. The custom domain is `tyulyukov.com`. Direct Upload does not deploy automatically when you push to GitHub. Run the commands above after merging each release PR.
+Pages serves React routes through its built-in SPA fallback. The custom domain is `cooking.tyulyukov.com`. Direct Upload does not deploy automatically when you push to GitHub. Run the commands above after merging each release PR.
 
 ### Change production Axiom credentials
 
