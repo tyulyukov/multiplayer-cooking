@@ -38,19 +38,20 @@ type PromptSelection = Readonly<{
   baseRequest: string;
 }>;
 
-type SendResult = { ok: true } | { ok: false; message: string };
-
 function useComposerDraft() {
   const [request, setRequest] = useState("");
+  const revision = useRef(0);
   const [selection, setSelection] = useState<PromptSelection | null>(null);
   const [quickPrompts, setQuickPrompts] = useState(() => pickQuickPrompts());
 
   function change(value: string) {
+    revision.current += 1;
     setRequest(value);
     setSelection(null);
   }
 
   function togglePrompt(prompt: QuickPrompt) {
+    revision.current += 1;
     if (selection?.promptId === prompt.id) {
       setRequest(selection.baseRequest);
       setSelection(null);
@@ -64,12 +65,13 @@ function useComposerDraft() {
   }
 
   function reset() {
+    revision.current += 1;
     setRequest("");
     setSelection(null);
     setQuickPrompts(pickQuickPrompts());
   }
 
-  return { request, selection, quickPrompts, change, togglePrompt, reset };
+  return { request, revision, selection, quickPrompts, change, togglePrompt, reset };
 }
 
 type RemoteDraft = { text: string; images: readonly { storageId: string; url: string }[] };
@@ -105,6 +107,7 @@ function useDraftSync({
   const pendingRef = useRef<{ timer: number; run: () => void } | null>(null);
   const hadThreadRef = useRef(false);
   const sendThreadRef = useRef<string | null | undefined>(undefined);
+  const createdThreadRef = useRef<string | undefined>(undefined);
   // State, not a ref: the sync effects must run again once a send finishes.
   const [sending, setSending] = useState(false);
   const adoptRef = useRef(adopt);
@@ -131,11 +134,11 @@ function useDraftSync({
   // once the server confirms; a refused or failed write is retried while the thread stays open.
   function schedule(target: string | null, delay = draftSaveDelayMs) {
     cancel();
+    const { text: draftText, imageIds: draftImageIds } = latestRef.current;
 
     const run = () => {
       cancel();
 
-      const { text: draftText, imageIds: draftImageIds } = latestRef.current;
       const key = draftKey(draftText, draftImageIds);
       const retry = () => {
         if (latestRef.current.threadId === target && !pendingRef.current) {
@@ -144,9 +147,9 @@ function useDraftSync({
       };
 
       saveRef.current(target, draftText, draftImageIds).then((saved) => {
-        if (saved) {
+        if (saved && latestRef.current.threadId === target) {
           syncedRef.current = key;
-        } else {
+        } else if (!saved) {
           retry();
         }
       }, retry);
@@ -160,11 +163,22 @@ function useDraftSync({
       return;
     }
 
-    // Leaving a thread: write what is pending there, then start clean for the next one.
-    pendingRef.current?.run();
+    const createdBySend =
+      sendThreadRef.current === null &&
+      (createdThreadRef.current === undefined || createdThreadRef.current === threadId);
+
+    if (createdBySend) {
+      cancel();
+    } else {
+      pendingRef.current?.run();
+    }
     syncedRef.current = null;
 
-    if (hadThreadRef.current) {
+    if (createdBySend) {
+      syncedRef.current = emptyDraftKey;
+      sendThreadRef.current = undefined;
+      createdThreadRef.current = undefined;
+    } else if (hadThreadRef.current) {
       adoptRef.current({ text: "", images: [] });
     }
 
@@ -202,8 +216,13 @@ function useDraftSync({
       threadId === undefined ||
       sending ||
       syncedRef.current === null ||
-      syncedRef.current === localKey
+      (threadId === null && createdThreadRef.current !== undefined)
     ) {
+      return;
+    }
+
+    if (syncedRef.current === localKey) {
+      cancel();
       return;
     }
 
@@ -227,13 +246,26 @@ function useDraftSync({
     beginSend() {
       cancel();
       sendThreadRef.current = threadId;
+      createdThreadRef.current = undefined;
       setSending(true);
     },
     // After a send the server has dropped that composer's draft. If the person moved to another
     // thread meanwhile, that thread's draft still has to load, so its synced state stays unset.
-    endSend(sent: boolean) {
-      if (sent && latestRef.current.threadId === sendThreadRef.current) {
+    endSend(sentThreadId: string | undefined) {
+      if (sentThreadId && sendThreadRef.current === null) {
+        createdThreadRef.current = sentThreadId;
+      }
+
+      if (
+        sentThreadId &&
+        (latestRef.current.threadId === sendThreadRef.current ||
+          latestRef.current.threadId === sentThreadId)
+      ) {
         syncedRef.current = emptyDraftKey;
+      }
+
+      if (!sentThreadId) {
+        sendThreadRef.current = undefined;
       }
 
       setSending(false);
@@ -784,10 +816,11 @@ function ConnectedHome() {
     setError(null);
     draftSync.beginSend();
 
-    let sent = false;
+    const submittedRevision = draft.revision.current;
+    let sentThreadId: string | undefined;
 
     try {
-      const result: SendResult = await sendMessage({
+      const result = await sendMessage({
         sessionId,
         threadId: threadId ?? undefined,
         text,
@@ -795,8 +828,10 @@ function ConnectedHome() {
       });
 
       if (result.ok) {
-        sent = true;
-        draft.change("");
+        sentThreadId = result.threadId;
+        if (draft.revision.current === submittedRevision) {
+          draft.change("");
+        }
         attachments.clear();
       } else {
         setError(result.message);
@@ -804,7 +839,7 @@ function ConnectedHome() {
     } catch {
       setError("Не вдалося надіслати. Спробуй ще раз.");
     } finally {
-      draftSync.endSend(sent);
+      draftSync.endSend(sentThreadId);
       setSending(false);
     }
   }

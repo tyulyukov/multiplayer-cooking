@@ -257,7 +257,11 @@ export function CookingSession({
             <CookingStatus
               loading
               title="Складаємо план"
-              body="Розподіляємо роботу між кухарями."
+              body={
+                data.room.cookCount === 1
+                  ? "Готуємо покрокові інструкції для тебе."
+                  : "Розподіляємо роботу між кухарями."
+              }
               image="cooking-preparing.webp"
             />
           ) : data.room.state === "error" ? (
