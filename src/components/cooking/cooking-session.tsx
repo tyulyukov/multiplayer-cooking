@@ -1,5 +1,11 @@
 import "./cooking.css";
-import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import ArrowTurnBackwardIcon from "@hugeicons/core-free-icons/ArrowTurnBackwardIcon";
+import CheckmarkCircle02Icon from "@hugeicons/core-free-icons/CheckmarkCircle02Icon";
+import PauseIcon from "@hugeicons/core-free-icons/PauseIcon";
+import PlayIcon from "@hugeicons/core-free-icons/PlayIcon";
+import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
+import StopIcon from "@hugeicons/core-free-icons/StopIcon";
 import Home01Icon from "@hugeicons/core-free-icons/Home01Icon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -630,7 +636,11 @@ function StepCard({
                     complete();
                   }}
                 >
-                  {recipient ? "Отримав, далі" : "Готово, далі"}
+                  {timerPending
+                    ? "Дочекайся таймера"
+                    : recipient
+                      ? "Отримав, далі"
+                      : "Готово, далі"}
                 </Button>
               )}
               {active && canAct && step.canWait && step.kind === "task" && (
@@ -662,11 +672,6 @@ function StepCard({
                 Є питання?
               </Button>
             </div>
-            {timerPending && canAct && (
-              <p className="cooking-wait-reason">
-                Таймер ще працює. Дочекайся сигналу або зупини його, якщо вже перевірив результат.
-              </p>
-            )}
             {step.choices?.map((choice) => (
               <Button
                 key={choice.id}
@@ -765,81 +770,82 @@ export function Timer({
         : timer.status === "fired"
           ? "acknowledge"
           : "start";
+  const actionLabel =
+    action === "acknowledge"
+      ? "Побачив"
+      : action === "pause"
+        ? "Пауза"
+        : action === "resume"
+          ? "Продовжити"
+          : "Старт";
+  const status =
+    timer.status === "fired"
+      ? "Перевір страву"
+      : timer.status === "cancelled"
+        ? "Зупинено"
+        : timer.status === "acknowledged"
+          ? "Перевірено"
+          : timer.status === "paused"
+            ? "Пауза"
+            : "";
   return (
     <div className="cooking-timer" data-fired={timer.status === "fired"} data-ended={ended}>
-      <div>
-        <HugeiconsIcon icon={Clock01Icon} strokeWidth={1.5} aria-hidden />
-        <span>{timer.label}</span>
-        <strong role={timer.status === "fired" ? "status" : undefined}>
-          {timerLabel(timer, now)}
-          <small>
-            {timer.status === "fired"
-              ? "Перевір страву"
-              : timer.status === "cancelled"
-                ? "Зупинено"
-                : timer.status === "acknowledged"
-                  ? "Перевірено"
-                  : timer.status === "paused"
-                    ? "Пауза"
-                    : "\u00a0"}
-          </small>
-        </strong>
+      <div className="cooking-timer-display">
+        <strong>{timerLabel(timer, now)}</strong>
+        <span
+          className="cooking-timer-label"
+          title={[status, timer.label].filter(Boolean).join(" · ")}
+        >
+          {status ? `${status} · ${timer.label}` : timer.label}
+        </span>
+        <span className="sr-only" role="status">
+          {status}
+        </span>
       </div>
-      <div>
-        {!ended && (
-          <>
-            <Button
-              size="chip"
-              variant="outline"
-              disabled={disabled || ended}
-              onClick={() => actions.timer(timer, action)}
-            >
-              {timer.status === "fired"
-                ? "Побачив"
-                : action === "pause"
-                  ? "Пауза"
-                  : action === "resume"
-                    ? "Продовжити"
-                    : "Старт"}
-            </Button>
-            <Button
-              size="chip"
-              variant="ghost"
-              disabled={disabled || ended}
-              onClick={() => actions.addTime(timer)}
-            >
-              +1 хв
-            </Button>
-            <Button
-              size="chip"
-              variant="ghost"
-              disabled={disabled || ended}
-              onClick={() => actions.timer(timer, "cancel")}
-            >
-              Зупинити
-            </Button>
-          </>
-        )}
-        {ended && (
-          <>
-            <Button
-              size="chip"
-              variant="outline"
-              disabled={disabled}
-              onClick={() => actions.timer(timer, "restore")}
-            >
-              Повернути
-            </Button>
-            <Button
-              size="chip"
-              variant="ghost"
-              disabled={disabled}
-              onClick={() => actions.timer(timer, "restart")}
-            >
-              Запустити знову
-            </Button>
-          </>
-        )}
+      <div className="cooking-timer-controls">
+        <Button
+          size="icon"
+          variant="ghost"
+          disabled={disabled}
+          aria-label={ended ? "Повернути" : actionLabel}
+          title={ended ? "Повернути" : actionLabel}
+          onClick={() => actions.timer(timer, ended ? "restore" : action)}
+        >
+          <HugeiconsIcon
+            icon={
+              ended
+                ? ArrowTurnBackwardIcon
+                : action === "acknowledge"
+                  ? CheckmarkCircle02Icon
+                  : action === "pause"
+                    ? PauseIcon
+                    : PlayIcon
+            }
+            strokeWidth={1.5}
+            aria-hidden
+          />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          disabled={disabled}
+          aria-label={ended ? "Запустити знову" : "Додати 1 хвилину"}
+          title={ended ? "Запустити знову" : "Додати 1 хвилину"}
+          onClick={() => (ended ? actions.timer(timer, "restart") : actions.addTime(timer))}
+        >
+          <HugeiconsIcon icon={ended ? RefreshIcon : Add01Icon} strokeWidth={1.5} aria-hidden />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className={ended ? "invisible" : undefined}
+          disabled={disabled || ended}
+          aria-label="Зупинити"
+          title="Зупинити"
+          onClick={() => actions.timer(timer, "cancel")}
+        >
+          <HugeiconsIcon icon={StopIcon} strokeWidth={1.5} aria-hidden />
+        </Button>
       </div>
     </div>
   );
