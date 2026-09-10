@@ -62,7 +62,7 @@ describe("cooking plan proposals", () => {
     expect(changedStepKeys(current, next)).toEqual(["cook", "serve"]);
   });
 
-  test("rejects a proposal that changes started work", () => {
+  test("accepts text changes for a started step without changing its work state", () => {
     const current = plan();
     const next = {
       ...current,
@@ -70,7 +70,100 @@ describe("cooking plan proposals", () => {
     };
 
     expect(
-      assessProposal(current, next, [{ stepKey: "prep", status: "active" }], ["prep"]),
+      assessProposal(
+        current,
+        next,
+        [{ stepKey: "prep", status: "active", checkedIds: [] }],
+        ["prep"],
+        "prep",
+      ),
+    ).toEqual({ ok: true });
+  });
+
+  test("rejects a started-step proposal that loses checklist progress", () => {
+    const current = validateCookingPlan(
+      {
+        ...plan(),
+        steps: [
+          {
+            ...plan().steps[0],
+            checklist: [{ id: "cut", label: "Наріжте томати." }],
+          },
+          plan().steps[1],
+        ],
+      },
+      2,
+    );
+    const next = { ...current, steps: [{ ...current.steps[0], checklist: [] }, current.steps[1]] };
+
+    expect(
+      assessProposal(
+        current,
+        next,
+        [{ stepKey: "prep", status: "active", checkedIds: ["cut"] }],
+        ["prep"],
+        "prep",
+      ),
+    ).toEqual({ ok: false });
+  });
+
+  test("accepts a selected-step change while another cook works on an unchanged step", () => {
+    const current = plan();
+    current.steps[1].dependsOn = [];
+    const next = {
+      ...current,
+      steps: [{ ...current.steps[0], body: "Готуй без чилі." }, current.steps[1]],
+    };
+    expect(
+      assessProposal(
+        current,
+        next,
+        [
+          { stepKey: "prep", status: "active" },
+          { stepKey: "cook", status: "active" },
+        ],
+        ["prep"],
+        "prep",
+      ),
+    ).toEqual({ ok: true });
+  });
+
+  test("rejects relabeling an already checked action", () => {
+    const current = plan();
+    current.steps[0].checklist = [{ id: "cut", label: "Наріж томати." }];
+    const next = {
+      ...current,
+      steps: [
+        { ...current.steps[0], checklist: [{ id: "cut", label: "Додай часник." }] },
+        current.steps[1],
+      ],
+    };
+    expect(
+      assessProposal(
+        current,
+        next,
+        [{ stepKey: "prep", status: "active", checkedIds: ["cut"] }],
+        ["prep"],
+        "prep",
+      ),
+    ).toEqual({ ok: false });
+  });
+
+  test("rejects a started-step change outside the selected step", () => {
+    const current = plan();
+    const next = {
+      ...current,
+      steps: [{ ...current.steps[0], body: "Подрібніть томати." }, current.steps[1]],
+    };
+
+    expect(
+      assessProposal(
+        current,
+        next,
+        [{ stepKey: "prep", status: "active", checkedIds: [] }],
+        ["prep"],
+        "sauce",
+      ),
     ).toEqual({ ok: false });
   });
 

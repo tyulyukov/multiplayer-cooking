@@ -4,7 +4,7 @@ import CookingPotIcon from "@hugeicons/core-free-icons/CookingPotIcon";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tooltip } from "radix-ui";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
 import { AI_MAX_IMAGES, AI_REQUEST_MAX_CHARACTERS } from "../../convex/lib/ai_config";
@@ -49,7 +49,7 @@ export function Composer({
 }: {
   questionnaire?: ReactNode;
   questionnaireKey?: string;
-  mode: "home" | "chat";
+  mode: "home" | "chat" | "helper";
   value: string;
   busy: boolean;
   autoFocus: boolean;
@@ -59,6 +59,7 @@ export function Composer({
   onAttach: (files: File[]) => void;
   onRemoveAttachment: (id: string) => void;
 }) {
+  const inputId = useId();
   const composerRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,6 +71,7 @@ export function Composer({
   const showCounter = value.length >= counterThreshold;
   const readyAttachments = attachments.filter((item) => item.state === "done");
   const uploading = attachments.some((item) => item.state === "uploading");
+  const attachmentError = mode === "helper" && attachments.some((item) => item.state === "error");
   const canAttach = attachments.length < AI_MAX_IMAGES && !busy;
 
   useEffect(() => {
@@ -119,7 +121,7 @@ export function Composer({
 
     const text = value.trim();
 
-    if ((!text && readyAttachments.length === 0) || uploading) {
+    if ((!text && readyAttachments.length === 0) || uploading || attachmentError) {
       textareaRef.current?.focus();
       return;
     }
@@ -182,19 +184,23 @@ export function Composer({
       data-over-limit={overLimit}
       onSubmit={handleSubmit}
     >
-      <label className="sr-only" htmlFor="cooking-request">
-        Що хочеш приготувати
+      <label className="sr-only" htmlFor={inputId}>
+        {mode === "helper" ? "Повідомлення помічнику" : "Що хочеш приготувати"}
       </label>
       <Textarea
         ref={textareaRef}
-        id="cooking-request"
+        id={inputId}
         name="request"
         variant="ghost"
         value={value}
-        readOnly={busy}
+        readOnly={busy && mode !== "helper"}
         aria-invalid={overLimit}
         placeholder={
-          mode === "home" ? "Опиши страву або напиши, що є вдома" : "Уточни або попроси інше"
+          mode === "home"
+            ? "Опиши страву або напиши, що є вдома"
+            : mode === "helper"
+              ? "Запитай або додай фото…"
+              : "Уточни або попроси інше"
         }
         className="request-textarea"
         onChange={(event) => onChange(event.target.value)}
@@ -280,7 +286,13 @@ export function Composer({
                   type="submit"
                   variant="ghost"
                   size="icon-lg"
-                  disabled={overLimit || busy || uploading}
+                  disabled={
+                    overLimit ||
+                    busy ||
+                    uploading ||
+                    attachmentError ||
+                    (mode === "helper" && !value.trim() && readyAttachments.length === 0)
+                  }
                   aria-label="Надіслати"
                   className="send-button"
                 >

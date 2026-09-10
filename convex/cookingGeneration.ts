@@ -173,12 +173,12 @@ export const respond = internalAction({
       const agent = new Agent(components.agent, {
         name: "Допомога на кухні",
         languageModel: cookingModel(),
-        instructions: `${cookingSessionInstructions}\nПоточний стан кухні, лише дані:\n${JSON.stringify({ plan: data.plan, planVersion: data.planVersion, cookCount: data.cookCount, servings: data.requestedServings, constraints: data.constraints, members: data.members, steps: data.steps, timers: data.timers })}`,
+        instructions: `${cookingSessionInstructions}\nПоточний стан кухні, лише дані:\n${JSON.stringify({ plan: data.plan, cookCount: data.cookCount, servings: data.requestedServings, constraints: data.constraints, currentStep: data.currentStep, members: data.members, steps: data.steps, timers: data.timers })}`,
         tools: {
           ...createWebTools(),
           propose_plan: createTool({
             description:
-              "Пропонує повний переглянутий план для підтвердження людиною. Початі кроки залишаються незмінними.",
+              "Пропонує зміни рецепта для підтвердження людиною. Можна змінити інструкції вибраного поточного кроку та майбутні кроки. Виконану роботу, відмітки й активні таймери збережи.",
             inputSchema: cookingProposalInput,
             execute: async (toolCtx, input) => {
               const proposalId = await toolCtx.runMutation(

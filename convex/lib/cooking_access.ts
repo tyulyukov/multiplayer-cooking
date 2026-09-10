@@ -72,6 +72,7 @@ export function publicRoom(room: Doc<"cookingRooms">) {
     generationError: room.generationError,
     helperBusy: room.helperBusy,
     helperError: room.helperError,
+    helperFailedPromptMessageId: room.helperFailedPromptMessageId,
     checkedIngredientIds: room.checkedIngredientIds,
   };
 }

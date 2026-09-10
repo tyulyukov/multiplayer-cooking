@@ -70,7 +70,7 @@ Specialised preservation or other safety-sensitive methods need specific, reliab
 
 ## AI changes and images
 
-Every cook can ask the helper and approve a proposed change. The helper can explain without changing the plan. Changes to unstarted instructions require a visible preview and explicit approval. Started and completed work remains unchanged.
+Every cook can ask the helper and approve a proposed change. The helper can explain without changing the plan. Recipe changes require a visible preview and explicit approval. The selected active step can receive revised cooking instructions while completed work, checked actions, assignments, and timers remain intact.
 
 Approval refers to the previewed plan revision. If another action makes the proposal stale, the app requests an updated proposal. Concurrent approvals cannot apply the same proposal twice.
 

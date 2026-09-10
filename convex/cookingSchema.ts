@@ -67,6 +67,7 @@ export const cookingTables = {
     helperThreadId: v.optional(v.string()),
     helperBusy: v.optional(v.boolean()),
     helperError: v.optional(v.string()),
+    helperFailedPromptMessageId: v.optional(v.string()),
     helperPromptMessageId: v.optional(v.string()),
     helperStartedAt: v.optional(v.number()),
   })
@@ -126,6 +127,9 @@ export const cookingTables = {
     preview: v.string(),
     plan: cookingPlanValidator,
     affectedStepKeys: v.array(v.string()),
+    selectedStepKey: v.optional(v.string()),
+    selectedStepStatus: v.optional(stepStatusValidator),
+    selectedStepCheckedIds: v.optional(v.array(v.string())),
     approvedBy: v.optional(v.id("cookingMembers")),
     resolvedAt: v.optional(v.number()),
     createdAt: v.number(),
@@ -136,4 +140,30 @@ export const cookingTables = {
     text: v.string(),
     createdAt: v.number(),
   }).index("by_room_created", ["roomId", "createdAt"]),
+  cookingHelperUploadGrants: defineTable({
+    roomId: v.id("cookingRooms"),
+    memberId: v.id("cookingMembers"),
+    ticketHash: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+  })
+    .index("by_room_member", ["roomId", "memberId"])
+    .index("by_ticketHash", ["ticketHash"]),
+  cookingHelperUploads: defineTable({
+    roomId: v.id("cookingRooms"),
+    memberId: v.id("cookingMembers"),
+    storageId: v.id("_storage"),
+    contentType: v.string(),
+    size: v.number(),
+  })
+    .index("by_room_member_storage", ["roomId", "memberId", "storageId"])
+    .index("by_storage", ["storageId"]),
+  cookingHelperMessages: defineTable({
+    roomId: v.id("cookingRooms"),
+    messageId: v.string(),
+    authorMemberId: v.id("cookingMembers"),
+    authorName: v.string(),
+    stepKey: v.optional(v.string()),
+    attachmentStorageIds: v.array(v.id("_storage")),
+  }).index("by_room_message", ["roomId", "messageId"]),
 };

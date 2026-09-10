@@ -107,7 +107,7 @@ export function CookingTools({
                 {data.room.requestedServings} порцій
               </Button>
               <Button variant="outline" size="xl" onClick={() => ask()}>
-                Помічник і нотатки
+                Відкрити помічника
               </Button>
               <Button
                 variant="outline"

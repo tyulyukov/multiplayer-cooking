@@ -170,8 +170,7 @@
 .cooking-step-body p {
   margin: 8px 0;
 }
-.cooking-step-body pre,
-.cooking-helper pre {
+.cooking-step-body pre {
   overflow-x: auto;
   max-width: 100%;
 }
@@ -250,8 +249,7 @@
 }
 .cooking-shell button,
 .cooking-drawer button,
-.cooking-people-drawer button,
-.cooking-helper button {
+.cooking-people-drawer button {
   min-height: 48px;
   font-size: 16px;
 }
@@ -366,7 +364,6 @@
   display: block;
 }
 .cooking-drawer,
-.cooking-helper-drawer,
 .cooking-people-drawer {
   width: 100%;
   max-width: 760px;
@@ -376,7 +373,6 @@
   background: var(--background);
   font-size: 17px;
 }
-.cooking-helper-drawer [data-slot="drawer-title"],
 .cooking-drawer [data-slot="drawer-title"],
 .cooking-people-drawer [data-slot="drawer-title"] {
   font: 600 28px/1.2 var(--font-sign);
@@ -453,45 +449,6 @@
 }
 .cooking-people-content > div strong {
   flex: 1;
-}
-.cooking-helper {
-  overflow-y: auto;
-  max-height: 68dvh;
-  display: grid;
-  gap: 14px;
-  padding: 16px;
-  font-size: 17px;
-}
-.cooking-helper > div:not(.markdown) {
-  min-width: 0;
-}
-.cooking-helper h2,
-.cooking-helper h3 {
-  font-family: var(--font-sign);
-}
-.cooking-helper-message {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow-wrap: anywhere;
-}
-.cooking-helper-message-user {
-  background: var(--muted);
-}
-.cooking-helper article {
-  display: grid;
-  gap: 12px;
-  border-top: 2px solid var(--border);
-  padding-top: 14px;
-}
-.cooking-helper article p {
-  margin: 0;
-}
-.cooking-helper details {
-  min-width: 0;
-}
-.cooking-helper textarea {
-  font-size: 17px;
 }
 .cooking-join {
   display: grid;

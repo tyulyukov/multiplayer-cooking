@@ -1,6 +1,5 @@
 import { People } from "@/components/cooking/cooking-people";
 import { CooksForm } from "@/components/cook-together";
-import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
@@ -11,9 +10,11 @@ import { useEffect, useRef, useState } from "react";
 import { CookingSession } from "@/components/cooking/cooking-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { CookingMarkdown } from "@/components/cooking/cooking-markdown";
+import { CookingHelper } from "@/components/cooking/cooking-helper";
+import { helperContextStep } from "@/lib/cooking-helper";
+import { useAttachments } from "@/lib/use-attachments";
+import { uploadImage } from "@/lib/images";
 import {
   createCookingCredential,
   inviteFromHash,
@@ -24,8 +25,6 @@ import { isConvexConfigured } from "@/lib/convex";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
-type Proposal = FunctionReturnType<typeof api.cookingAssistance.listProposals>[number];
-
 export const Route = createFileRoute("/cook/$roomId")({
   component: CookingRoomRoute,
 });
@@ -34,7 +33,10 @@ function CookingRoomRoute() {
   const { roomId } = Route.useParams();
   if (!isConvexConfigured)
     return (
-      <RoomNotice title="Кухня недоступна" body="Підключи Convex, щоб відкрити спільну сесію." />
+      <RoomNotice
+        title="Кухня недоступна"
+        body="Не вдалося відкрити спільну сесію. Спробуй пізніше."
+      />
     );
   if (!/^[a-zA-Z0-9]{16,}$/.test(roomId))
     return (
@@ -57,7 +59,15 @@ function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteCopyState, setInviteCopyState] = useState<"copied" | "manual" | null>(null);
   const [helperRequested, setHelperRequested] = useState(false);
+  const [helperChatRequest, setHelperChatRequest] = useState(0);
   const [helperPrompt, setHelperPrompt] = useState("");
+  const [helperStepKey, setHelperStepKey] = useState<string>();
+  const [lastHelperRequest, setLastHelperRequest] = useState<{
+    promptMessageId: string;
+    prompt: string;
+    stepKey?: string;
+    attachmentStorageIds: Id<"_storage">[];
+  }>();
   const online = browserOnline && connection.isWebSocketConnected;
   const read = useQuery(
     api.cookingRooms.read,
@@ -124,6 +134,40 @@ function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
   const rejectProposal = useMutation(api.cookingAssistance.rejectProposal);
   const deleteNote = useMutation(api.cookingAssistance.deleteNote);
   const requestReference = useMutation(api.cookingAssistance.requestReference);
+  const generateHelperUploadUrl = useMutation(api.cookingAssistance.generateHelperUploadUrl);
+  const registerHelperUpload = useMutation(api.cookingAssistance.registerHelperUpload);
+  const helperAttachments = useAttachments(
+    credential && online
+      ? async (blob) => {
+          const args = { roomId, participantToken: credential.participantToken };
+          const grant = await generateHelperUploadUrl(args);
+          if (!grant) throw new Error("Upload unavailable");
+          const storageId = await uploadImage(grant.uploadUrl, blob);
+          if (
+            !(await registerHelperUpload({
+              ...args,
+              uploadTicket: grant.uploadTicket,
+              storageId: storageId as Id<"_storage">,
+            }))
+          )
+            throw new Error("Upload rejected");
+          return storageId;
+        }
+      : null,
+  );
+  const activeHelperStep =
+    read?.steps.find(
+      (step) => step.status === "active" && step.slots.some((slot) => read.me.slots.includes(slot)),
+    ) ??
+    read?.steps.find(
+      (step) =>
+        step.status === "waiting" && step.slots.some((slot) => read.me.slots.includes(slot)),
+    );
+  const helperContext = helperContextStep(
+    read?.room.plan?.steps ?? [],
+    helperStepKey,
+    activeHelperStep?.stepKey,
+  );
 
   useEffect(() => {
     const update = () => setBrowserOnline(navigator.onLine);
@@ -290,8 +334,10 @@ function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
           seconds,
         }),
       ),
-    ask: (prompt = "") => {
-      setHelperPrompt(prompt);
+    ask: (prompt?: string, stepKey?: string) => {
+      if (prompt) setHelperPrompt(prompt);
+      setHelperStepKey(stepKey);
+      setHelperChatRequest((key) => key + 1);
       setHelperRequested(true);
     },
     startSession: () =>
@@ -425,43 +471,77 @@ function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
           </div>
         </DrawerContent>
       </Drawer>
-      <AssistantPanel
-        currentSteps={read.room.plan?.steps ?? []}
-        notes={(notes ?? []).map((note) => ({
-          ...note,
-          canDelete: read.me.role === "host" || note.authorMemberId === read.me._id,
-        }))}
-        proposals={proposals ?? []}
-        messages={helperMessages ?? []}
-        helperBusy={read.room.helperBusy === true}
-        helperError={error ?? read.room.helperError}
-        requested={helperRequested}
-        onRequestedChange={setHelperRequested}
-        prompt={helperPrompt}
-        onPromptChange={setHelperPrompt}
-        disabled={!online || pending}
-        onNote={(text) =>
-          invoke(() => addNote({ roomId, participantToken: credential.participantToken, text }))
-        }
-        onAsk={(prompt) =>
-          invoke(() => askHelper({ roomId, participantToken: credential.participantToken, prompt }))
-        }
-        onDeleteNote={(noteId) =>
-          invoke(() =>
-            deleteNote({ roomId, participantToken: credential.participantToken, noteId }),
-          )
-        }
-        onApprove={(proposalId) =>
-          invoke(() =>
-            approveProposal({ roomId, participantToken: credential.participantToken, proposalId }),
-          )
-        }
-        onReject={(proposalId) =>
-          invoke(() =>
-            rejectProposal({ roomId, participantToken: credential.participantToken, proposalId }),
-          )
-        }
-      />
+      {read.room.plan && (
+        <CookingHelper
+          plan={read.room.plan}
+          contextStepKey={helperContext}
+          chatRequestKey={helperChatRequest}
+          onContextChange={setHelperStepKey}
+          notes={(notes ?? []).map((note) => ({
+            ...note,
+            canDelete: read.me.role === "host" || note.authorMemberId === read.me._id,
+          }))}
+          proposals={proposals ?? []}
+          messages={helperMessages ?? []}
+          loaded={helperMessages !== undefined && proposals !== undefined}
+          helperBusy={read.room.helperBusy === true}
+          helperError={read.room.helperError}
+          open={helperRequested}
+          onOpenChange={(open) => {
+            if (open) setHelperStepKey(undefined);
+            setHelperRequested(open);
+          }}
+          prompt={helperPrompt}
+          onPromptChange={setHelperPrompt}
+          online={online}
+          finished={read.room.state === "done" || read.room.state === "error"}
+          attachments={helperAttachments}
+          onNote={(text) =>
+            addNote({ roomId, participantToken: credential.participantToken, text })
+          }
+          onAsk={async (prompt) => {
+            const request = {
+              prompt,
+              stepKey: helperContext || undefined,
+              attachmentStorageIds: helperAttachments.storageIds as Id<"_storage">[],
+            };
+            const result = await askHelper({
+              roomId,
+              participantToken: credential.participantToken,
+              ...request,
+            });
+            if (result)
+              setLastHelperRequest({ ...request, promptMessageId: result.promptMessageId });
+            return result;
+          }}
+          onRetry={
+            lastHelperRequest &&
+            lastHelperRequest.promptMessageId === read.room.helperFailedPromptMessageId
+              ? async () => {
+                  const { promptMessageId: _failedMessageId, ...request } = lastHelperRequest;
+                  const result = await askHelper({
+                    roomId,
+                    participantToken: credential.participantToken,
+                    ...request,
+                    stepKey: helperContextStep(read.room.plan?.steps ?? [], request.stepKey),
+                  });
+                  if (result)
+                    setLastHelperRequest({ ...request, promptMessageId: result.promptMessageId });
+                  return result;
+                }
+              : undefined
+          }
+          onDeleteNote={(noteId) =>
+            deleteNote({ roomId, participantToken: credential.participantToken, noteId })
+          }
+          onApprove={(proposalId) =>
+            approveProposal({ roomId, participantToken: credential.participantToken, proposalId })
+          }
+          onReject={(proposalId) =>
+            rejectProposal({ roomId, participantToken: credential.participantToken, proposalId })
+          }
+        />
+      )}
       {error && (
         <p className="cooking-action-error" role="alert">
           {error}
@@ -584,216 +664,6 @@ function JoinRoom({
         {busy ? "Заходимо…" : "Приєднатися"}
       </Button>
     </main>
-  );
-}
-
-function AssistantPanel({
-  currentSteps,
-  notes,
-  proposals,
-  messages,
-  helperBusy,
-  helperError,
-  requested,
-  onRequestedChange,
-  prompt,
-  onPromptChange,
-  disabled,
-  onNote,
-  onDeleteNote,
-  onAsk,
-  onApprove,
-  onReject,
-}: {
-  notes: Array<{
-    _id: Id<"cookingNotes">;
-    authorMemberId: Id<"cookingMembers">;
-    text: string;
-    canDelete: boolean;
-  }>;
-  currentSteps: Array<{ id: string; title: string }>;
-  proposals: Proposal[];
-  messages: Array<{ _id: string; role: "user" | "assistant"; text: string }>;
-  helperBusy: boolean;
-  helperError?: string;
-  requested: boolean;
-  onRequestedChange: (open: boolean) => void;
-  prompt: string;
-  onPromptChange: (value: string) => void;
-  disabled: boolean;
-  onNote: (text: string) => void;
-  onDeleteNote: (id: Id<"cookingNotes">) => void;
-  onAsk: (text: string) => void;
-  onApprove: (id: Id<"cookingProposals">) => void;
-  onReject: (id: Id<"cookingProposals">) => void;
-}) {
-  return (
-    <Drawer autoFocus open={requested} onOpenChange={onRequestedChange}>
-      <DrawerContent className="cooking-helper-drawer" aria-describedby={undefined}>
-        <DrawerHeader>
-          <DrawerTitle>Помічник</DrawerTitle>
-        </DrawerHeader>
-        <section className="cooking-helper">
-          <Textarea
-            value={prompt}
-            maxLength={1_024}
-            rows={3}
-            placeholder="Запитай про крок або заміну"
-            onChange={(event) => onPromptChange(event.target.value)}
-          />
-          <div>
-            <Button
-              size="sm"
-              disabled={disabled || helperBusy || !prompt.trim()}
-              onClick={() => onAsk(prompt.trim())}
-            >
-              Запитати
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={disabled || prompt.length > 1000 || !prompt.trim()}
-              onClick={() => onNote(prompt.trim())}
-            >
-              Додати нотатку
-            </Button>
-          </div>
-          {helperBusy && <p>Помічник думає…</p>}
-          {helperError && <p role="alert">{helperError}</p>}
-          {messages.map((message) => (
-            <div
-              key={message._id}
-              className={`cooking-helper-message cooking-helper-message-${message.role}`}
-            >
-              <CookingMarkdown text={message.text} />
-            </div>
-          ))}
-          {proposals
-            .filter((proposal) => proposal.status === "open")
-            .map((proposal) => (
-              <article key={proposal._id}>
-                <strong>Пропозиція зміни</strong>
-                <p>{proposal.preview}</p>
-                <ProposalDetails proposal={proposal} currentSteps={currentSteps} />
-                <Button size="sm" disabled={disabled} onClick={() => onApprove(proposal._id)}>
-                  Підтвердити
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={disabled}
-                  onClick={() => onReject(proposal._id)}
-                >
-                  Відхилити
-                </Button>
-              </article>
-            ))}
-          {notes.length > 0 && (
-            <div className="cooking-notes">
-              <h3>Нотатки</h3>
-              {notes.map((note) => (
-                <p key={note._id}>
-                  {note.text}
-                  {note.canDelete && (
-                    <Button
-                      size="chip"
-                      variant="ghost"
-                      disabled={disabled}
-                      onClick={() => onDeleteNote(note._id)}
-                    >
-                      Прибрати
-                    </Button>
-                  )}
-                </p>
-              ))}
-            </div>
-          )}
-        </section>
-      </DrawerContent>
-    </Drawer>
-  );
-}
-
-function ProposalDetails({
-  proposal,
-  currentSteps,
-}: {
-  proposal: Proposal;
-  currentSteps: Array<{ id: string; title: string }>;
-}) {
-  const titleFor = (id: string) =>
-    proposal.plan.steps.find((step) => step.id === id)?.title ??
-    currentSteps.find((step) => step.id === id)?.title ??
-    id;
-  const removed = currentSteps.filter(
-    (step) => !proposal.plan.steps.some((next) => next.id === step.id),
-  );
-  return (
-    <details>
-      <summary>Переглянути зміни</summary>
-      <p>Порцій: {proposal.plan.servings}</p>
-      <p>
-        Інгредієнти:{" "}
-        {proposal.plan.ingredients.map((item) => `${item.name} ${item.amount}`).join(", ")}
-      </p>
-      {removed.length > 0 && (
-        <p>Прибираємо кроки: {removed.map((step) => step.title).join(", ")}</p>
-      )}
-      <p>
-        Обладнання:{" "}
-        {proposal.plan.equipment.map((item) => `${item.name}, ${item.capacity} шт.`).join("; ") ||
-          "не потрібне"}
-      </p>
-      {proposal.plan.steps
-        .filter((step) => proposal.affectedStepKeys.includes(step.id))
-        .map((step) => (
-          <section key={step.id}>
-            <strong>{step.title}</strong>
-            <CookingMarkdown text={step.body} />
-            <p>
-              Кухарі: {step.slots.join(", ")}. Після:{" "}
-              {step.dependsOn.map(titleFor).join(", ") || "без залежностей"}
-            </p>
-            {step.checklist.length > 0 && (
-              <p>Перевірити: {step.checklist.map((item) => item.label).join(", ")}</p>
-            )}
-            {step.timers.length > 0 && (
-              <p>
-                Таймери:{" "}
-                {step.timers
-                  .map((timer) => `${timer.label} (${timer.durationSeconds} с)`)
-                  .join(", ")}
-              </p>
-            )}
-            {step.confirmation && <p>Підтвердження: {step.confirmation}</p>}
-            {step.temperature && (
-              <p>
-                {step.temperature.label}: {step.temperature.value} °{step.temperature.unit}
-              </p>
-            )}
-            {step.kind !== "task" && (
-              <p>
-                {step.kind === "together"
-                  ? "Починаємо разом після готовності всіх."
-                  : "Передача з підтвердженням отримання."}
-              </p>
-            )}
-            {step.canWait && <p>Під час очікування можна взяти інше завдання.</p>}
-            {step.equipment.length > 0 && (
-              <p>
-                Використовує:{" "}
-                {step.equipment
-                  .map((id) => proposal.plan.equipment.find((item) => item.id === id)?.name ?? id)
-                  .join(", ")}
-              </p>
-            )}
-            {step.choices?.map((choice) => (
-              <p key={choice.id}>Варіант: {choice.label}</p>
-            ))}
-            {step.reference && <p>Візуальний орієнтир: {step.reference.alt}</p>}
-          </section>
-        ))}
-    </details>
   );
 }
 

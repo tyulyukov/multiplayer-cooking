@@ -40,7 +40,7 @@ export type CookingActions = Readonly<{
   retryGeneration: () => void;
   invite: () => void;
   managePeople: () => void;
-  ask: (prompt?: string) => void;
+  ask: (prompt?: string, stepKey?: string) => void;
   cookAgain: () => void;
 }>;
 
@@ -626,11 +626,7 @@ function StepCard({
                     Скасувати завершення
                   </Button>
                 )}
-              <Button
-                variant="ghost"
-                size="chip"
-                onClick={() => actions.ask(`Поясни крок «${step.title}».`)}
-              >
+              <Button variant="ghost" size="chip" onClick={() => actions.ask(undefined, step.id)}>
                 Є питання?
               </Button>
             </div>
@@ -644,7 +640,7 @@ function StepCard({
                 key={choice.id}
                 variant="outline"
                 size="chip"
-                onClick={() => actions.ask(choice.prompt)}
+                onClick={() => actions.ask(choice.prompt, step.id)}
               >
                 {choice.label}
               </Button>

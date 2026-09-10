@@ -16,7 +16,7 @@ import { AddressPrompt } from "@/components/address-prompt";
 import { ChatThread, type QuestionSubmit } from "@/components/chat-thread";
 import { QuestionCard } from "@/components/question-card";
 import { pendingQuestion } from "@/lib/question-messages";
-import { Composer, type ComposerAttachment } from "@/components/composer";
+import { Composer } from "@/components/composer";
 import { HistoryPanel } from "@/components/history-panel";
 import { IdeaCompact, IdeaPane, type Idea, type IdeaVersions } from "@/components/idea-card";
 import { ConnectCard, ProfileMenu, type SilpoConnection } from "@/components/silpo-connect";
@@ -27,7 +27,8 @@ import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { isConvexConfigured } from "@/lib/convex";
-import { resizeImage, uploadImage } from "@/lib/images";
+import { uploadImage } from "@/lib/images";
+import { useAttachments } from "@/lib/use-attachments";
 import { pickQuickPrompts, type QuickPrompt } from "@/lib/quick-prompts";
 import type { CookingSetup } from "@/components/cook-together";
 import { createCookingCredential, saveCookingCredential } from "@/lib/cooking-session";
@@ -69,94 +70,6 @@ function useComposerDraft() {
   }
 
   return { request, selection, quickPrompts, change, togglePrompt, reset };
-}
-
-type PendingAttachment = ComposerAttachment & { storageId?: string };
-
-// Photos are resized and uploaded as soon as they are picked; the send carries only storage ids.
-function useAttachments(
-  upload: {
-    url: () => Promise<string | null>;
-    register: (storageId: string) => Promise<boolean>;
-  } | null,
-) {
-  const [items, setItems] = useState<PendingAttachment[]>([]);
-
-  function update(id: string, patch: Partial<PendingAttachment>) {
-    setItems((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
-  }
-
-  async function add(files: File[]) {
-    if (!upload) {
-      return;
-    }
-
-    for (const file of files) {
-      const id = crypto.randomUUID();
-      const previewUrl = URL.createObjectURL(file);
-
-      setItems((current) => [...current, { id, previewUrl, state: "uploading" }]);
-
-      try {
-        const blob = await resizeImage(file);
-        const url = await upload.url();
-
-        if (!url) {
-          throw new Error("Upload limit reached");
-        }
-
-        const storageId = await uploadImage(url, blob);
-
-        if (!(await upload.register(storageId))) {
-          throw new Error("Upload rejected");
-        }
-
-        update(id, { state: "done", storageId });
-      } catch {
-        update(id, { state: "error" });
-      }
-    }
-  }
-
-  function remove(id: string) {
-    setItems((current) => {
-      const item = current.find((entry) => entry.id === id);
-
-      if (item) {
-        URL.revokeObjectURL(item.previewUrl);
-      }
-
-      return current.filter((entry) => entry.id !== id);
-    });
-  }
-
-  // Replaces the finished tiles with photos already in storage, for example a draft saved on
-  // another device. A photo still uploading keeps its tile so its result is not lost.
-  function restore(images: readonly { storageId: string; url: string }[]) {
-    setItems((current) => {
-      const uploading = current.filter((item) => item.state === "uploading");
-
-      for (const item of current) {
-        if (item.state !== "uploading") URL.revokeObjectURL(item.previewUrl);
-      }
-
-      return [
-        ...images.map((image) => ({
-          id: image.storageId,
-          previewUrl: image.url,
-          state: "done" as const,
-          storageId: image.storageId,
-        })),
-        ...uploading,
-      ];
-    });
-  }
-
-  const storageIds = items.flatMap((item) =>
-    item.state === "done" && item.storageId ? [item.storageId] : [],
-  );
-
-  return { items, storageIds, add, remove, clear: () => restore([]), restore };
 }
 
 type RemoteDraft = { text: string; images: readonly { storageId: string; url: string }[] };
@@ -821,10 +734,13 @@ function ConnectedHome() {
   const draft = useComposerDraft();
   const attachments = useAttachments(
     sessionId
-      ? {
-          url: () => uploadUrl({ sessionId }),
-          register: (storageId) =>
-            registerUpload({ sessionId, storageId: storageId as Id<"_storage"> }),
+      ? async (blob) => {
+          const url = await uploadUrl({ sessionId });
+          if (!url) throw new Error("Upload limit reached");
+          const storageId = await uploadImage(url, blob);
+          if (!(await registerUpload({ sessionId, storageId: storageId as Id<"_storage"> })))
+            throw new Error("Upload rejected");
+          return storageId;
         }
       : null,
   );

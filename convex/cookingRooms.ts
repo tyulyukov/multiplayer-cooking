@@ -70,6 +70,7 @@ const publicRoomValidator = v.object({
   generationError: v.optional(v.string()),
   helperBusy: v.optional(v.boolean()),
   helperError: v.optional(v.string()),
+  helperFailedPromptMessageId: v.optional(v.string()),
   checkedIngredientIds: v.array(v.string()),
   dishImage: v.optional(
     v.object({
