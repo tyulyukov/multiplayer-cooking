@@ -219,3 +219,67 @@ test("invalid pending completion rolls back its automatic start", async () => {
   });
   expect(step.startedAt).toBeUndefined();
 });
+
+test("unchecked items require an explicit skip and stay unchecked after completion", async () => {
+  const { t, host } = await cookingFixture([
+    task("prep", 1, { checklist: [{ id: "cut", label: "Нарізати" }] }),
+  ]);
+  await expect(
+    t.mutation(api.cookingSteps.complete, {
+      ...host,
+      stepKey: "prep",
+      confirmed: false,
+    }),
+  ).rejects.toThrow("Позначте всі пункти");
+  expect(
+    await t.mutation(api.cookingSteps.complete, {
+      ...host,
+      stepKey: "prep",
+      confirmed: false,
+      skipChecklist: true,
+    }),
+  ).toBe(true);
+  expect((await t.query(api.cookingRooms.read, host))?.steps[0]).toMatchObject({
+    status: "done",
+    checkedIds: [],
+  });
+});
+
+test("skipping checklist items preserves assignment, confirmation, and timer gates", async () => {
+  const { t, host, guest } = await cookingFixture([
+    task("prep", 1, {
+      checklist: [{ id: "check", label: "Перевірити" }],
+      confirmation: "Перевірив результат",
+      timers: [{ id: "cook", label: "Готування", durationSeconds: 60 }],
+    }),
+  ]);
+  await expect(
+    t.mutation(api.cookingSteps.complete, {
+      ...guest,
+      stepKey: "prep",
+      confirmed: true,
+      skipChecklist: true,
+    }),
+  ).rejects.toThrow("іншому кухарю");
+  await expect(
+    t.mutation(api.cookingSteps.complete, {
+      ...host,
+      stepKey: "prep",
+      confirmed: false,
+      skipChecklist: true,
+    }),
+  ).rejects.toThrow("Потрібне підтвердження");
+  await t.mutation(api.cookingTimers.start, {
+    ...host,
+    stepKey: "prep",
+    timerKey: "cook",
+  });
+  await expect(
+    t.mutation(api.cookingSteps.complete, {
+      ...host,
+      stepKey: "prep",
+      confirmed: true,
+      skipChecklist: true,
+    }),
+  ).rejects.toThrow("таймера");
+});

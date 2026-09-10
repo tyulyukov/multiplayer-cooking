@@ -21,7 +21,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { normalizeCookName, readSavedCookName, saveCookName } from "@/lib/cook-name";
+import {
+  normalizeCookName,
+  readSavedCookName,
+  resolveCookName,
+  saveCookName,
+} from "@/lib/cook-name";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 const minCooks = 1;
@@ -64,9 +69,10 @@ export function CooksForm({
   onGenerate: (setup: CookingSetup) => Promise<void> | void;
 }) {
   const [count, setCooks] = useState(initial);
-  const [name, setName] = useState(
-    () => normalizeCookName(initialName) || readSavedCookName() || normalizeCookName(suggestedName),
+  const [name, setName] = useState(() =>
+    resolveCookName(initialName, readSavedCookName(), suggestedName),
   );
+  const [needsName] = useState(() => !name);
   const [constraints, setConstraints] = useState(initialConstraints);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,24 +130,26 @@ export function CooksForm({
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden />
         </Button>
       </div>
+      {needsName ? (
+        <label className="cook-setup-field">
+          <span>Твоє ім’я</span>
+          <input
+            value={name}
+            maxLength={80}
+            autoComplete="name"
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Наприклад, Аня"
+          />
+        </label>
+      ) : null}
       <label className="cook-setup-field">
-        <span>Твоє ім’я</span>
-        <input
-          value={name}
-          maxLength={80}
-          autoComplete="name"
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Наприклад, Аня"
-        />
-      </label>
-      <label className="cook-setup-field">
-        <span>Обладнання або досвід (необов’язково)</span>
+        <span>Обладнання (необов’язково)</span>
         <textarea
           value={constraints}
           maxLength={500}
           rows={2}
           onChange={(event) => setConstraints(event.target.value)}
-          placeholder="Є одна велика пательня, я новачок"
+          placeholder="Є одна велика пательня"
         />
       </label>
       {error && (

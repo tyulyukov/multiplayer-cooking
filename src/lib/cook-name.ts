@@ -7,6 +7,14 @@ export function normalizeCookName(value: string) {
   return name.length > 0 && name.length <= maxCookNameLength ? name : "";
 }
 
+export function resolveCookName(initialName: string, savedName: string, suggestedName: string) {
+  return (
+    normalizeCookName(savedName) ||
+    normalizeCookName(initialName) ||
+    normalizeCookName(suggestedName)
+  );
+}
+
 export function readSavedCookName() {
   if (typeof window === "undefined") return "";
 
@@ -24,6 +32,16 @@ export function saveCookName(value: string) {
 
   try {
     window.localStorage.setItem(storageKey, name);
+  } catch {
+    return;
+  }
+}
+
+export function clearSavedCookName() {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.removeItem(storageKey);
   } catch {
     return;
   }

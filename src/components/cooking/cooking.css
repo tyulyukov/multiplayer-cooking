@@ -5,7 +5,6 @@
   font-size: 17px;
   line-height: 1.5;
 }
-.cooking-header,
 .cooking-title,
 .cooking-tools-row,
 .cooking-timeline,
@@ -18,27 +17,11 @@
   margin-left: auto;
 }
 .cooking-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 68px;
+  min-height: 50px;
 }
 .cooking-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  font: 600 21px var(--font-sign);
   color: var(--foreground);
   text-decoration: none;
-}
-.brand-dot {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--foreground);
-  border-radius: 50%;
-  background: var(--teal);
 }
 .cooking-title {
   display: grid;
@@ -260,6 +243,7 @@
 }
 .cooking-timer {
   display: grid;
+  grid-template-rows: auto 102px;
   gap: 12px;
   padding: 14px;
   margin-top: 12px;
@@ -275,6 +259,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  align-content: start;
 }
 .cooking-timer svg {
   width: 20px;
@@ -287,15 +272,21 @@
   font: 700 56px/1 var(--font-sign);
   font-variant-numeric: tabular-nums;
 }
-.cooking-timer[data-fired="true"] strong {
-  font-size: 32px;
-}
 .cooking-timer > div:last-child {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: 48px 48px;
   gap: 6px;
 }
+.cooking-timer > div:last-child button:first-child,
+.cooking-timer[data-ended="true"] > div:last-child button {
+  grid-column: 1 / -1;
+}
 .cooking-timer button {
+  min-width: 0;
+  padding-inline: 6px;
+  white-space: normal;
+  line-height: 1.2;
   color: var(--foreground);
   background: var(--card);
 }
@@ -464,7 +455,6 @@
   gap: 8px;
 }
 @media (min-width: 720px) {
-  .cooking-header,
   .cooking-title,
   .cooking-tools-row,
   .cooking-timeline,
@@ -498,29 +488,6 @@
   margin: 24px auto 0;
   display: grid;
   gap: 16px;
-}
-.cooking-shell[data-lobby="true"] .checker-band {
-  height: calc(28px + env(safe-area-inset-top));
-  background-size: 28px 28px;
-}
-.cooking-shell[data-lobby="true"] .cooking-header,
-.cooking-shell[data-lobby="true"] .cooking-title {
-  width: min(100% - 32px, 480px);
-}
-.cooking-shell[data-lobby="true"] .cooking-header {
-  min-height: 56px;
-}
-.cooking-shell[data-lobby="true"] .cooking-brand {
-  font-size: 17px;
-}
-.cooking-shell[data-lobby="true"] .cooking-title .sign {
-  border-radius: 14px;
-}
-.cooking-shell[data-lobby="true"] .cooking-title h1 {
-  padding: 8px 12px 10px;
-  border-radius: 11px;
-  font-size: 24px;
-  line-height: 1.15;
 }
 .cooking-lobby-intro {
   display: flex;
@@ -654,4 +621,8 @@
   color: var(--teal);
   font-size: 12px;
   text-align: left;
+}
+
+.cooking-skip-dialog [data-slot="dialog-title"] {
+  font: 600 24px/1.1 var(--font-sign);
 }

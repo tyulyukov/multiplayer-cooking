@@ -271,8 +271,9 @@ function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
       participantToken && invoke(() => waitStep({ roomId, participantToken, stepKey })),
     ready: (stepKey: string) =>
       participantToken && invoke(() => ready({ roomId, participantToken, stepKey })),
-    complete: (stepKey: string, confirmed: boolean) =>
-      participantToken && invoke(() => complete({ roomId, participantToken, stepKey, confirmed })),
+    complete: (stepKey: string, confirmed: boolean, skipChecklist = false) =>
+      participantToken &&
+      invoke(() => complete({ roomId, participantToken, stepKey, confirmed, skipChecklist })),
     undo: (stepKey: string) =>
       participantToken && invoke(() => undo({ roomId, participantToken, stepKey })),
     toggleChecklist: (stepKey: string, itemId: string, checked: boolean) =>
@@ -647,6 +648,12 @@ function JoinRoom({
   return (
     <main className="cooking-shell cooking-join">
       <div className="checker-band" aria-hidden />
+      <header className="topbar page-frame">
+        <a href="/" className="brand">
+          <i aria-hidden />
+          Multiplayer Cooking
+        </a>
+      </header>
       <div className="sign">
         <h1>Приєднатися до кухні</h1>
       </div>
@@ -671,6 +678,12 @@ function RoomNotice({ title, body }: { title: string; body: string }) {
   return (
     <main className="cooking-shell">
       <div className="checker-band" aria-hidden />
+      <header className="topbar page-frame">
+        <a href="/" className="brand">
+          <i aria-hidden />
+          Multiplayer Cooking
+        </a>
+      </header>
       <CookingStatus title={title} body={body} />
     </main>
   );

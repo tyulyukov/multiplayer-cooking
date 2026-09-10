@@ -87,7 +87,20 @@ export function CookingCompletion({
             До інструкцій
           </Button>
         </div>
-        <div className="completion-ticket-edge" aria-hidden />
+        <svg
+          className="completion-ticket-edge"
+          viewBox="0 0 338 14"
+          preserveAspectRatio="none"
+          aria-hidden
+        >
+          <path
+            d="M1 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 q12 22 24 0 "
+            fill="var(--card)"
+            stroke="var(--foreground)"
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
       </div>
       <KitchenIllustration name="serving-bell" className="completion-bell" />
     </section>

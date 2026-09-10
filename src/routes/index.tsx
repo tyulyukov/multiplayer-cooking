@@ -350,7 +350,7 @@ function HomeScreen({
               onClick={() => draft.togglePrompt(prompt)}
             >
               <HugeiconsIcon icon={prompt.icon} strokeWidth={1.5} aria-hidden />
-              {prompt.label}
+              <span>{prompt.label}</span>
             </Button>
           ))}
         </div>

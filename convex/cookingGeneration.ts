@@ -84,6 +84,7 @@ export const generate = internalAction({
             cookCount: data.cookCount,
             servings: data.requestedServings,
             constraints: data.constraints,
+            cookProfile: data.agentSettings,
           }),
           abortSignal: AbortSignal.timeout(AGENT_RUN_TIMEOUT_MS),
         },
