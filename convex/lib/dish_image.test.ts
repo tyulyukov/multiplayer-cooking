@@ -35,6 +35,8 @@ describe("generated dish images", () => {
           n: 1,
           quality: "medium",
           aspect_ratio: "3:2",
+          output_format: "webp",
+          output_compression: 85,
           provider: { order: ["openai"], allow_fallbacks: false },
         });
         expect(body).not.toHaveProperty("resolution");
