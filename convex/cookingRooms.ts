@@ -558,6 +558,7 @@ export const generationData = internalQuery({
       cookCount: v.number(),
       requestedServings: v.number(),
       constraints: v.string(),
+      cooks: v.array(v.object({ slot: v.number(), name: v.string() })),
       agentSettings: v.optional(agentSettingsValidator),
       attempt: v.string(),
     }),
@@ -565,16 +566,25 @@ export const generationData = internalQuery({
   handler: async (ctx, { roomId }) => {
     const room = await ctx.db.get(roomId);
     if (room?.state !== "generating") return null;
-    const personalization = await ctx.db
-      .query("personalizations")
-      .withIndex("by_user", (q) => q.eq("userId", room.hostUserId))
-      .unique();
+    const [personalization, members] = await Promise.all([
+      ctx.db
+        .query("personalizations")
+        .withIndex("by_user", (q) => q.eq("userId", room.hostUserId))
+        .unique(),
+      ctx.db
+        .query("cookingMembers")
+        .withIndex("by_room_status", (q) => q.eq("roomId", roomId).eq("status", "active"))
+        .take(ROOM_MEMBER_LIMIT),
+    ]);
     return {
       hostUserId: room.hostUserId,
       source: room.source,
       cookCount: room.cookCount,
       requestedServings: room.requestedServings,
       constraints: room.constraints,
+      cooks: members
+        .flatMap((member) => member.slots.map((slot) => ({ slot, name: member.name })))
+        .sort((a, b) => a.slot - b.slot),
       agentSettings: personalization?.settings,
       attempt: room.generationAttempt,
     };

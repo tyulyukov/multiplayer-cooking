@@ -2,7 +2,7 @@
 
 import { Agent, createTool, stepCountIs } from "@convex-dev/agent";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { z } from "zod";
 
 import { components, internal } from "./_generated/api";
@@ -82,6 +82,7 @@ export const generate = internalAction({
           prompt: JSON.stringify({
             recipe: data.source,
             cookCount: data.cookCount,
+            cooks: data.cooks,
             servings: data.requestedServings,
             constraints: data.constraints,
             cookProfile: data.agentSettings,
@@ -182,11 +183,26 @@ export const respond = internalAction({
               "Пропонує зміни рецепта для підтвердження людиною. Можна змінити інструкції вибраного поточного кроку та майбутні кроки. Виконану роботу, відмітки й активні таймери збережи.",
             inputSchema: cookingProposalInput,
             execute: async (toolCtx, input) => {
-              const proposalId = await toolCtx.runMutation(
-                internal.cookingAssistance.saveProposal,
-                { ...args, authorMemberId: data.memberId, planVersion: data.planVersion, ...input },
-              );
-              return { proposed: Boolean(proposalId), requiresConfirmation: true };
+              let proposalId;
+              try {
+                proposalId = await toolCtx.runMutation(internal.cookingAssistance.saveProposal, {
+                  ...args,
+                  authorMemberId: data.memberId,
+                  planVersion: data.planVersion,
+                  ...input,
+                });
+              } catch (error) {
+                throw new Error(
+                  error instanceof ConvexError
+                    ? String(error.data)
+                    : "Пропозицію не збережено. Перевір план і спробуй ще раз.",
+                );
+              }
+              if (!proposalId)
+                throw new Error(
+                  "Пропозицію не збережено: стан кухні змінився. Перевір поточний план і спробуй ще раз.",
+                );
+              return { proposed: true, requiresConfirmation: true };
             },
           }),
         },

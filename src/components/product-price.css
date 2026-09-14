@@ -1,7 +1,5 @@
 .product-price-sale {
-  display: grid;
-  justify-items: end;
-  gap: 2px;
+  display: contents;
 }
 
 .product-price-current {
