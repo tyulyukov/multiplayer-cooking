@@ -56,14 +56,14 @@ The Сільпо OAuth callback is served by Convex at `<CONVEX_SITE_URL>/silpo/
 
 ## Environment variables
 
-| Variable                                     | Where         | Purpose                                                                                                      |
-| -------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------ |
-| `VITE_CONVEX_URL`                            | Browser build | Convex deployment URL. `bunx convex dev` sets it locally; the Railway build takes it as a build argument.    |
-| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`     | Convex        | The agent model. Use a dedicated key with a spending limit.                                                  |
-| `OPENROUTER_IMAGE_MODEL`                     | Convex        | The image model for dish and cooking-reference images.                                                       |
-| `SEARXNG_URL`                                | Convex        | Base URL of the SearXNG instance for `web_search`. Without it, web search reports that it is not configured. |
-| `APP_URL`                                    | Convex        | Where the OAuth callback sends the browser back. Without it the callback shows a plain text page.            |
-| `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_EDGE` | Convex        | Optional telemetry. Records run outcome, duration, and token counts. Never prompts or responses.             |
+| Variable                                     | Where         | Purpose                                                                                                                                                                                                                                                                    |
+| -------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_CONVEX_URL`                            | Browser build | Convex deployment URL. `bunx convex dev` sets it locally; the Railway build takes it as a build argument.                                                                                                                                                                  |
+| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`     | Convex        | The agent model. Use a dedicated key with a spending limit.                                                                                                                                                                                                                |
+| `OPENROUTER_IMAGE_MODEL`                     | Convex        | The image model for dish and cooking-reference images.                                                                                                                                                                                                                     |
+| `SEARXNG_URL`                                | Convex        | Base URL of the SearXNG instance for `web_search`. Without it, web search reports that it is not configured.                                                                                                                                                               |
+| `APP_URL`                                    | Convex        | Where the OAuth callback sends the browser back. Without it the callback shows a plain text page.                                                                                                                                                                          |
+| `AXIOM_TOKEN`, `AXIOM_DATASET`, `AXIOM_EDGE` | Convex        | Optional telemetry. Records run outcome, duration, and token counts. Never prompts or responses. Each deployment has its own dataset and ingest-only token: `multiplayer-cooking-events-dev` and `multiplayer-cooking-events-prod`, with a dashboard per dataset in Axiom. |
 
 AI requests share the host’s existing budget of 5 requests per minute and 40 per day. A cooking plan includes up to six automatic reference images. Extra images and helper requests from guests also use that host budget.
 

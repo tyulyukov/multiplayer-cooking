@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import type { SessionId } from "convex-helpers/server/sessions";
 
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { cookingFixture, guestToken, inviteToken, task } from "../tests/cooking-fixture";
 
 const extraToken = "extra-".padEnd(40, "d");
@@ -144,3 +144,17 @@ for (const recovery of ["continueAlone", "takeover"] as const) {
     ).toBe(true);
   });
 }
+
+test("generation data lists the cooks who already joined by slot", async () => {
+  const { t, roomId } = await cookingFixture();
+  await t.run(async (ctx) => {
+    await ctx.db.patch(roomId, { state: "generating" });
+  });
+
+  const data = await t.query(internal.cookingRooms.generationData, { roomId });
+
+  expect(data?.cooks).toEqual([
+    { slot: 1, name: "Оля" },
+    { slot: 2, name: "Аня" },
+  ]);
+});

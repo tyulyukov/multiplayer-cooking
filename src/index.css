@@ -1016,6 +1016,12 @@
 }
 
 .product-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  column-gap: 6px;
+  row-gap: 2px;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   white-space: nowrap;
@@ -2155,6 +2161,7 @@
   }
   .products li[data-photo="true"] .product-price {
     grid-column: 2;
+    justify-content: flex-start;
   }
   .product-price {
     font-size: 0.875rem;

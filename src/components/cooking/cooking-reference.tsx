@@ -48,18 +48,20 @@ export function CookingReference({
       </p>
     );
 
+  // The dither animation means "the model is drawing". A stored image that is still downloading
+  // shows the static grid and the caption, so a reload never looks like another generation.
   if (imageUrl || status === "pending")
     return (
       <figure className={`cooking-reference-figure ${loaded ? "is-revealed" : ""}`}>
         <div className="cooking-reference-slot">
-          {showPlaceholder && <ReferencePlaceholder animate={!loaded} />}
+          {showPlaceholder && <ReferencePlaceholder animate={!imageUrl} />}
           {imageUrl && (
             <img
               key={attempt}
               className="cooking-reference"
               src={proxyConvexStorageUrl(imageUrl)}
               alt={alt}
-              loading="lazy"
+              decoding="async"
               width={600}
               height={400}
               onLoad={() => setLoaded(true)}
@@ -67,7 +69,7 @@ export function CookingReference({
             />
           )}
         </div>
-        {loaded ? (
+        {imageUrl ? (
           <figcaption>{alt}</figcaption>
         ) : (
           <figcaption role="status">

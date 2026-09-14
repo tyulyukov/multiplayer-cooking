@@ -76,6 +76,65 @@ async function saveSelectedActiveProposal() {
   return { ...fixture, proposalId };
 }
 
+test("a proposal that rewrites a finished step keeps that step and saves the future change", async () => {
+  const fixture = await cookingFixture();
+  await fixture.t.mutation(api.cookingSteps.start, { ...fixture.host, stepKey: "prep" });
+  await fixture.t.mutation(api.cookingSteps.complete, {
+    ...fixture.host,
+    stepKey: "prep",
+    confirmed: false,
+  });
+  await fixture.t.run(async (ctx) => {
+    await ctx.db.patch(fixture.roomId, { helperBusy: true, helperPromptMessageId: "prompt" });
+  });
+  const proposalId = await fixture.t.mutation(internal.cookingAssistance.saveProposal, {
+    roomId: fixture.roomId,
+    authorMemberId: fixture.guestId,
+    promptMessageId: "prompt",
+    planVersion: 1,
+    preview: "Готуємо без помідорів.",
+    plan: {
+      ...fixture.plan,
+      ingredients: [],
+      steps: [
+        { ...fixture.plan.steps[0], body: "Без помідорів." },
+        { ...fixture.plan.steps[1], body: "Соус без помідорів." },
+      ],
+    },
+  });
+  expect(proposalId).not.toBeNull();
+  const [proposal] = await fixture.t.query(api.cookingAssistance.listProposals, fixture.guest);
+  expect(proposal?.affectedStepKeys).toEqual(["sauce"]);
+  expect(proposal?.plan.steps[0]).toEqual(fixture.plan.steps[0]);
+  expect(proposal?.plan.ingredients).toEqual([]);
+});
+
+test("a proposal that only rewrites finished steps is rejected with a reason", async () => {
+  const fixture = await cookingFixture();
+  await fixture.t.mutation(api.cookingSteps.start, { ...fixture.host, stepKey: "prep" });
+  await fixture.t.mutation(api.cookingSteps.complete, {
+    ...fixture.host,
+    stepKey: "prep",
+    confirmed: false,
+  });
+  await fixture.t.run(async (ctx) => {
+    await ctx.db.patch(fixture.roomId, { helperBusy: true, helperPromptMessageId: "prompt" });
+  });
+  await expect(
+    fixture.t.mutation(internal.cookingAssistance.saveProposal, {
+      roomId: fixture.roomId,
+      authorMemberId: fixture.guestId,
+      promptMessageId: "prompt",
+      planVersion: 1,
+      preview: "Інакше нарізати.",
+      plan: {
+        ...fixture.plan,
+        steps: [{ ...fixture.plan.steps[0], body: "Наріж дрібніше." }, fixture.plan.steps[1]],
+      },
+    }),
+  ).rejects.toThrow("План не змінився");
+});
+
 test("any cook approves a future-only proposal while preserving completed runtime work", async () => {
   const { t, host, guest, roomId, proposalId } = await saveFutureProposal();
   await t.mutation(api.cookingSteps.start, { ...host, stepKey: "prep" });

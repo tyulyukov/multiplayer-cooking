@@ -52,3 +52,15 @@ export async function uploadImage(uploadUrl: string, blob: Blob): Promise<string
 
   return storageId;
 }
+
+// Convex serves stored files with a 30-day private cache, so a warm request now means the step
+// image is already local when the cook expands the step or reloads the page.
+const preloaded = new Set<string>();
+
+export function preloadImages(urls: readonly string[]) {
+  for (const url of urls) {
+    if (preloaded.has(url)) continue;
+    preloaded.add(url);
+    new Image().src = url;
+  }
+}
