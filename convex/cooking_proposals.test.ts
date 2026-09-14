@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { assessProposal, changedStepKeys } from "./cookingAssistance";
+import { assessProposal, changedStepKeys, keepStartedSteps } from "./cookingAssistance";
 import { validateCookingPlan } from "./lib/cooking_plan";
 
 function plan() {
@@ -104,7 +104,7 @@ describe("cooking plan proposals", () => {
         ["prep"],
         "prep",
       ),
-    ).toEqual({ ok: false });
+    ).toMatchObject({ ok: false });
   });
 
   test("accepts a selected-step change while another cook works on an unchanged step", () => {
@@ -146,7 +146,7 @@ describe("cooking plan proposals", () => {
         ["prep"],
         "prep",
       ),
-    ).toEqual({ ok: false });
+    ).toMatchObject({ ok: false });
   });
 
   test("rejects a started-step change outside the selected step", () => {
@@ -164,7 +164,10 @@ describe("cooking plan proposals", () => {
         ["prep"],
         "sauce",
       ),
-    ).toEqual({ ok: false });
+    ).toEqual({
+      ok: false,
+      reason: "Крок «Підготувати» уже розпочато, змінювати можна лише вибраний поточний крок.",
+    });
   });
 
   test("rejects a proposal after a dependent step starts", () => {
@@ -176,7 +179,7 @@ describe("cooking plan proposals", () => {
 
     expect(
       assessProposal(current, next, [{ stepKey: "cook", status: "active" }], ["prep"]),
-    ).toEqual({ ok: false });
+    ).toMatchObject({ ok: false });
   });
 
   test("accepts a change when all affected work remains pending", () => {
@@ -212,6 +215,43 @@ describe("cooking plan proposals", () => {
 
     expect(assessProposal(current, next, [{ stepKey: "prep", status: "active" }], [])).toEqual({
       ok: false,
+      reason: "Обладнання «Сковорода» використовує вже початий крок, його не можна змінювати.",
     });
+  });
+});
+
+describe("keepStartedSteps", () => {
+  test("restores finished steps the model rewrote and keeps future edits", () => {
+    const current = plan();
+    const next = {
+      ...current,
+      ingredients: [],
+      steps: [
+        { ...current.steps[0], body: "Без томатів." },
+        { ...current.steps[1], body: "Тушкуйте без томатів." },
+      ],
+    };
+
+    const kept = keepStartedSteps(current, next, [{ stepKey: "prep", status: "done" }]);
+
+    expect(kept.ingredients).toEqual([]);
+    expect(kept.steps[0]).toEqual(current.steps[0]);
+    expect(kept.steps[1].body).toBe("Тушкуйте без томатів.");
+    expect(assessProposal(current, kept, [{ stepKey: "prep", status: "done" }], ["cook"])).toEqual({
+      ok: true,
+    });
+  });
+
+  test("leaves the selected started step editable", () => {
+    const current = plan();
+    const next = {
+      ...current,
+      steps: [{ ...current.steps[0], body: "Дрібно." }, current.steps[1]],
+    };
+
+    expect(
+      keepStartedSteps(current, next, [{ stepKey: "prep", status: "active" }], "prep").steps[0]
+        .body,
+    ).toBe("Дрібно.");
   });
 });

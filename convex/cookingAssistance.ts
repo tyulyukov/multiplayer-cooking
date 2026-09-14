@@ -681,7 +681,7 @@ export const saveProposal = internalMutation({
       (messageMetadata && messageMetadata.authorMemberId !== member._id)
     )
       return null;
-    const plan = validateCookingPlan(args.plan, room.cookCount);
+    const proposed = validateCookingPlan(args.plan, room.cookCount);
     const runtimes = await ctx.db
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", args.roomId))
@@ -690,14 +690,23 @@ export const saveProposal = internalMutation({
       ? runtimes.find((runtime) => runtime.stepKey === messageMetadata.stepKey)
       : undefined;
     if (messageMetadata?.stepKey && !selectedRuntime) return null;
+    const plan = keepStartedSteps(room.plan, proposed, runtimes, messageMetadata?.stepKey);
     const affectedStepKeys = changedStepKeys(room.plan, plan);
-    if (
-      (!affectedStepKeys.length && stableJson(room.plan) === stableJson(plan)) ||
-      !assessProposal(room.plan, plan, runtimes, affectedStepKeys, messageMetadata?.stepKey).ok
-    )
-      return null;
+    if (!affectedStepKeys.length && stableJson(room.plan) === stableJson(plan))
+      throw new ConvexError(
+        "План не змінився: завершені й початі кроки лишаються як є, тож зміни потрібні в майбутніх кроках або інгредієнтах.",
+      );
+    const assessment = assessProposal(
+      room.plan,
+      plan,
+      runtimes,
+      affectedStepKeys,
+      messageMetadata?.stepKey,
+    );
+    if (!assessment.ok) throw new ConvexError(assessment.reason);
     const preview = args.preview.trim();
-    if (!preview || preview.length > 2_000) return null;
+    if (!preview || preview.length > 2_000)
+      throw new ConvexError("preview має бути від 1 до 2000 символів.");
     return ctx.db.insert("cookingProposals", {
       roomId: args.roomId,
       authorMemberId: args.authorMemberId,
@@ -836,32 +845,72 @@ function dependentClosure(plan: CookingPlan, keys: readonly string[]): Set<strin
   return affected;
 }
 
+type StepRuntime = Readonly<{
+  stepKey: string;
+  status: Doc<"cookingSteps">["status"];
+  checkedIds?: readonly string[];
+}>;
+
+// The model often rewrites finished steps while removing an ingredient. Those steps are history,
+// so the proposal keeps their current text instead of failing on them.
+export function keepStartedSteps(
+  current: CookingPlan,
+  next: CookingPlan,
+  runtimes: readonly StepRuntime[],
+  mutableStartedStepKey?: string,
+): CookingPlan {
+  const currentById = new Map(current.steps.map((step) => [step.id, step]));
+  const locked = new Set(
+    runtimes
+      .filter(
+        (runtime) => runtime.status !== "pending" && runtime.stepKey !== mutableStartedStepKey,
+      )
+      .map((runtime) => runtime.stepKey),
+  );
+  return {
+    ...next,
+    steps: next.steps.map((step) =>
+      locked.has(step.id) ? (currentById.get(step.id) ?? step) : step,
+    ),
+  };
+}
+
 export function assessProposal(
   current: CookingPlan,
   next: CookingPlan,
-  runtimes: readonly {
-    stepKey: string;
-    status: Doc<"cookingSteps">["status"];
-    checkedIds?: readonly string[];
-  }[],
+  runtimes: readonly StepRuntime[],
   affectedKeys: readonly string[],
   mutableStartedStepKey?: string,
-): { ok: boolean } {
+): { ok: true } | { ok: false; reason: string } {
   const currentById = new Map(current.steps.map((step) => [step.id, step]));
   const nextById = new Map(next.steps.map((step) => [step.id, step]));
   const runtimeByKey = new Map(runtimes.map((runtime) => [runtime.stepKey, runtime]));
+  const title = (stepKey: string) => currentById.get(stepKey)?.title ?? stepKey;
   for (const [stepKey, runtime] of runtimeByKey) {
     if (runtime.status === "pending") continue;
     const currentStep = currentById.get(stepKey);
     const nextStep = nextById.get(stepKey);
-    if (!currentStep || !nextStep) return { ok: false };
+    if (!currentStep || !nextStep)
+      return {
+        ok: false,
+        reason: `Крок «${title(stepKey)}» уже розпочато або завершено, його не можна прибрати з плану.`,
+      };
     if (sameStep(currentStep, nextStep)) continue;
-    if (
-      runtime.status === "done" ||
-      stepKey !== mutableStartedStepKey ||
-      !preservesStartedStep(currentStep, nextStep, runtime.checkedIds ?? [])
-    )
-      return { ok: false };
+    if (runtime.status === "done")
+      return {
+        ok: false,
+        reason: `Крок «${title(stepKey)}» уже завершений, його не можна змінювати.`,
+      };
+    if (stepKey !== mutableStartedStepKey)
+      return {
+        ok: false,
+        reason: `Крок «${title(stepKey)}» уже розпочато, змінювати можна лише вибраний поточний крок.`,
+      };
+    if (!preservesStartedStep(currentStep, nextStep, runtime.checkedIds ?? []))
+      return {
+        ok: false,
+        reason: `У початому кроці «${title(stepKey)}» можна змінити лише текст: збережи виконавців, залежності, таймери, обладнання, confirmation, choices, reference та вже відмічені пункти.`,
+      };
   }
   const currentEquipment = new Map(current.equipment.map((item) => [item.id, item]));
   const nextEquipment = new Map(next.equipment.map((item) => [item.id, item]));
@@ -871,13 +920,20 @@ export function assessProposal(
       if (
         stableJson(currentEquipment.get(equipmentId)) !== stableJson(nextEquipment.get(equipmentId))
       )
-        return { ok: false };
+        return {
+          ok: false,
+          reason: `Обладнання «${currentEquipment.get(equipmentId)?.name ?? equipmentId}» використовує вже початий крок, його не можна змінювати.`,
+        };
     }
   }
   const blocked = dependentClosure(current, affectedKeys);
   for (const stepKey of blocked) {
     if (stepKey === mutableStartedStepKey) continue;
-    if ((runtimeByKey.get(stepKey)?.status ?? "pending") !== "pending") return { ok: false };
+    if ((runtimeByKey.get(stepKey)?.status ?? "pending") !== "pending")
+      return {
+        ok: false,
+        reason: `Крок «${title(stepKey)}» уже розпочато, а він залежить від зміненого кроку; змінюй лише майбутні кроки.`,
+      };
   }
   return { ok: true };
 }

@@ -27,6 +27,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { CookingLobby } from "./cooking-lobby";
 import { CookingCompletion } from "./cooking-completion";
 import { CookingReference } from "./cooking-reference";
+import { proxyConvexStorageUrl } from "@/lib/convex-url";
+import { preloadImages } from "@/lib/images";
 
 export type CookingRoomData = NonNullable<FunctionReturnType<typeof api.cookingRooms.read>>;
 type PlanStep = NonNullable<CookingRoomData["room"]["plan"]>["steps"][number];
@@ -163,6 +165,13 @@ export function CookingSession({
     own.find((step) => runtimes.get(step.id)?.status === "pending");
   const currentId = current?.id;
   const expanded = expandedId ?? currentId;
+  const ownImageUrls = own
+    .flatMap((step) => runtimes.get(step.id)?.imageUrl ?? [])
+    .map(proxyConvexStorageUrl)
+    .join("\n");
+  useEffect(() => {
+    if (ownImageUrls) preloadImages(ownImageUrls.split("\n"));
+  }, [ownImageUrls]);
   useEffect(() => {
     if (inLobby || expandedId !== null || !currentId) return;
     const element = document.getElementById(`step-${currentId}`);

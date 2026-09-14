@@ -82,7 +82,7 @@ function IdeaPhoto({ idea }: { idea: Idea }) {
       <img
         src={proxyConvexStorageUrl(idea.imageUrl)}
         alt={idea.title}
-        loading="lazy"
+        fetchPriority="high"
         decoding="async"
         onError={() => setFailed(true)}
       />
