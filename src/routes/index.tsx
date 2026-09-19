@@ -446,12 +446,15 @@ function ChatScreen({
   const desktop = useMediaQuery("(min-width: 1024px)");
   const visibleIdea = idea;
   const showIdea = Boolean(visibleIdea) && !hidden;
+  const latestMessage = messages.at(-1);
+  const responseComplete =
+    latestMessage?.role === "assistant" && latestMessage.status === "success";
   const showAddressPrompt =
+    Boolean(idea) &&
     !connection.hasCart &&
     (connection.cartPending ||
       Boolean(connection.cartError) ||
-      wantsAddress(messages) ||
-      idea?.productsStatus === "needs_address");
+      (!working && responseComplete && idea?.productsStatus === "needs_address"));
   const compactIdea = ideas.at(-1) ?? idea;
   const pane = visibleIdea ? (
     <IdeaPane
@@ -563,30 +566,6 @@ function ChatScreen({
       )}
     </main>
   );
-}
-
-// The model asks for the address through a tool result flag; the address itself never reaches it.
-function wantsAddress(messages: readonly UIMessage[]) {
-  const last = messages.at(-1);
-
-  if (!last || last.role !== "assistant") {
-    return false;
-  }
-
-  return last.parts.some((part) => {
-    if (part.type !== "tool-silpo_find_products" || !("output" in part)) {
-      return false;
-    }
-
-    const output: unknown = part.output;
-
-    return (
-      typeof output === "object" &&
-      output !== null &&
-      "needsAddress" in output &&
-      output.needsAddress === true
-    );
-  });
 }
 
 function sortMessages(messages: readonly UIMessage[]) {

@@ -1,6 +1,4 @@
 import Location01Icon from "@hugeicons/core-free-icons/Location01Icon";
-import ViewIcon from "@hugeicons/core-free-icons/ViewIcon";
-import ViewOffIcon from "@hugeicons/core-free-icons/ViewOffIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -9,7 +7,6 @@ import { ADDRESS_MAX_CHARACTERS } from "../../convex/lib/ai_config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-// Grok Bot style secure input: masked on screen, stored only on the server, never sent to the model.
 export function AddressPrompt({
   pending,
   error,
@@ -20,7 +17,6 @@ export function AddressPrompt({
   onSubmit: (address: string) => void;
 }) {
   const [value, setValue] = useState("");
-  const [visible, setVisible] = useState(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,7 +47,7 @@ export function AddressPrompt({
         </label>
         <Input
           id="delivery-address"
-          type={visible ? "text" : "password"}
+          type="text"
           autoComplete="street-address"
           placeholder="Одеса, пров. Семафорний, 4"
           maxLength={ADDRESS_MAX_CHARACTERS}
@@ -59,16 +55,6 @@ export function AddressPrompt({
           readOnly={pending}
           onChange={(event) => setValue(event.target.value)}
         />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={visible ? "Сховати адресу" : "Показати адресу"}
-          aria-pressed={visible}
-          onClick={() => setVisible((current) => !current)}
-        >
-          <HugeiconsIcon icon={visible ? ViewOffIcon : ViewIcon} strokeWidth={1.5} aria-hidden />
-        </Button>
       </div>
       {error && <p className="address-error">{error}</p>}
       {pending ? (

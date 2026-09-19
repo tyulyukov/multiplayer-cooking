@@ -29,6 +29,8 @@ describe("generated dish images", () => {
         expect(request?.url).toBe("https://openrouter.ai/api/v1/images");
         expect(request?.method).toBe("POST");
         expect(request?.headers.get("authorization")).toBe("Bearer test-key");
+        expect(request?.headers.get("HTTP-Referer")).toBe("https://cooking.tyulyukov.com");
+        expect(request?.headers.get("X-OpenRouter-Title")).toBe("Multiplayer Cooking");
         const body = await request?.json();
         expect(body).toMatchObject({
           model,

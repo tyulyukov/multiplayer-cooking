@@ -212,6 +212,16 @@ export function validateCookingPlan(input: unknown, cookCount: number): CookingP
   return parsed.data;
 }
 
+export function validateGeneratedCookingPlan(input: unknown, cookCount: number): CookingPlan {
+  const plan = validateCookingPlan(input, cookCount);
+
+  if (!plan.steps.some((step) => step.timers.length > 0)) {
+    throw new Error("Generated cooking plan must include at least one timer");
+  }
+
+  return plan;
+}
+
 export function topologicalOrder(plan: CookingPlan): CookingStep[] {
   const remaining = new Set(plan.steps.map((step) => step.id));
   const ordered: CookingStep[] = [];

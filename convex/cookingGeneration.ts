@@ -7,9 +7,9 @@ import { z } from "zod";
 
 import { components, internal } from "./_generated/api";
 import { internalAction } from "./_generated/server";
-import { AGENT_RUN_TIMEOUT_MS } from "./lib/ai_config";
+import { AGENT_RUN_TIMEOUT_MS, OPENROUTER_APP_NAME, OPENROUTER_APP_URL } from "./lib/ai_config";
 import { cookingSessionInstructions } from "./lib/cooking_instructions";
-import { cookingPlanSchema, validateCookingPlan } from "./lib/cooking_plan";
+import { cookingPlanSchema, validateGeneratedCookingPlan } from "./lib/cooking_plan";
 import { cookingReferencePrompt } from "./lib/cooking_reference";
 import { generateImageFromPrompt } from "./lib/dish_image";
 import { classifyFailure } from "./lib/errors";
@@ -22,7 +22,8 @@ function cookingModel() {
   if (!apiKey || !modelId) throw new Error("Cooking model is not configured");
   const provider = createOpenRouter({
     apiKey,
-    appName: "Multiplayer Cooking",
+    appName: OPENROUTER_APP_NAME,
+    appUrl: OPENROUTER_APP_URL,
     compatibility: "strict",
   });
   return provider.chat(modelId, { reasoning: { effort: "medium" } });
@@ -49,7 +50,7 @@ export const generate = internalAction({
             inputSchema: cookingPlanSchema,
             execute: async (toolCtx, input) => {
               if (saved) return { saved: true };
-              const plan = validateCookingPlan(input, data.cookCount);
+              const plan = validateGeneratedCookingPlan(input, data.cookCount);
               if (plan.servings !== data.requestedServings)
                 throw new Error("Використай вибрану кількість порцій.");
               saved = await toolCtx.runMutation(internal.cookingRooms.savePlan, {
