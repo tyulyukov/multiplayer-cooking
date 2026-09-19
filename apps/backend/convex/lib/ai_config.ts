@@ -3,6 +3,8 @@ export const AI_MAX_OUTPUT_TOKENS = 4_000;
 export const AGENT_MAX_STEPS = 50;
 // Convex Node actions stop at 10 minutes; leave room to record the failure.
 export const AGENT_RUN_TIMEOUT_MS = 8 * 60_000;
+export const OPENROUTER_APP_NAME = "Multiplayer Cooking";
+export const OPENROUTER_APP_URL = "https://cooking.tyulyukov.com";
 
 export const AI_RATE_LIMITS = {
   chatBurst: { kind: "token bucket", rate: 5, period: 60_000, capacity: 5 },
@@ -15,7 +17,7 @@ export const AI_RATE_LIMITS = {
 // A draft may hold more than a sendable request; the composer shows the limit before sending.
 export const DRAFT_MAX_CHARACTERS = 4 * AI_REQUEST_MAX_CHARACTERS;
 
-// Delivery address length accepted by the secure address form.
+// Delivery address length accepted by the address form.
 export const ADDRESS_MAX_CHARACTERS = 200;
 
 // Photo attachments in a message: the browser resizes them before upload.
