@@ -1,3 +1,4 @@
+import { OPENROUTER_APP_NAME, OPENROUTER_APP_URL } from "./ai_config";
 import { foodImageStyle } from "./food_image_style";
 import { readBounded } from "./http";
 
@@ -64,7 +65,12 @@ export async function generateImageFromPrompt(prompt: string) {
   const model = dishImageModel();
   const response = await fetch("https://openrouter.ai/api/v1/images", {
     method: "POST",
-    headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+    headers: {
+      authorization: `Bearer ${key}`,
+      "content-type": "application/json",
+      "HTTP-Referer": OPENROUTER_APP_URL,
+      "X-OpenRouter-Title": OPENROUTER_APP_NAME,
+    },
     body: JSON.stringify({
       model,
       prompt,

@@ -18,7 +18,13 @@ import { z } from "zod";
 import { components, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalAction, type ActionCtx } from "./_generated/server";
-import { AGENT_MAX_STEPS, AGENT_RUN_TIMEOUT_MS, AI_MAX_OUTPUT_TOKENS } from "./lib/ai_config";
+import {
+  AGENT_MAX_STEPS,
+  AGENT_RUN_TIMEOUT_MS,
+  AI_MAX_OUTPUT_TOKENS,
+  OPENROUTER_APP_NAME,
+  OPENROUTER_APP_URL,
+} from "./lib/ai_config";
 import { classifyFailure } from "./lib/errors";
 import { readQuestionAnswer } from "./lib/questions";
 import { recordAiEvent } from "./lib/telemetry";
@@ -413,7 +419,8 @@ function createModel() {
 
   const openrouter = createOpenRouter({
     apiKey,
-    appName: "Multiplayer Cooking",
+    appName: OPENROUTER_APP_NAME,
+    appUrl: OPENROUTER_APP_URL,
     compatibility: "strict",
   });
 

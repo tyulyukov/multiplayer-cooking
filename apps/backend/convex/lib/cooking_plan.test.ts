@@ -4,6 +4,7 @@ import {
   availableSteps,
   normalizeSoloPlan,
   topologicalOrder,
+  validateGeneratedCookingPlan,
   validateCookingPlan,
   type CookingPlan,
 } from "./cooking_plan";
@@ -48,6 +49,14 @@ describe("validateCookingPlan", () => {
     const plan = validateCookingPlan(validPlan(), 2);
 
     expect(plan.steps).toHaveLength(2);
+  });
+
+  test("rejects generated plans that omit the product timer", () => {
+    const plan = validPlan();
+    for (const step of plan.steps) step.timers = [];
+
+    expect(() => validateGeneratedCookingPlan(plan, 2)).toThrow("at least one timer");
+    expect(() => validateGeneratedCookingPlan(validPlan(), 2)).not.toThrow();
   });
 
   test("validates optional timer placement within its own checklist", () => {

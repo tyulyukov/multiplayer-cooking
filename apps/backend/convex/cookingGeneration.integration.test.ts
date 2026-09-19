@@ -5,6 +5,8 @@ import { cookingFixture } from "../tests/cooking-fixture";
 
 test("generates and saves a cooking plan through the agent without reading the original chat", async () => {
   const { t, plan, roomId, host, userId } = await cookingFixture();
+  const generatedPlan = structuredClone(plan);
+  generatedPlan.steps[0]!.timers = [{ id: "cook", label: "Готування", durationSeconds: 600 }];
   await t.run(async (ctx) => {
     await ctx.db.insert("personalizations", {
       userId,
@@ -33,8 +35,9 @@ test("generates and saves a cooking plan through the agent without reading the o
       throw new Error("Unexpected network request");
     }
     requests.push(request);
+    const proposedPlan = requests.length === 1 ? plan : generatedPlan;
     return Response.json({
-      id: "plan-response",
+      id: `plan-response-${requests.length}`,
       created: 1,
       model: "test-model",
       choices: [
@@ -50,7 +53,7 @@ test("generates and saves a cooking plan through the agent without reading the o
                 type: "function",
                 function: {
                   name: "save_plan",
-                  arguments: JSON.stringify(plan),
+                  arguments: JSON.stringify(proposedPlan),
                 },
               },
             ],
@@ -65,9 +68,11 @@ test("generates and saves a cooking plan through the agent without reading the o
     await t.action(internal.cookingGeneration.generate, { roomId, attempt: "fixture" });
     const room = await t.query(api.cookingRooms.read, host);
     expect(room?.room.state).toBe("ready");
-    expect(room?.room.plan).toEqual(plan);
-    expect(room?.steps).toHaveLength(plan.steps.length);
-    expect(requests).toHaveLength(1);
+    expect(room?.room.plan).toEqual(generatedPlan);
+    expect(room?.steps).toHaveLength(generatedPlan.steps.length);
+    expect(requests).toHaveLength(2);
+    expect(requests[0]!.headers.get("HTTP-Referer")).toBe("https://cooking.tyulyukov.com");
+    expect(requests[0]!.headers.get("X-OpenRouter-Title")).toBe("Multiplayer Cooking");
     const body: unknown = await requests[0]!.json();
     expect(body).toMatchObject({ model: "test-model" });
     expect(JSON.stringify(body)).toContain("Я новачок на кухні");
