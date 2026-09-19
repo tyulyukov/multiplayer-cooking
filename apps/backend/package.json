@@ -1,0 +1,37 @@
+{
+  "name": "@multiplayer-cooking/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./convex/_generated/api": {
+      "types": "./convex/_generated/api.d.ts",
+      "default": "./convex/_generated/api.js"
+    },
+    "./convex/_generated/dataModel": "./convex/_generated/dataModel.d.ts",
+    "./convex/lib/ai_config": "./convex/lib/ai_config.ts",
+    "./convex/lib/ingredient": "./convex/lib/ingredient.ts",
+    "./convex/lib/questions": "./convex/lib/questions.ts"
+  },
+  "scripts": {
+    "dev": "convex dev",
+    "dev:with-web": "convex dev --start 'bun --cwd ../web dev'",
+    "deploy": "convex deploy",
+    "typecheck": "tsc -p convex/tsconfig.json && tsc -p tsconfig.test.json",
+    "test": "bun test convex"
+  },
+  "dependencies": {
+    "@axiomhq/js": "^2.0.0",
+    "@convex-dev/agent": "^0.7.1",
+    "@convex-dev/rate-limiter": "^0.3.2",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@openrouter/ai-sdk-provider": "^3.0.0",
+    "ai": "^7.0.91",
+    "convex": "^1.45.0",
+    "convex-helpers": "^0.1.123",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "convex-test": "0.0.56"
+  }
+}
