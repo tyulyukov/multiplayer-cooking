@@ -10,8 +10,14 @@ The app today: you connect your Сільпо account, describe what you want to 
 - **@convex-dev/agent** runs the cooking agent on **AI SDK 7** with an **OpenRouter** model. Each person has one active thread; older threads stay in the history.
 - The agent can call `save_idea`, `web_search`, `read_page`, `ask_user`, `silpo_find_products`, and memory tools. SearXNG provides read-only recipe research. Saving an idea generates a dish image from its final ingredients through OpenRouter with `OPENROUTER_IMAGE_MODEL`, then stores the image in Convex. Image failure leaves the idea usable without a picture.
 - **Сільпо MCP** is the official `https://mcp.silpo.ua/mcp` server. The app registers itself with dynamic client registration, logs the shopper in with OAuth 2.1 and PKCE, and keeps the tokens in Convex. The delivery address is typed into a masked form and stored on the server; the model never sees it. Cart writes happen only from the "Додати в кошик" button.
-- **Frontend** is React, Vite, TanStack Router, shadcn/ui, and Hugeicons. `DESIGN.md` owns the visual system.
+- **Frontend** is React, Vite, TanStack Router, shadcn/ui, and Hugeicons. `apps/web/DESIGN.md` owns the visual system.
 - **Sessions** are anonymous device sessions from `convex-helpers`, kept in `localStorage`.
+
+## Workspace layout
+
+- `apps/web` contains the React and Vite app.
+- `apps/backend` contains the Convex app and backend tests.
+- `packages/theme` contains platform-neutral design tokens and the web CSS binding. A future React Native app can import the TypeScript tokens from `@multiplayer-cooking/theme`.
 
 ## Run locally
 
@@ -21,15 +27,18 @@ Install dependencies:
 bun install
 ```
 
-Start Convex. The CLI creates an anonymous local deployment and writes `VITE_CONVEX_URL` to `.env.local`:
+Start Convex and Vite together. The Convex CLI creates an anonymous local deployment and writes its URL to `apps/backend/.env.local`. Vite reads that generated URL:
 
 ```sh
-bunx convex dev
+bun run dev
 ```
+
+Use `bun run dev:backend` and `bun run dev:web` to run the apps in separate terminals.
 
 Set the server variables on that deployment. Replace each placeholder; never paste a real key into this file:
 
 ```sh
+cd apps/backend
 bunx convex env set OPENROUTER_API_KEY '<openrouter-api-key>'
 bunx convex env set OPENROUTER_MODEL 'openai/gpt-5.6-luna'
 bunx convex env set OPENROUTER_IMAGE_MODEL 'openai/gpt-image-2.5-flare'
@@ -38,12 +47,7 @@ bunx convex env set APP_URL 'http://localhost:5173'
 bunx convex env set AXIOM_TOKEN '<axiom-ingest-token>'
 bunx convex env set AXIOM_DATASET '<axiom-dataset-name>'
 bunx convex env set AXIOM_EDGE '<axiom-edge-domain>'
-```
-
-Start Vite in a second terminal:
-
-```sh
-bun run dev
+cd ../..
 ```
 
 Run the repository checks before you finish a change:
@@ -58,7 +62,7 @@ The Сільпо OAuth callback is served by Convex at `<CONVEX_SITE_URL>/silpo/
 
 | Variable                                     | Where         | Purpose                                                                                                                                                                                                                                                                    |
 | -------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_CONVEX_URL`                            | Browser build | Convex deployment URL. `bunx convex dev` sets it locally; the production build uses the cloud deployment URL.                                                                                                                                                              |
+| `VITE_CONVEX_URL`                            | Browser build | Convex deployment URL for production builds. Local development prefers `CONVEX_URL` from `apps/backend/.env.local`, then the workspace value; an explicit shell variable overrides both.                                                                                   |
 | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`     | Convex        | The agent model. Use a dedicated key with a spending limit.                                                                                                                                                                                                                |
 | `OPENROUTER_IMAGE_MODEL`                     | Convex        | The image model for dish and cooking-reference images.                                                                                                                                                                                                                     |
 | `SEARXNG_URL`                                | Convex        | Base URL of the SearXNG instance for `web_search`. Without it, web search reports that it is not configured.                                                                                                                                                               |
@@ -86,14 +90,14 @@ git switch main
 git pull --ff-only
 bun install --frozen-lockfile
 VITE_CONVEX_URL=https://diligent-kingfisher-436.convex.cloud bun run check
-CONVEX_DEPLOYMENT=prod:diligent-kingfisher-436 bunx convex deploy
+CONVEX_DEPLOYMENT=prod:diligent-kingfisher-436 bun run deploy:backend
 ```
 
 **Cloudflare Pages.** The `multiplayer-cooking` project uses Direct Upload with `main` as its production branch. Deploy the verified `dist/` directory:
 
 ```sh
 bunx wrangler@4.131.0 login
-bunx wrangler@4.131.0 pages deploy dist --project-name multiplayer-cooking --branch main
+(cd apps/web && bunx wrangler@4.131.0 pages deploy dist --project-name multiplayer-cooking --branch main)
 ```
 
 Pages serves React routes through its built-in SPA fallback. The custom domain is `cooking.tyulyukov.com`. Direct Upload does not deploy automatically when you push to GitHub. Run the commands above after merging each release PR.
@@ -114,5 +118,5 @@ Axiom records server-side AI outcomes, durations, and token usage. Browser page 
 
 ## Design and tests
 
-- `DESIGN.md` is the source of truth for palette, type, components, and copy. Read it before changing UI.
+- `apps/web/DESIGN.md` is the source of truth for palette, type, components, and copy. Read it before changing UI.
 - Unit tests live next to the code as `*.test.ts` and run with `bun test`. They cover rate limit admission, telemetry payloads, web result parsing and SSRF guards, Сільпо response shaping, and quick prompt sampling.
