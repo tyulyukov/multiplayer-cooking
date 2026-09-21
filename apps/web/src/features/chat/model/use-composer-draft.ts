@@ -1,0 +1,44 @@
+import { useRef, useState } from "react";
+
+import { pickQuickPrompts, type QuickPrompt } from "@/lib/quick-prompts";
+
+type PromptSelection = Readonly<{
+  promptId: string;
+  baseRequest: string;
+}>;
+
+export function useComposerDraft() {
+  const [request, setRequest] = useState("");
+  const revision = useRef(0);
+  const [selection, setSelection] = useState<PromptSelection | null>(null);
+  const [quickPrompts, setQuickPrompts] = useState(() => pickQuickPrompts());
+
+  function change(value: string) {
+    revision.current += 1;
+    setRequest(value);
+    setSelection(null);
+  }
+
+  function togglePrompt(prompt: QuickPrompt) {
+    revision.current += 1;
+    if (selection?.promptId === prompt.id) {
+      setRequest(selection.baseRequest);
+      setSelection(null);
+      return;
+    }
+
+    const baseRequest = selection ? selection.baseRequest : request;
+    const trimmedBase = baseRequest.trim();
+    setRequest(trimmedBase ? `${trimmedBase}\n${prompt.label}` : prompt.label);
+    setSelection({ promptId: prompt.id, baseRequest });
+  }
+
+  function reset() {
+    revision.current += 1;
+    setRequest("");
+    setSelection(null);
+    setQuickPrompts(pickQuickPrompts());
+  }
+
+  return { request, revision, selection, quickPrompts, change, togglePrompt, reset };
+}

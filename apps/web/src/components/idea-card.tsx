@@ -9,19 +9,16 @@ import ShoppingBasketAdd01Icon from "@hugeicons/core-free-icons/ShoppingBasketAd
 import UndoIcon from "@hugeicons/core-free-icons/UndoIcon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 
-import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import { CookTogether, type CookingSetup } from "@/components/cook-together";
 import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Markdown } from "@/components/markdown";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import type { Idea, IdeaVersions } from "@/features/ideas/model/types";
 import { proxyConvexStorageUrl } from "@/lib/convex-url";
 import "./product-price.css";
-
-export type Idea = NonNullable<FunctionReturnType<typeof api.ideas.latest>>;
 
 const hryvnia = new Intl.NumberFormat("uk-UA", {
   style: "currency",
@@ -459,15 +456,6 @@ function ProductEmptyState({
     </section>
   );
 }
-
-export type IdeaVersions = Readonly<{
-  index: number;
-  count: number;
-  onSelect: (index: number) => void;
-  onRestore: () => void;
-  restoring: boolean;
-  restoreError: string | null;
-}>;
 
 // "Версія N з M": older versions are read-only until restored.
 function VersionNav({ versions }: { versions: IdeaVersions }) {

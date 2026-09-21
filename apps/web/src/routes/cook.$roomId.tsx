@@ -21,7 +21,7 @@ import {
   readCookingCredential,
   saveCookingCredential,
 } from "@/lib/cooking-session";
-import { isConvexConfigured } from "@/lib/convex";
+import { isConvexConfigured } from "@/app/providers/convex-provider";
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 

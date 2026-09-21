@@ -3,11 +3,11 @@ import { SessionProvider } from "convex-helpers/react/sessions";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import { ConvexBoundary } from "@/lib/convex";
+import { ConvexBoundary } from "@/app/providers/convex-provider";
+import { router } from "@/app/router";
 import { useLocalStorage } from "@/lib/session";
-import { router } from "@/router";
 
-import "./index.css";
+import "@/app/styles/globals.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

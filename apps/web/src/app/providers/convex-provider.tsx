@@ -1,7 +1,7 @@
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import type { ReactNode } from "react";
 
-import { convexUrl, useConvexProxy } from "./convex-url";
+import { convexUrl, useConvexProxy } from "@/lib/convex-url";
 
 const convexClient = convexUrl
   ? new ConvexReactClient(useConvexProxy ? window.location.origin : convexUrl, {
