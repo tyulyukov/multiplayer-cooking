@@ -6,7 +6,7 @@ import {
   type CookingActions,
   type CookingRoomData,
 } from "../../src/components/cooking/cooking-session";
-import { Button } from "../../src/components/ui/button";
+import { Button } from "../../src/shared/ui/button";
 import "../../src/index.css";
 
 const mode = new URLSearchParams(location.search).get("mode") ?? "pending";

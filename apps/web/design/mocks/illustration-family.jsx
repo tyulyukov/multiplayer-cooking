@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 
-import { Alert, AlertDescription } from "../../src/components/ui/alert";
+import { Alert, AlertDescription } from "../../src/shared/ui/alert";
 
 import { IdeaPane } from "../../src/components/idea-card";
 import { HistoryPanel } from "../../src/components/history-panel";

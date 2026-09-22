@@ -1,0 +1,232 @@
+// Styles local to this component boundary.
+.history-panel {
+  gap: 0;
+  padding: 0 14px max(14px, env(safe-area-inset-bottom));
+}
+
+.history-panel[data-side="right"] {
+  width: min(100%, 560px);
+  max-width: none;
+}
+
+.history-panel[data-side="right"][data-state="open"] {
+  animation: history-sheet-open var(--duration-slow) var(--ease-smooth-out);
+}
+
+.history-panel[data-side="right"][data-state="closed"] {
+  animation: history-sheet-close var(--duration-medium) var(--ease-smooth-out);
+}
+
+[data-slot="sheet-overlay"]:has(+ .history-panel)[data-state="open"] {
+  animation: history-backdrop-open var(--duration-slow) var(--ease-smooth-out);
+}
+
+[data-slot="sheet-overlay"]:has(+ .history-panel)[data-state="closed"] {
+  animation: history-backdrop-close var(--duration-medium) var(--ease-smooth-out);
+}
+
+.history-panel [data-slot="sheet-header"],
+.history-panel [data-slot="drawer-header"] {
+  padding: 18px 8px 12px;
+  text-align: left;
+}
+
+.history-empty {
+  flex: 1;
+  min-height: min(280px, 40dvh);
+  margin: 0;
+  padding: 8px;
+  color: var(--muted-foreground);
+}
+
+/* The list is the only scrolling part of the panel, in the sheet and in the bottom drawer alike. */
+.history-list {
+  display: grid;
+  flex: 1 1 auto;
+  align-content: start;
+  gap: 4px;
+  min-height: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 4px;
+}
+
+/* One surface per row: hover, open, and pressed all paint the whole <li>, never the inner button. */
+.history-list li {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 6px;
+  border-radius: 14px;
+  transition: background-color var(--duration-quick) var(--ease-smooth-out);
+}
+
+@media (hover: hover) {
+  .history-list li:hover {
+    background: var(--muted);
+  }
+}
+
+.history-list li:has(.history-row:active) {
+  background: var(--muted);
+}
+
+.history-list li[data-active="true"] {
+  background: color-mix(in oklch, var(--teal) 25%, transparent);
+}
+
+.history-row {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 56px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.history-row:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: -3px;
+}
+
+.history-photos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: none;
+  width: 72px;
+  height: 40px;
+}
+
+.history-photos img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border: 2px solid var(--card);
+  border-radius: 10px;
+  background: var(--muted);
+}
+
+.history-photos img + img {
+  margin-left: -24px;
+}
+
+.history-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Titles wrap to two lines instead of being cut with an ellipsis. */
+.history-text strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-family: var(--font-sign);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+.history-text span {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 639px) {
+  .history-trigger span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .history-panel[data-side="right"],
+  [data-slot="sheet-overlay"]:has(+ .history-panel) {
+    animation: none !important;
+  }
+}
+
+.history-cooking-menu {
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  border: 2px solid var(--foreground);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.history-cooking-menu [data-slot="dropdown-menu-item"] {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+}
+
+.history-cooking-menu [data-slot="dropdown-menu-item"]:focus {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.history-cooking-menu [data-slot="dropdown-menu-item"]:focus > span {
+  color: var(--foreground);
+}
+
+.history-cooking-state {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+@keyframes history-backdrop-open {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes history-backdrop-close {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes history-sheet-open {
+  from {
+    transform: translateX(48px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes history-sheet-close {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(48px);
+    opacity: 0;
+  }
+}
