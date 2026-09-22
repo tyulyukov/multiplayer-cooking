@@ -40,7 +40,7 @@ Set the server variables on that deployment. Replace each placeholder; never pas
 ```sh
 cd apps/backend
 bunx convex env set OPENROUTER_API_KEY '<openrouter-api-key>'
-bunx convex env set OPENROUTER_MODEL 'openai/gpt-5.6-luna'
+bunx convex env set OPENROUTER_MODEL 'openai/gpt-6-luna'
 bunx convex env set OPENROUTER_IMAGE_MODEL 'openai/gpt-image-2.5-flare'
 bunx convex env set SEARXNG_URL 'https://<your-searxng-host>'
 bunx convex env set APP_URL 'http://localhost:5173'
