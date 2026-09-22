@@ -89,14 +89,14 @@ Cloudflare Pages builds the web app independently when `main` changes. Keep chan
 
 **Cloudflare Pages.** The Git-connected Pages project uses these settings:
 
-| Setting                | Value                                          |
-| ---------------------- | ---------------------------------------------- |
-| Production branch      | `main`                                         |
-| Root directory         | Repository root (leave the field empty)        |
-| Build command          | `bun run build:web`                            |
-| Build output directory | `apps/web/dist`                                |
-| `BUN_VERSION`          | `1.3.11`                                       |
-| `VITE_CONVEX_URL`      | `https://diligent-kingfisher-436.convex.cloud` |
+| Setting                | Value                                                |
+| ---------------------- | ---------------------------------------------------- |
+| Production branch      | `main`                                               |
+| Root directory         | Repository root (leave the field empty)              |
+| Build command          | `bun install --frozen-lockfile && bun run build:web` |
+| Build output directory | `apps/web/dist`                                      |
+| `BUN_VERSION`          | `1.3.11`                                             |
+| `VITE_CONVEX_URL`      | `https://diligent-kingfisher-436.convex.cloud`       |
 
 Pages builds the web app when a commit reaches `main`. It serves React routes through its built-in SPA fallback. The custom domain is `cooking.tyulyukov.com`.
 
