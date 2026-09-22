@@ -17,14 +17,14 @@ import {
   AttachmentActions,
   AttachmentGroup,
   AttachmentMedia,
-} from "@/components/ui/attachment";
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/shared/ui/attachment";
+import { Button } from "@/shared/ui/button";
+import { Spinner } from "@/shared/ui/spinner";
+import { Textarea } from "@/shared/ui/textarea";
 import type { ComposerAttachment } from "@/shared/ui/composer/types";
-import { shouldSubmitComposerShortcut } from "@/lib/composer-shortcut";
-import { useComposerShortcut } from "@/lib/use-composer-shortcut";
-import { useMediaQuery } from "@/lib/use-media-query";
+import { shouldSubmitComposerShortcut } from "@/shared/lib/composer-shortcut";
+import { useComposerShortcut } from "@/shared/hooks/use-composer-shortcut";
+import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 const counterThreshold = Math.floor(AI_REQUEST_MAX_CHARACTERS * 0.8);
 const shakeDurationMs = 300;

@@ -6,10 +6,10 @@ import UserSettings02Icon from "@hugeicons/core-free-icons/UserSettings02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/shared/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
+import { Input } from "@/shared/ui/input";
+import { Textarea } from "@/shared/ui/textarea";
 import type { AgentSettings, Memory } from "@/features/personalization/model/types";
 import {
   clearSavedCookName,
@@ -17,8 +17,8 @@ import {
   readSavedCookName,
   saveCookName,
 } from "@/features/cooking/lib/cook-name";
-import { useComposerShortcut } from "@/lib/use-composer-shortcut";
-import { useMediaQuery } from "@/lib/use-media-query";
+import { useComposerShortcut } from "@/shared/hooks/use-composer-shortcut";
+import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 import "./personal-settings.css";
 

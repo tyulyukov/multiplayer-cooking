@@ -1,5 +1,5 @@
 import type { CookingRoomData, HelperProposal } from "@/features/cooking/model/types";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { CookingMarkdown } from "./cooking-markdown";
 
 type Plan = NonNullable<CookingRoomData["room"]["plan"]>;

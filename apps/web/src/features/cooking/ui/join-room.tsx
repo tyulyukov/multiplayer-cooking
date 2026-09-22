@@ -2,8 +2,8 @@ import type { SessionId } from "convex-helpers/server/sessions";
 import { useState } from "react";
 
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 import {
   createCookingCredential,
   saveCookingCredential,

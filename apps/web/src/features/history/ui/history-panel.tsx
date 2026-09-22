@@ -6,29 +6,29 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+} from "@/shared/ui/drawer";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/shared/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 import {
   type CookingHistoryItem,
   type HistoryEntry,
   type HistoryItem,
 } from "@/features/history/model/types";
 import { mergeHistory } from "@/features/history/lib/merge-history";
-import { formatRelativeTime } from "@/lib/relative-time";
-import { useMediaQuery } from "@/lib/use-media-query";
+import { formatRelativeTime } from "@/shared/lib/relative-time";
+import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 const title = "Історія";
 

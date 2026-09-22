@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 
-import type { ComposerSendShortcut } from "./composer-shortcut";
+import type { ComposerSendShortcut } from "@/shared/lib/composer-shortcut";
 
 const storageKey = "multiplayer-cooking.composer-send-shortcut";
 const changeEvent = "multiplayer-cooking:composer-send-shortcut";

@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 
 import { ConvexBoundary } from "@/app/providers/convex-provider";
 import { router } from "@/app/router";
-import { useLocalStorage } from "@/lib/session";
+import { useLocalStorage } from "@/shared/hooks/use-local-storage";
 
 import "@/app/styles/globals.css";
 

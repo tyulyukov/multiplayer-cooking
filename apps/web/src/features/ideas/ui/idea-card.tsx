@@ -14,11 +14,11 @@ import { useState } from "react";
 import { CookTogether } from "@/features/cooking/ui/cook-together";
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Markdown } from "@/shared/ui/markdown";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
+import { Button } from "@/shared/ui/button";
 import type { Idea, IdeaVersions } from "@/features/ideas/model/types";
 import type { CookingSetup } from "@/features/cooking/model/types";
-import { proxyConvexStorageUrl } from "@/lib/convex-url";
+import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 import "./product-price.css";
 
 const hryvnia = new Intl.NumberFormat("uk-UA", {

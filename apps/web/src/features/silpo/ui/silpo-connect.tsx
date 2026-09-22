@@ -7,7 +7,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import * as React from "react";
 
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import type { SilpoConnection } from "@/features/silpo/model/types";
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 
 export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () => void }) {
   return (

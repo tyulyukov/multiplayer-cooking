@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
 // Thumbnails in a message; tapping one opens the full photo in a dialog.
 export function PhotoStrip({ urls, alt }: { urls: readonly string[]; alt: string }) {

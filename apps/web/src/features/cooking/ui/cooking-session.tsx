@@ -12,7 +12,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { CookingMarkdown } from "./cooking-markdown";
 import { CookingTools } from "./cooking-tools";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -20,14 +20,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Spinner } from "@/components/ui/spinner";
+} from "@/shared/ui/dialog";
+import { Spinner } from "@/shared/ui/spinner";
 import type { CookingActions, CookingRoomData, RoomTimer } from "@/features/cooking/model/types";
 import { CookingLobby } from "./cooking-lobby";
 import { CookingCompletion } from "./cooking-completion";
 import { CookingReference } from "./cooking-reference";
-import { proxyConvexStorageUrl } from "@/lib/convex-url";
-import { preloadImages } from "@/lib/images";
+import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
+import { preloadImages } from "@/shared/lib/images";
 
 type PlanStep = NonNullable<CookingRoomData["room"]["plan"]>["steps"][number];
 type RuntimeStep = CookingRoomData["steps"][number];

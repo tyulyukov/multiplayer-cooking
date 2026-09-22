@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import type { QuestionResponse } from "@/features/chat/model/types";
-import { uploadImage } from "@/lib/images";
+import { uploadImage } from "@/shared/lib/images";
 
 function sortMessages(messages: readonly UIMessage[]) {
   return [...messages].sort((a, b) => a.order - b.order || a.stepOrder - b.stepOrder);

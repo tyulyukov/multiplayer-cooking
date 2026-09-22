@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { CookingRoomData } from "@/features/cooking/model/types";
-import { Button } from "@/components/ui/button";
-import { proxyConvexStorageUrl } from "@/lib/convex-url";
+import { Button } from "@/shared/ui/button";
+import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 
 type ImageStatus = CookingRoomData["steps"][number]["imageStatus"];
 

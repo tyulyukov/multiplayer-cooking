@@ -6,21 +6,21 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/shared/ui/dialog";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
+} from "@/shared/ui/drawer";
 import {
   normalizeCookName,
   readSavedCookName,
@@ -28,7 +28,7 @@ import {
   saveCookName,
 } from "@/features/cooking/lib/cook-name";
 import type { CookingSetup } from "@/features/cooking/model/types";
-import { useMediaQuery } from "@/lib/use-media-query";
+import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 const minCooks = 1;
 const maxCooks = 12;

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
 

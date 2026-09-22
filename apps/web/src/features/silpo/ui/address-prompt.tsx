@@ -4,8 +4,8 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { ADDRESS_MAX_CHARACTERS } from "@multiplayer-cooking/backend/convex/lib/ai_config";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 
 export function AddressPrompt({
   pending,

@@ -2,8 +2,8 @@ import { useMutation, useQuery } from "convex/react";
 
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
-import { uploadImage } from "@/lib/images";
-import { useAttachments } from "@/lib/use-attachments";
+import { uploadImage } from "@/shared/lib/images";
+import { useAttachments } from "@/shared/hooks/use-attachments";
 
 export function useCookingAssistance({
   roomId,

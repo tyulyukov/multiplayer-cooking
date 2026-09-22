@@ -4,9 +4,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
 import { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/shared/ui/drawer";
 import { useCookingAssistance } from "@/features/cooking/api/use-cooking-assistance";
 import { useCookingRoom } from "@/features/cooking/api/use-cooking-room";
 import { useCookingSteps } from "@/features/cooking/api/use-cooking-steps";

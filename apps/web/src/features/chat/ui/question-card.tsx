@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
-import { useMediaQuery } from "@/lib/use-media-query";
+import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
-import type { QuestionAnswer, QuestionInput } from "@/lib/question";
+import type { QuestionAnswer, QuestionInput } from "@/features/chat/lib/question";
 import type { QuestionResponse } from "@/features/chat/model/types";
 import {
   Questionnaire,
@@ -19,7 +19,7 @@ import {
   QuestionnairePrevious,
   QuestionnaireSubmit,
   QuestionnaireTitle,
-} from "@/components/ui/questionnaire";
+} from "@/shared/ui/questionnaire";
 
 export function QuestionSummary({
   input,

@@ -14,7 +14,7 @@ import { useHistory } from "@/features/history/api/use-history";
 import { useIdeas } from "@/features/ideas/api/use-ideas";
 import { usePersonalization } from "@/features/personalization/api/use-personalization";
 import { useSilpoConnection } from "@/features/silpo/api/use-silpo-connection";
-import { useAttachments } from "@/lib/use-attachments";
+import { useAttachments } from "@/shared/hooks/use-attachments";
 
 export function useHomePageModel() {
   const [sessionId] = useSessionId();
