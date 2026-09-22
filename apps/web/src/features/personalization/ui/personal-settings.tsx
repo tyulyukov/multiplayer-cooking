@@ -5,7 +5,7 @@ import LaptopIcon from "@hugeicons/core-free-icons/LaptopIcon";
 import UserSettings02Icon from "@hugeicons/core-free-icons/UserSettings02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 
-import { KitchenIllustration } from "@/components/kitchen-illustration";
+import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";

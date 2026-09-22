@@ -6,7 +6,7 @@ import UserSettings02Icon from "@hugeicons/core-free-icons/UserSettings02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import * as React from "react";
 
-import { KitchenIllustration } from "@/components/kitchen-illustration";
+import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import type { SilpoConnection } from "@/features/silpo/model/types";
 import {

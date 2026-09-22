@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { KitchenIllustration } from "@/components/kitchen-illustration";
+import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
 
 export function CookingLobby({

@@ -11,9 +11,9 @@ import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
-import { CookTogether } from "@/components/cook-together";
-import { KitchenIllustration } from "@/components/kitchen-illustration";
-import { Markdown } from "@/components/markdown";
+import { CookTogether } from "@/features/cooking/ui/cook-together";
+import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
+import { Markdown } from "@/shared/ui/markdown";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { Idea, IdeaVersions } from "@/features/ideas/model/types";

@@ -1,4 +1,4 @@
-import { CooksForm } from "@/components/cook-together";
+import { CooksForm } from "@/features/cooking/ui/cook-together";
 import { ConvexError } from "convex/values";
 import { useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";

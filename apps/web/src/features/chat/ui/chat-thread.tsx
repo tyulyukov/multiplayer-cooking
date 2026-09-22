@@ -6,9 +6,9 @@ import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
 import { readMemoryEvent } from "@/lib/memory-event";
-import { Markdown } from "@/components/markdown";
-import { PhotoStrip } from "@/components/photo-lightbox";
-import { QuestionSummary } from "@/components/question-card";
+import { Markdown } from "@/shared/ui/markdown";
+import { PhotoStrip } from "@/shared/ui/photo-lightbox";
+import { QuestionSummary } from "@/features/chat/ui/question-card";
 import { readQuestionInput, type QuestionAnswer } from "@/lib/question";
 
 function imageUrls(message: UIMessage) {

@@ -7,7 +7,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { useEffect, useRef, useState } from "react";
 import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
-import { Composer } from "@/components/composer";
+import { Composer } from "@/shared/ui/composer/composer";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";

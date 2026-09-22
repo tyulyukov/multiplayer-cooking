@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
-import { KitchenIllustration } from "@/components/kitchen-illustration";
+import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,

@@ -1,7 +1,7 @@
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
-import { KitchenIllustration } from "@/components/kitchen-illustration";
+import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import { proxyConvexStorageUrl } from "@/lib/convex-url";
 import { CompletionConfetti } from "./completion-confetti";
