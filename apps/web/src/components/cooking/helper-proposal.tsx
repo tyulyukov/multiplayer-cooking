@@ -1,10 +1,7 @@
-import type { FunctionReturnType } from "convex/server";
-import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
-import type { CookingRoomData } from "./cooking-session";
+import type { CookingRoomData, HelperProposal } from "@/features/cooking/model/types";
 import { Button } from "@/components/ui/button";
 import { CookingMarkdown } from "./cooking-markdown";
 
-export type HelperProposal = FunctionReturnType<typeof api.cookingAssistance.listProposals>[number];
 type Plan = NonNullable<CookingRoomData["room"]["plan"]>;
 
 export function HelperProposalCard({

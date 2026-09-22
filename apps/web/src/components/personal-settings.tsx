@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { AgentSettings, Memory } from "@/features/personalization/model/types";
 import {
   clearSavedCookName,
   normalizeCookName,
@@ -21,17 +22,6 @@ import { useMediaQuery } from "@/lib/use-media-query";
 
 import "./personal-settings.css";
 
-export type Memory = {
-  _id: string;
-  kind: "allergy" | "dislike" | "preference";
-  text: string;
-  updatedAt: number;
-};
-export type AgentSettings = {
-  tone: "friendly" | "concise" | "playful";
-  customInstructions: string;
-  about: string;
-};
 type Tab = "memories" | "settings" | "interface";
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -71,7 +61,7 @@ export function PersonalSettings({
   initialTab: Tab;
   memories: Memory[];
   settings: AgentSettings;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (id: Memory["_id"]) => Promise<void>;
   onSave: (settings: AgentSettings) => Promise<void>;
   loading?: boolean;
 }) {
@@ -215,7 +205,7 @@ export function PersonalSettings({
     onOpenChange(nextOpen);
   }
 
-  async function deleteMemory(id: string) {
+  async function deleteMemory(id: Memory["_id"]) {
     setDeletingId(id);
     setDeleteError(null);
     try {

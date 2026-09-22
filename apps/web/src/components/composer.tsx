@@ -21,15 +21,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import type { ComposerAttachment } from "@/shared/ui/composer/types";
 import { shouldSubmitComposerShortcut } from "@/lib/composer-shortcut";
 import { useComposerShortcut } from "@/lib/use-composer-shortcut";
 import { useMediaQuery } from "@/lib/use-media-query";
-
-export type ComposerAttachment = Readonly<{
-  id: string;
-  previewUrl: string;
-  state: "uploading" | "done" | "error";
-}>;
 
 const counterThreshold = Math.floor(AI_REQUEST_MAX_CHARACTERS * 0.8);
 const shakeDurationMs = 300;

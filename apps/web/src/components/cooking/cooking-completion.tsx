@@ -5,7 +5,7 @@ import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Button } from "@/components/ui/button";
 import { proxyConvexStorageUrl } from "@/lib/convex-url";
 import { CompletionConfetti } from "./completion-confetti";
-import type { CookingActions, CookingRoomData } from "./cooking-session";
+import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
 import "./cooking-completion.css";
 
 export function CookingCompletion({

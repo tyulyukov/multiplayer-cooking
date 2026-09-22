@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
-import type { CookingRoomData } from "./cooking-session";
+import type { CookingRoomData } from "@/features/cooking/model/types";
 
 export function People({
   disabled,

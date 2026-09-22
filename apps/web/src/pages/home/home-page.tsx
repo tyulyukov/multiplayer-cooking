@@ -1,40 +1,41 @@
-import type { UIMessage } from "@convex-dev/agent";
-import { useUIMessages } from "@convex-dev/agent/react";
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
-import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import { AddressPrompt } from "@/components/address-prompt";
-import { ChatThread, type QuestionSubmit } from "@/components/chat-thread";
+import { ChatThread } from "@/components/chat-thread";
 import { QuestionCard } from "@/components/question-card";
 import { pendingQuestion } from "@/lib/question-messages";
 import { Composer } from "@/components/composer";
 import { HistoryPanel } from "@/components/history-panel";
 import { IdeaCompact, IdeaPane } from "@/components/idea-card";
-import { ConnectCard, ProfileMenu, type SilpoConnection } from "@/components/silpo-connect";
-import { PersonalSettings, type AgentSettings } from "@/components/personal-settings";
+import { ConnectCard, ProfileMenu } from "@/components/silpo-connect";
+import { PersonalSettings } from "@/components/personal-settings";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/lib/use-media-query";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { isConvexConfigured } from "@/app/providers/convex-provider";
+import { useChat } from "@/features/chat/api/use-chat";
 import { useComposerDraft } from "@/features/chat/model/use-composer-draft";
 import { useDraftSync } from "@/features/chat/model/use-draft-sync";
-import { useIdeaVersions } from "@/features/ideas/api/use-idea-versions";
+import type { ChatMessage, QuestionSubmit } from "@/features/chat/model/types";
+import { useCreateCookingRoom } from "@/features/cooking/api/use-create-cooking-room";
+import type { CookingSetup } from "@/features/cooking/model/types";
+import { useHistory } from "@/features/history/api/use-history";
+import { useIdeas } from "@/features/ideas/api/use-ideas";
 import type { Idea, IdeaVersions } from "@/features/ideas/model/types";
+import { usePersonalization } from "@/features/personalization/api/use-personalization";
 import { useSilpoConnection } from "@/features/silpo/api/use-silpo-connection";
-import { uploadImage } from "@/lib/images";
+import type { SilpoConnection } from "@/features/silpo/model/types";
 import { useAttachments } from "@/lib/use-attachments";
-import type { CookingSetup } from "@/components/cook-together";
-import { createCookingCredential, saveCookingCredential } from "@/lib/cooking-session";
 
 function Brand({ ready }: { ready: boolean }) {
   return (
@@ -183,7 +184,7 @@ function ChatScreen({
   backendReady: boolean;
   menu?: ReactNode;
   connection: SilpoConnection;
-  messages: readonly UIMessage[];
+  messages: readonly ChatMessage[];
   idea: Idea | null | undefined;
   ideas: readonly Idea[];
   versions: IdeaVersions;
@@ -331,109 +332,39 @@ function ChatScreen({
   );
 }
 
-function sortMessages(messages: readonly UIMessage[]) {
-  return [...messages].sort((a, b) => a.order - b.order || a.stepOrder - b.stepOrder);
-}
-
-function isAgentWorking(messages: readonly UIMessage[]) {
-  const last = messages.at(-1);
-
-  if (!last) {
-    return false;
-  }
-
-  return (
-    last.role === "user" ||
-    (last.role === "assistant" && (last.status === "pending" || last.status === "streaming"))
-  );
-}
-
-const defaultAgentSettings: AgentSettings = { tone: "friendly", customInstructions: "", about: "" };
-
 function ConnectedHome() {
   const [sessionId] = useSessionId();
   const navigate = useNavigate();
   const status = useQuery(api.status.current);
   const silpo = useSilpoConnection(sessionId);
   const connected = silpo.connection != null;
-  const active = useQuery(api.chat.activeThread, sessionId && connected ? { sessionId } : "skip");
-  const threadId = active?.threadId ?? null;
-  const threadArgs = sessionId && threadId ? { sessionId, threadId } : ("skip" as const);
-  const { results } = useUIMessages(api.chat.listMessages, threadArgs, {
-    initialNumItems: 50,
-    stream: true,
-  });
-  const latestIdea = useQuery(api.ideas.latest, threadArgs);
-  const {
-    idea,
-    ideas,
-    versions,
-    reset: resetVersion,
-    select: selectVersion,
-  } = useIdeaVersions(sessionId, threadId, latestIdea);
-  const history = useQuery(api.chat.history, sessionId && connected ? { sessionId } : "skip");
-  const cookingHistory = useQuery(
-    api.cookingRooms.listOwned,
-    sessionId && connected ? { sessionId } : "skip",
-  );
-  const sendMessage = useMutation(api.chat.sendMessage);
-  const newThread = useMutation(api.chat.newThread);
-  const openThread = useMutation(api.chat.openThread);
-  const deleteThread = useMutation(api.chat.deleteThread);
-  const answerQuestion = useMutation(api.chat.answerQuestion);
-  const saveAddress = useMutation(api.silpo.saveAddress);
-  const addToCart = useMutation(api.ideas.addToCart);
-  const createCookingRoom = useMutation(api.cookingRooms.create);
-  const uploadUrl = useMutation(api.files.uploadUrl);
-  const registerUpload = useMutation(api.files.register);
-  const saveDraft = useMutation(api.chat.saveDraft);
-  const remoteDraft = useQuery(
-    api.chat.draft,
-    sessionId && connected ? { sessionId, threadId: threadId ?? undefined } : "skip",
-  );
+  const chat = useChat(sessionId, connected);
+  const { threadId } = chat;
+  const ideaState = useIdeas(sessionId, threadId);
+  const { idea, ideas, versions, reset: resetVersion, select: selectVersion } = ideaState;
+  const history = useHistory(sessionId, connected);
+  const personal = usePersonalization(sessionId);
+  const createCookingRoom = useCreateCookingRoom(sessionId);
   const draft = useComposerDraft();
-  const attachments = useAttachments(
-    sessionId
-      ? async (blob) => {
-          const url = await uploadUrl({ sessionId });
-          if (!url) throw new Error("Upload limit reached");
-          const storageId = await uploadImage(url, blob);
-          if (!(await registerUpload({ sessionId, storageId: storageId as Id<"_storage"> })))
-            throw new Error("Upload rejected");
-          return storageId;
-        }
-      : null,
-  );
+  const attachments = useAttachments(sessionId ? chat.uploadAttachment : null);
   const draftSync = useDraftSync({
-    threadId: active === undefined ? undefined : threadId,
-    remote: remoteDraft,
+    threadId: chat.active === undefined ? undefined : threadId,
+    remote: chat.remoteDraft,
     text: draft.request,
     imageIds: attachments.storageIds,
     adopt: (saved) => {
       draft.change(saved.text);
       attachments.restore(saved.images);
     },
-    save: (target, text, imageIds) =>
-      sessionId
-        ? saveDraft({
-            sessionId,
-            threadId: target ?? undefined,
-            text,
-            imageIds: imageIds as Id<"_storage">[],
-          }).catch(() => false)
-        : Promise.resolve(false),
+    save: chat.saveDraft,
   });
-  const personal = useQuery(api.personalization.get, sessionId ? { sessionId } : "skip");
-  const deleteMemory = useMutation(api.personalization.removeMemory);
-  const saveSettings = useMutation(api.personalization.saveSettings);
   const [personalTab, setPersonalTab] = useState<"memories" | "settings" | null>(null);
   const [sending, setSending] = useState(false);
   const [answering, setAnswering] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
 
-  const messages = sortMessages(results);
-  const working = sending || answering || isAgentWorking(messages);
+  const working = sending || answering || chat.agentWorking;
 
   async function submit(text: string) {
     if (!sessionId) {
@@ -448,12 +379,11 @@ function ConnectedHome() {
     let sentThreadId: string | undefined;
 
     try {
-      const result = await sendMessage({
-        sessionId,
-        threadId: threadId ?? undefined,
-        text,
-        imageIds: attachments.storageIds as Id<"_storage">[],
-      });
+      const result = await chat.sendMessage(text, attachments.storageIds);
+
+      if (!result) {
+        return;
+      }
 
       if (result.ok) {
         sentThreadId = result.threadId;
@@ -480,9 +410,9 @@ function ConnectedHome() {
     setAddressError(null);
 
     try {
-      const result = await saveAddress({ sessionId, address });
+      const result = await silpo.saveAddress(address);
 
-      if (!result.ok) {
+      if (result && !result.ok) {
         setAddressError(result.message);
       }
     } catch {
@@ -492,17 +422,7 @@ function ConnectedHome() {
 
   async function cookCount(setup: CookingSetup) {
     if (sessionId && idea) {
-      const credential = createCookingCredential(createCookingCredential().participantToken);
-      const result = await createCookingRoom({
-        sessionId,
-        sourceIdeaId: idea._id,
-        participantToken: credential.participantToken,
-        inviteToken: credential.inviteToken!,
-        ...setup,
-      });
-      if (!result) throw new Error("Не вдалося створити кухню.");
-      saveCookingCredential(result.roomId, credential);
-      await navigate({ to: "/cook/$roomId", params: { roomId: result.roomId } });
+      await createCookingRoom(idea._id, setup);
     }
   }
 
@@ -514,9 +434,9 @@ function ConnectedHome() {
     setError(null);
 
     try {
-      const result = await addToCart({ sessionId, ideaId: idea._id });
+      const result = await ideaState.addToCart();
 
-      if (!result.ok) {
+      if (result && !result.ok) {
         setError(result.message);
       }
     } catch {
@@ -532,7 +452,7 @@ function ConnectedHome() {
     setError(null);
 
     try {
-      await newThread({ sessionId });
+      await chat.createThread();
       draft.reset();
       resetVersion();
     } catch {
@@ -549,7 +469,11 @@ function ConnectedHome() {
     setError(null);
 
     try {
-      const result = await answerQuestion({ sessionId, threadId, toolCallId, answer: value });
+      const result = await chat.answerQuestion(toolCallId, value);
+
+      if (!result) {
+        return;
+      }
 
       if (!result.ok) {
         setError(result.message);
@@ -569,7 +493,7 @@ function ConnectedHome() {
     setError(null);
 
     try {
-      await openThread({ sessionId, threadId: target });
+      await history.openThread(target);
       resetVersion();
     } catch {
       setError("Не вдалося відкрити розмову. Спробуй ще раз.");
@@ -584,7 +508,7 @@ function ConnectedHome() {
     setError(null);
 
     try {
-      await deleteThread({ sessionId, threadId: target });
+      await history.deleteThread(target);
     } catch {
       setError("Не вдалося видалити розмову. Спробуй ще раз.");
     }
@@ -608,10 +532,10 @@ function ConnectedHome() {
   const menu = (
     <>
       <HistoryPanel
-        items={history}
+        items={history.items}
         onOpen={openFromHistory}
         onDelete={removeFromHistory}
-        cookingRooms={cookingHistory}
+        cookingRooms={history.cookingRooms}
         onOpenCooking={(roomId) => {
           void navigate({ to: "/cook/$roomId", params: { roomId } });
         }}
@@ -622,15 +546,11 @@ function ConnectedHome() {
           if (!open) setPersonalTab(null);
         }}
         initialTab={personalTab ?? "memories"}
-        memories={personal?.memories ?? []}
-        settings={personal?.settings ?? defaultAgentSettings}
-        loading={!personal}
-        onDelete={async (memoryId) => {
-          if (sessionId) await deleteMemory({ sessionId, memoryId: memoryId as Id<"memories"> });
-        }}
-        onSave={async (settings) => {
-          if (sessionId) await saveSettings({ sessionId, settings });
-        }}
+        memories={personal.memories}
+        settings={personal.settings}
+        loading={personal.loading}
+        onDelete={personal.removeMemory}
+        onSave={personal.saveSettings}
       />
       <ProfileMenu
         onOpenSettings={() => setPersonalTab("settings")}
@@ -661,7 +581,7 @@ function ConnectedHome() {
       backendReady={status?.ready === true}
       menu={menu}
       connection={silpo.connection}
-      messages={messages}
+      messages={chat.messages}
       idea={idea}
       ideas={ideas}
       versions={versions}

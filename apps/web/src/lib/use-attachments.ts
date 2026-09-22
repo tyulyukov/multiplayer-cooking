@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ComposerAttachment } from "@/components/composer";
+import type { ComposerAttachment } from "@/shared/ui/composer/types";
 import { resizeImage } from "@/lib/images";
 import { AI_MAX_IMAGES } from "@multiplayer-cooking/backend/convex/lib/ai_config";
 

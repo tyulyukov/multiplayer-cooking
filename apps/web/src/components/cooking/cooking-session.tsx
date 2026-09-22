@@ -9,9 +9,7 @@ import StopIcon from "@hugeicons/core-free-icons/StopIcon";
 import Home01Icon from "@hugeicons/core-free-icons/Home01Icon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { FunctionReturnType } from "convex/server";
 import { Fragment, useEffect, useRef, useState } from "react";
-import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import { CookingMarkdown } from "./cooking-markdown";
 import { CookingTools } from "./cooking-tools";
 import { Button } from "@/components/ui/button";
@@ -24,42 +22,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
+import type { CookingActions, CookingRoomData, RoomTimer } from "@/features/cooking/model/types";
 import { CookingLobby } from "./cooking-lobby";
 import { CookingCompletion } from "./cooking-completion";
 import { CookingReference } from "./cooking-reference";
 import { proxyConvexStorageUrl } from "@/lib/convex-url";
 import { preloadImages } from "@/lib/images";
 
-export type CookingRoomData = NonNullable<FunctionReturnType<typeof api.cookingRooms.read>>;
 type PlanStep = NonNullable<CookingRoomData["room"]["plan"]>["steps"][number];
 type RuntimeStep = CookingRoomData["steps"][number];
-export type RoomTimer = CookingRoomData["timers"][number];
-export type CookingActions = Readonly<{
-  online: boolean;
-  busy: boolean;
-  pendingKeys?: readonly string[];
-  start: (stepKey: string) => void;
-  wait: (stepKey: string) => void;
-  ready: (stepKey: string) => void;
-  complete: (stepKey: string, confirmed: boolean, skipChecklist?: boolean) => void;
-  undo: (stepKey: string) => void;
-  toggleChecklist: (stepKey: string, itemId: string, checked: boolean) => void;
-  toggleIngredient: (ingredientId: string, checked: boolean) => void;
-  timer: (
-    timer: RoomTimer,
-    action: "start" | "pause" | "resume" | "cancel" | "acknowledge" | "restore" | "restart",
-  ) => void;
-  addTime: (timer: RoomTimer) => void;
-  createTimer: (stepKey: string, label: string, seconds: number) => void;
-  requestReference: (stepKey: string) => void;
-  startSession: () => void;
-  finish: () => void;
-  retryGeneration: () => void;
-  invite: () => void;
-  managePeople: () => void;
-  ask: (prompt?: string, stepKey?: string) => void;
-  cookAgain: () => void;
-}>;
 
 export function CookingSession({
   data,

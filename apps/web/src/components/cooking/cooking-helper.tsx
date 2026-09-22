@@ -16,8 +16,8 @@ import { proxyConvexStorageUrl } from "@/lib/convex-url";
 import type { useAttachments } from "@/lib/use-attachments";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { CookingMarkdown } from "./cooking-markdown";
-import type { CookingRoomData } from "./cooking-session";
-import { HelperProposalCard, type HelperProposal } from "./helper-proposal";
+import type { CookingRoomData, HelperProposal } from "@/features/cooking/model/types";
+import { HelperProposalCard } from "./helper-proposal";
 import "./cooking-helper.css";
 
 type HelperMessage = FunctionReturnType<typeof api.cookingAssistance.listMessages>[number];

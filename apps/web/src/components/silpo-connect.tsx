@@ -4,12 +4,11 @@ import Unlink01Icon from "@hugeicons/core-free-icons/Unlink01Icon";
 import UserCircleIcon from "@hugeicons/core-free-icons/UserCircleIcon";
 import UserSettings02Icon from "@hugeicons/core-free-icons/UserSettings02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { FunctionReturnType } from "convex/server";
 import * as React from "react";
 
-import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Button } from "@/components/ui/button";
+import type { SilpoConnection } from "@/features/silpo/model/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +16,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-export type SilpoConnection = NonNullable<FunctionReturnType<typeof api.silpo.connection>>;
 
 export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () => void }) {
   return (

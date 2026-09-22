@@ -27,6 +27,7 @@ import {
   resolveCookName,
   saveCookName,
 } from "@/lib/cook-name";
+import type { CookingSetup } from "@/features/cooking/model/types";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 const minCooks = 1;
@@ -43,13 +44,6 @@ function countLabel(count: number) {
 
   return `${count} кухарів`;
 }
-
-export type CookingSetup = Readonly<{
-  cookCount: number;
-  servings: number;
-  name: string;
-  constraints: string;
-}>;
 
 export function CooksForm({
   initial,

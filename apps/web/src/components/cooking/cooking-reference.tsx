@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CookingRoomData } from "./cooking-session";
+import type { CookingRoomData } from "@/features/cooking/model/types";
 import { Button } from "@/components/ui/button";
 import { proxyConvexStorageUrl } from "@/lib/convex-url";
 

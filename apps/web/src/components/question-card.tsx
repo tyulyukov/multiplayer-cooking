@@ -1,5 +1,3 @@
-import type { FunctionArgs } from "convex/server";
-import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
@@ -7,6 +5,7 @@ import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 import type { QuestionAnswer, QuestionInput } from "@/lib/question";
+import type { QuestionResponse } from "@/features/chat/model/types";
 import {
   Questionnaire,
   QuestionnaireActions,
@@ -21,8 +20,6 @@ import {
   QuestionnaireSubmit,
   QuestionnaireTitle,
 } from "@/components/ui/questionnaire";
-
-export type QuestionResponse = FunctionArgs<typeof api.chat.answerQuestion>["answer"];
 
 export function QuestionSummary({
   input,

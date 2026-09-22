@@ -22,15 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  mergeHistory,
+  type CookingHistoryItem,
   type HistoryEntry,
   type HistoryItem,
-  type CookingHistoryItem,
-} from "@/lib/history";
+} from "@/features/history/model/types";
+import { mergeHistory } from "@/features/history/lib/merge-history";
 import { formatRelativeTime } from "@/lib/relative-time";
 import { useMediaQuery } from "@/lib/use-media-query";
-
-export type { HistoryItem } from "@/lib/history";
 
 const title = "Історія";
 

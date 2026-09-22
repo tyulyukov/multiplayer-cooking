@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
 
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
-import { mergeHistory, type CookingHistoryItem, type HistoryItem } from "./history";
+import type { CookingHistoryItem, HistoryItem } from "@/features/history/model/types";
+import { mergeHistory } from "./merge-history";
 
 const ideaId = "idea-1" as Id<"ideas">;
 const item: HistoryItem = {

@@ -11,12 +11,13 @@ import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
-import { CookTogether, type CookingSetup } from "@/components/cook-together";
+import { CookTogether } from "@/components/cook-together";
 import { KitchenIllustration } from "@/components/kitchen-illustration";
 import { Markdown } from "@/components/markdown";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { Idea, IdeaVersions } from "@/features/ideas/model/types";
+import type { CookingSetup } from "@/features/cooking/model/types";
 import { proxyConvexStorageUrl } from "@/lib/convex-url";
 import "./product-price.css";
 

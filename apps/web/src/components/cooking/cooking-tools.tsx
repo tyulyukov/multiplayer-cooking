@@ -15,7 +15,7 @@ import {
   isCookingUnit,
   parseCookingQuantity,
 } from "@/lib/cooking-units";
-import type { CookingActions, CookingRoomData } from "./cooking-session";
+import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
 
 export function CookingTools({
   data,

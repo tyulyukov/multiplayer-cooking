@@ -8,10 +8,8 @@ import type { ReactNode } from "react";
 import { readMemoryEvent } from "@/lib/memory-event";
 import { Markdown } from "@/components/markdown";
 import { PhotoStrip } from "@/components/photo-lightbox";
-import { QuestionSummary, type QuestionResponse } from "@/components/question-card";
+import { QuestionSummary } from "@/components/question-card";
 import { readQuestionInput, type QuestionAnswer } from "@/lib/question";
-
-export type QuestionSubmit = (toolCallId: string, answer: QuestionResponse) => void;
 
 function imageUrls(message: UIMessage) {
   return message.parts.flatMap((part) =>
