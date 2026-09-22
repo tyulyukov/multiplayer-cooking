@@ -1,0 +1,58 @@
+import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useState } from "react";
+
+import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
+import type { Idea } from "@/features/ideas/model/types";
+import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
+
+export function IdeaPhoto({ idea }: { idea: Idea }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!idea.imageUrl || !idea.image) {
+    return <IdeaImageNotice message={idea.imageError} />;
+  }
+
+  if (failed) {
+    return <IdeaImageNotice message={idea.imageError ?? "Спробуй відкрити ідею ще раз."} />;
+  }
+
+  return (
+    <figure className="idea-photo">
+      <img
+        src={proxyConvexStorageUrl(idea.imageUrl)}
+        alt={idea.title}
+        fetchPriority="high"
+        decoding="async"
+        onError={() => setFailed(true)}
+      />
+      {idea.image.sourceUrl && idea.image.credit && (
+        <figcaption>
+          <a href={idea.image.sourceUrl} target="_blank" rel="noreferrer">
+            {idea.image.credit}
+          </a>
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+function IdeaImageNotice({ message }: { message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <div className="idea-image-notice">
+      <KitchenIllustration name="serving-dome" />
+      <Alert variant="destructive" className="idea-image-error">
+        <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
+        <div>
+          <AlertTitle>Фото страви не завантажилося</AlertTitle>
+          <AlertDescription>{message}</AlertDescription>
+        </div>
+      </Alert>
+    </div>
+  );
+}
