@@ -83,24 +83,22 @@ railway up infra/searxng --service searxng --path-as-root --ci
 
 **Convex.** Production server variables live in the Convex dashboard under **Settings > Environment Variables**. Set `APP_URL=https://cooking.tyulyukov.com`. Keep `OPENROUTER_API_KEY` and the Axiom variables on Convex, outside the browser build.
 
-Merge the release PR into `main`, then deploy from that commit:
+The [GitHub Actions workflow](.github/workflows/ci.yml) runs `bun run check` on pull requests and commits to `main`. After a successful check on `main`, it deploys the backend using the `CONVEX_DEPLOY_KEY` repository secret. The key must target the production deployment `diligent-kingfisher-436`; a missing key fails the deploy step.
 
-```sh
-git switch main
-git pull --ff-only
-bun install --frozen-lockfile
-VITE_CONVEX_URL=https://diligent-kingfisher-436.convex.cloud bun run check
-CONVEX_DEPLOYMENT=prod:diligent-kingfisher-436 bun run deploy:backend
-```
+Cloudflare Pages builds the web app independently when `main` changes. Keep changes compatible with both the old and new backend while those deployments run. If a web change requires a new backend contract, release the compatible backend change in an earlier commit, then release the web change.
 
-**Cloudflare Pages.** The `multiplayer-cooking` project uses Direct Upload with `main` as its production branch. Deploy the verified `dist/` directory:
+**Cloudflare Pages.** The Git-connected Pages project uses these settings:
 
-```sh
-bunx wrangler@4.131.0 login
-(cd apps/web && bunx wrangler@4.131.0 pages deploy dist --project-name multiplayer-cooking --branch main)
-```
+| Setting                | Value                                                |
+| ---------------------- | ---------------------------------------------------- |
+| Production branch      | `main`                                               |
+| Root directory         | Repository root (leave the field empty)              |
+| Build command          | `bun install --frozen-lockfile && bun run build:web` |
+| Build output directory | `apps/web/dist`                                      |
+| `BUN_VERSION`          | `1.3.11`                                             |
+| `VITE_CONVEX_URL`      | `https://diligent-kingfisher-436.convex.cloud`       |
 
-Pages serves React routes through its built-in SPA fallback. The custom domain is `cooking.tyulyukov.com`. Direct Upload does not deploy automatically when you push to GitHub. Run the commands above after merging each release PR.
+Pages builds the web app when a commit reaches `main`. It serves React routes through its built-in SPA fallback. The custom domain is `cooking.tyulyukov.com`.
 
 ### Change production Axiom credentials
 

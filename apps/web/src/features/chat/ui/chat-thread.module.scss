@@ -1,0 +1,128 @@
+// Styles local to this component boundary.
+.thread {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 5px;
+}
+
+.thread-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.msg-user {
+  width: fit-content;
+  margin-left: auto;
+  max-width: 88%;
+  padding: 10px 14px;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--foreground);
+  color: var(--card);
+  font-size: 1rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.msg-agent {
+  display: grid;
+  gap: 8px;
+}
+
+.msg-agent :global(.markdown) {
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: 14px 14px 14px 4px;
+  background: var(--card);
+}
+
+.msg-error {
+  margin: 0;
+  color: var(--destructive);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.msg-user[data-photos="true"] {
+  max-width: min(88%, 420px);
+}
+
+.generation-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 4px 0;
+  color: var(--teal-deep);
+  font-size: 0.9375rem;
+}
+/* The pot's weight sits in its lower half: lift it so the body, not the steam, centres on the text line. */
+.generation-pot {
+  flex: none;
+  transform: translateY(-9px);
+}
+.pot-steam,
+.pot-bubble {
+  animation: pot-simmer 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.pot-bubble {
+  animation-delay: -1.4s;
+}
+
+.memory-event {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  width: fit-content;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--card);
+  font-size: 0.875rem;
+  color: var(--teal-deep);
+  cursor: pointer;
+}
+.memory-event span {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+@media (prefers-reduced-motion: reduce) {
+  .generation-pot * {
+    animation: none !important;
+  }
+}
+
+.generation-status {
+  align-items: flex-start;
+}
+.generation-status > :global(.t-shimmer) {
+  line-height: 22px;
+  max-width: 100%;
+}
+
+@keyframes pot-simmer {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(1px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-1px);
+  }
+}
+
+.memory-event:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}

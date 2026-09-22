@@ -1,0 +1,62 @@
+// Styles local to this component boundary.
+.cooks-illustration {
+  justify-self: center;
+  width: 104px;
+  height: 104px;
+}
+
+.cook-form {
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  gap: 18px;
+  padding: 6px 18px 18px;
+}
+
+.servings-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.servings-value {
+  min-width: 9ch;
+  text-align: center;
+  font-family: var(--font-sign);
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: 0.02em;
+}
+
+.cook-form > button {
+  justify-self: center;
+}
+
+.cook-setup-field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.cook-setup-field input,
+.cook-setup-field textarea {
+  width: 100%;
+  border: 2px solid var(--foreground);
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: var(--card);
+  font: inherit;
+  font-size: 17px;
+  min-height: 50px;
+}
+
+.cook-soon {
+  margin: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  text-align: center;
+  color: var(--muted-foreground);
+}

@@ -12,7 +12,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-} from "../../../src/components/ui/drawer";
+} from "../../../src/shared/ui/drawer";
 import type { Id } from "../../../convex/_generated/dataModel";
 import "../../../src/index.css";
 

@@ -1,0 +1,209 @@
+// Styles local to this component boundary.
+.question-card {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 18px;
+}
+
+.question-card[data-answered] {
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+.question-card[data-answered] > div {
+  display: grid;
+  gap: 4px;
+  border-left: 2px solid var(--border);
+  padding-left: 14px;
+}
+
+.question-title {
+  margin: 0;
+  font-family: var(--font-sign);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  letter-spacing: 0.02em;
+}
+
+.question-answer {
+  margin: 0;
+  color: var(--teal-deep);
+  font-weight: 600;
+}
+
+.question-card [data-slot="questionnaire-choice"] {
+  border: 2px solid var(--foreground);
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.question-card [data-slot="questionnaire-choice"][data-checked] {
+  background: var(--foreground);
+  color: var(--card);
+}
+
+.question-card [data-slot="questionnaire-choice-indicator"] {
+  margin-top: 3px;
+}
+
+.question-card input[name="custom"] {
+  height: 44px;
+  border: 2px solid var(--foreground);
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+.question-card legend.question-title {
+  margin-bottom: 16px;
+}
+
+.composer-questionnaire {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  gap: 12px;
+}
+.question-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+.question-progress > :last-child {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.question-viewport {
+  min-height: 0;
+  max-height: min(48dvh, 440px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 5px;
+  margin: 0 -5px;
+  scroll-padding-block: 5px;
+}
+.question-viewport:not([hidden]) {
+  display: grid;
+}
+.composer-questionnaire [data-slot="questionnaire-item"] {
+  grid-area: 1 / 1;
+  align-self: start;
+  gap: 12px;
+}
+.composer-questionnaire [data-slot="questionnaire-item"][hidden] {
+  visibility: hidden;
+  pointer-events: none;
+}
+.composer-questionnaire legend.question-title {
+  margin-bottom: 8px;
+}
+.composer-questionnaire [data-slot="questionnaire-description"] {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+.composer-questionnaire [data-slot="questionnaire-actions"] {
+  flex: none;
+  justify-content: flex-end;
+}
+.composer-questionnaire [data-slot="questionnaire-input"] {
+  min-height: 44px;
+  font-size: 1rem;
+}
+
+button.question-progress {
+  align-items: center;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  padding: 4px 0;
+  text-align: left;
+  cursor: pointer;
+}
+button.question-progress > :first-child {
+  flex: 1;
+}
+button.question-progress:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+button.question-progress[aria-expanded="true"] > svg {
+  transform: rotate(180deg);
+}
+.composer-questionnaire [data-slot="questionnaire-choice"] {
+  border-color: transparent;
+  min-height: 44px;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.composer-questionnaire [data-slot="questionnaire-choice"]:hover,
+.composer-questionnaire [data-slot="questionnaire-choice"][data-checked] {
+  background: var(--muted);
+  color: var(--foreground);
+}
+.composer-questionnaire [data-slot="questionnaire-choices"] {
+  gap: 6px;
+}
+.composer-questionnaire
+  [data-slot="questionnaire-choice"][data-type="radio"]
+  [data-slot="questionnaire-choice-indicator"] {
+  display: none;
+}
+.composer-questionnaire [data-slot="questionnaire-choice"]:has(input:focus-visible) {
+  border-color: var(--ring);
+}
+.composer-questionnaire .question-next {
+  width: 130px;
+  min-height: 44px;
+}
+
+.composer-questionnaire [data-slot="questionnaire-choice-shortcut"] {
+  display: none;
+}
+.question-option-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  width: 20px;
+  min-width: 20px;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.question-option-marker svg {
+  display: none;
+}
+[data-checked] .question-option-marker > span {
+  display: none;
+}
+[data-checked] .question-option-marker svg {
+  display: block;
+  color: var(--teal-deep);
+}
+
+.composer-questionnaire [data-slot="questionnaire-choice-label"] {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+}
+
+.composer-questionnaire [data-type="checkbox"] .question-option-marker svg {
+  display: none;
+}
+.composer-questionnaire [data-type="checkbox"] .question-option-marker > span {
+  display: inline;
+}
+
+@layer base {
+  .composer-questionnaire [data-slot="questionnaire-item"][hidden] {
+    display: flex !important;
+  }
+}
