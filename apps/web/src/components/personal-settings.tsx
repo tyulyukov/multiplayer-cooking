@@ -16,7 +16,7 @@ import {
   normalizeCookName,
   readSavedCookName,
   saveCookName,
-} from "@/lib/cook-name";
+} from "@/features/cooking/lib/cook-name";
 import { useComposerShortcut } from "@/lib/use-composer-shortcut";
 import { useMediaQuery } from "@/lib/use-media-query";
 

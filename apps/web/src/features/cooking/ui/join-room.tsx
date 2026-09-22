@@ -8,7 +8,7 @@ import {
   createCookingCredential,
   saveCookingCredential,
   type CookingCredential,
-} from "@/lib/cooking-session";
+} from "@/features/cooking/lib/cooking-session";
 
 export function JoinRoom({
   roomId,

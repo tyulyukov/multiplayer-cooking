@@ -26,7 +26,7 @@ import {
   readSavedCookName,
   resolveCookName,
   saveCookName,
-} from "@/lib/cook-name";
+} from "@/features/cooking/lib/cook-name";
 import type { CookingSetup } from "@/features/cooking/model/types";
 import { useMediaQuery } from "@/lib/use-media-query";
 

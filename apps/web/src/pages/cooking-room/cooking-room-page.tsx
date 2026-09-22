@@ -1,28 +1,28 @@
-import { People } from "@/components/cooking/cooking-people";
 import { CooksForm } from "@/components/cook-together";
 import { ConvexError } from "convex/values";
 import { useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
 import { useRef, useState } from "react";
 
-import { CookingSession } from "@/components/cooking/cooking-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { CookingHelper } from "@/components/cooking/cooking-helper";
 import { useCookingAssistance } from "@/features/cooking/api/use-cooking-assistance";
 import { useCookingRoom } from "@/features/cooking/api/use-cooking-room";
 import { useCookingSteps } from "@/features/cooking/api/use-cooking-steps";
 import { useCookingTimers } from "@/features/cooking/api/use-cooking-timers";
+import { CookingHelper } from "@/features/cooking/ui/cooking-helper";
+import { People } from "@/features/cooking/ui/cooking-people";
+import { CookingSession } from "@/features/cooking/ui/cooking-session";
 import { JoinRoom } from "@/features/cooking/ui/join-room";
 import { RoomNotice } from "@/features/cooking/ui/room-notice";
-import { helperContextStep } from "@/lib/cooking-helper";
+import { helperContextStep } from "@/features/cooking/lib/cooking-helper";
 import {
   createCookingCredential,
   inviteFromHash,
   readCookingCredential,
   saveCookingCredential,
-} from "@/lib/cooking-session";
+} from "@/features/cooking/lib/cooking-session";
 import { isConvexConfigured } from "@/app/providers/convex-provider";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 

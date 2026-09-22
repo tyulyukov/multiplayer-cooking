@@ -14,7 +14,7 @@ import {
   cookingUnits,
   isCookingUnit,
   parseCookingQuantity,
-} from "@/lib/cooking-units";
+} from "@/features/cooking/lib/cooking-units";
 import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
 
 export function CookingTools({

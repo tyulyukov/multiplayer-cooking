@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
-import type { CookingCredential } from "@/lib/cooking-session";
+import type { CookingCredential } from "@/features/cooking/lib/cooking-session";
 
 export function useCookingRoom(roomId: Id<"cookingRooms">, credential: CookingCredential | null) {
   const connection = useConvexConnectionState();
