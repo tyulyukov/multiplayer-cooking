@@ -1,3 +1,4 @@
+import styles from "@/features/cooking/ui/cooking-helper.module.scss";
 import { Button } from "@/shared/ui/button";
 import { Textarea } from "@/shared/ui/textarea";
 
@@ -18,10 +19,12 @@ export function HelperNotes({
   setNote,
 }: HelperNotesProps) {
   return (
-    <div className="helper-notes">
-      <div className="helper-note-list">
+    <div className={styles["helper-notes"]}>
+      <div className={styles["helper-note-list"]}>
         {notes.length === 0 && (
-          <p className="helper-muted">Збережи тут те, що варто пам’ятати під час готування.</p>
+          <p className={styles["helper-muted"]}>
+            Збережи тут те, що варто пам’ятати під час готування.
+          </p>
         )}
         {notes.map((item) => (
           <article key={item._id}>
@@ -40,7 +43,7 @@ export function HelperNotes({
         ))}
       </div>
       {error && (
-        <p className="helper-error" role="alert">
+        <p className={styles["helper-error"]} role="alert">
           {error}
         </p>
       )}

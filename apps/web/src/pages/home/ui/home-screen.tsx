@@ -1,3 +1,4 @@
+import styles from "@/pages/home/home-page.module.scss";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactNode } from "react";
 
@@ -32,7 +33,7 @@ export function HomeScreen({
       <div className="page-frame">
         <header className="topbar">
           <Brand ready={backendReady} />
-          {menu && <div className="topbar-actions">{menu}</div>}
+          {menu && <div className={styles["topbar-actions"]}>{menu}</div>}
         </header>
       </div>
       <div className="home-layout">
@@ -52,7 +53,7 @@ export function HomeScreen({
           onRemoveAttachment={attachments.remove}
         />
 
-        <div className="quick-prompts" role="group" aria-label="Швидкі запити">
+        <div className={styles["quick-prompts"]} role="group" aria-label="Швидкі запити">
           {draft.quickPrompts.map((prompt) => (
             <Button
               key={prompt.id}
@@ -61,7 +62,7 @@ export function HomeScreen({
               variant="outline"
               aria-pressed={draft.selection?.promptId === prompt.id}
               disabled={busy}
-              className="quick-prompt"
+              className={styles["quick-prompt"]}
               onClick={() => draft.togglePrompt(prompt)}
             >
               <HugeiconsIcon icon={prompt.icon} strokeWidth={1.5} aria-hidden />

@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/shared/ui/composer/composer.module.scss";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 
@@ -40,7 +42,7 @@ export function Composer(props: ComposerProps) {
   } = model;
   if (questionnaire && questionnaireKey !== dismissedQuestionnaireKey) {
     return (
-      <div className="composer chrome" data-mode={mode}>
+      <div className={cn(styles["composer"], "chrome")} data-mode={mode}>
         {questionnaire}
         <Button
           type="button"
@@ -57,7 +59,7 @@ export function Composer(props: ComposerProps) {
   return (
     <form
       ref={composerRef}
-      className="composer chrome t-input"
+      className={cn(styles["composer"], styles["t-input"], "chrome")}
       data-mode={mode}
       data-over-limit={overLimit}
       onSubmit={handleSubmit}
@@ -79,7 +81,7 @@ export function Composer(props: ComposerProps) {
               ? "Запитай або додай фото…"
               : "Уточни або попроси інше"
         }
-        className="request-textarea"
+        className={styles["request-textarea"]}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
           if (shouldSubmitComposerShortcut(event.nativeEvent, shortcut, desktopKeyboard)) {
@@ -95,7 +97,7 @@ export function Composer(props: ComposerProps) {
         onRemoveAttachment={onRemoveAttachment}
       />
 
-      <div className="composer-actions">
+      <div className={styles["composer-actions"]} data-composer-actions>
         <input
           ref={fileInputRef}
           type="file"
@@ -109,14 +111,14 @@ export function Composer(props: ComposerProps) {
           type="button"
           variant="ghost"
           size="icon-lg"
-          className="attach-button"
+          className={styles["attach-button"]}
           aria-label="Додати фото"
           disabled={!canAttach}
           onClick={() => fileInputRef.current?.click()}
         >
           <HugeiconsIcon icon={ImageAdd01Icon} className="size-5" strokeWidth={1.5} aria-hidden />
         </Button>
-        <span className="character-count" data-over-limit={overLimit} aria-live="polite">
+        <span className={styles["character-count"]} data-over-limit={overLimit} aria-live="polite">
           {showCounter ? `${value.length}/${AI_REQUEST_MAX_CHARACTERS}` : null}
           {overLimit && <span className="sr-only">, забагато знаків</span>}
         </span>

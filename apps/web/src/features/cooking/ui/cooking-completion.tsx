@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/features/cooking/ui/cooking-completion.module.scss";
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
@@ -6,7 +8,6 @@ import { Button } from "@/shared/ui/button";
 import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 import { CompletionConfetti } from "./completion-confetti";
 import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
-import "./cooking-completion.css";
 
 export function CookingCompletion({
   data,
@@ -33,17 +34,17 @@ export function CookingCompletion({
   }, []);
 
   return (
-    <section className="cooking-completion" aria-labelledby="completion-heading">
+    <section className={styles["cooking-completion"]} aria-labelledby="completion-heading">
       <CompletionConfetti />
-      <div className="completion-ticket">
-        <div className="sign completion-sign">
+      <div className={styles["completion-ticket"]}>
+        <div className={cn(styles["completion-sign"], "sign")}>
           <h1 ref={heading} id="completion-heading" tabIndex={-1}>
             Смачного!
           </h1>
         </div>
-        <div className="completion-dish">
+        <div className={styles["completion-dish"]}>
           {showPhoto && (
-            <figure className="completion-photo">
+            <figure className={styles["completion-photo"]}>
               <img
                 src={proxyConvexStorageUrl(photo.url)}
                 alt={data.room.source.title}
@@ -61,21 +62,21 @@ export function CookingCompletion({
             </figure>
           )}
           <h2>{data.room.source.title}</h2>
-          <p className="completion-meta">
+          <p className={styles["completion-meta"]}>
             {cooks} {cookLabel === "one" ? "кухар" : cookLabel === "few" ? "кухарі" : "кухарів"}
             {" · "}
             {servings}{" "}
             {servingLabel === "one" ? "порція" : servingLabel === "few" ? "порції" : "порцій"}
           </p>
           {photo && !showPhoto && (
-            <p className="completion-photo-error" role="status">
+            <p className={styles["completion-photo-error"]} role="status">
               Фото не завантажилося.
             </p>
           )}
         </div>
-        <div className="completion-actions">
+        <div className={styles["completion-actions"]}>
           {!actions.online && (
-            <p className="completion-photo-error" role="status">
+            <p className={styles["completion-photo-error"]} role="status">
               Немає зв’язку. Інструкції доступні.
             </p>
           )}
@@ -88,7 +89,7 @@ export function CookingCompletion({
           </Button>
         </div>
         <svg
-          className="completion-ticket-edge"
+          className={styles["completion-ticket-edge"]}
           viewBox="0 0 338 14"
           preserveAspectRatio="none"
           aria-hidden
@@ -102,7 +103,7 @@ export function CookingCompletion({
           />
         </svg>
       </div>
-      <KitchenIllustration name="serving-bell" className="completion-bell" />
+      <KitchenIllustration name="serving-bell" className={styles["completion-bell"]} />
     </section>
   );
 }

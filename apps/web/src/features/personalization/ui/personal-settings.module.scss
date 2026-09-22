@@ -1,3 +1,4 @@
+// Scoped product styles. Shared application primitives stay global.
 .personal-settings {
   height: min(650px, calc(100dvh - 2rem));
   max-width: min(100% - 2rem, 620px);

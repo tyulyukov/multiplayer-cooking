@@ -1,3 +1,4 @@
+import styles from "@/features/cooking/ui/cooking-completion.module.scss";
 import { useEffect, useRef } from "react";
 
 export function CompletionConfetti() {
@@ -72,5 +73,5 @@ export function CompletionConfetti() {
     };
   }, []);
 
-  return <canvas ref={ref} className="completion-confetti" aria-hidden />;
+  return <canvas ref={ref} className={styles["completion-confetti"]} aria-hidden />;
 }

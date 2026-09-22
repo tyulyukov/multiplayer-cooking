@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/features/personalization/ui/personal-settings.module.scss";
 import Delete01Icon from "@hugeicons/core-free-icons/Delete01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 
@@ -23,19 +25,22 @@ export function PersonalMemories({
   loading,
 }: Props) {
   return (
-    <section className="personal-settings__memories" aria-live="polite">
-      {loading ? <p className="personal-settings__quiet">Завантажуємо спогади…</p> : null}
+    <section className={styles["personal-settings__memories"]} aria-live="polite">
+      {loading ? <p className={styles["personal-settings__quiet"]}>Завантажуємо спогади…</p> : null}
       {!loading && sortedMemories.length === 0 ? (
-        <div className="personal-settings__empty illustrated-empty">
+        <div className={cn(styles["personal-settings__empty"], "illustrated-empty")}>
           <KitchenIllustration name="memory-fridge" />
           <p>Щойно щось стане для тебе важливим, агент збереже це тут.</p>
         </div>
       ) : null}
       {sortedMemories.map((memory) => (
-        <article className="personal-settings__memory" key={memory._id}>
+        <article className={styles["personal-settings__memory"]} key={memory._id}>
           <div>
             <span
-              className={`personal-settings__memory-kind personal-settings__memory-kind--${memory.kind}`}
+              className={cn(
+                styles["personal-settings__memory-kind"],
+                styles[`personal-settings__memory-kind--${memory.kind}`],
+              )}
             >
               {memoryLabels[memory.kind]}
             </span>
@@ -57,7 +62,7 @@ export function PersonalMemories({
         </article>
       ))}
       {deleteError ? (
-        <p className="personal-settings__error" role="alert">
+        <p className={styles["personal-settings__error"]} role="alert">
           {deleteError}
         </p>
       ) : null}

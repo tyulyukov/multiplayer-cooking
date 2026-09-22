@@ -1,11 +1,12 @@
+import styles from "@/features/personalization/ui/personal-settings.module.scss";
 import type { usePersonalSettings } from "../model/use-personal-settings";
 type Props = Pick<ReturnType<typeof usePersonalSettings>, "shortcut" | "setShortcut">;
 export function InterfaceSettings({ shortcut, setShortcut }: Props) {
   return (
-    <section className="personal-settings__interface">
+    <section className={styles["personal-settings__interface"]}>
       <fieldset>
         <legend>Надсилання повідомлень</legend>
-        <div className="personal-settings__shortcut-options">
+        <div className={styles["personal-settings__shortcut-options"]}>
           <label data-selected={shortcut === "enter"}>
             <input
               type="radio"

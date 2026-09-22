@@ -1,3 +1,4 @@
+import styles from "@/features/ideas/ui/idea-card.module.scss";
 import LinkSquare01Icon from "@hugeicons/core-free-icons/LinkSquare01Icon";
 import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import ShoppingBasketAdd01Icon from "@hugeicons/core-free-icons/ShoppingBasketAdd01Icon";
@@ -24,16 +25,16 @@ export function IdeaCart({
 
   if (idea.cart) {
     action = (
-      <div className="cart-done" aria-busy={idea.cartPending === true}>
-        <div className="cart-heading-row">
+      <div className={styles["cart-done"]} aria-busy={idea.cartPending === true}>
+        <div className={styles["cart-heading-row"]}>
           {!idea.cartPending && <KitchenIllustration name="basket-filled" />}
-          <div className="cart-heading">
+          <div className={styles["cart-heading"]}>
             <strong>Кошик Сільпо</strong>
             <span>{idea.cartPending ? "Оновлюємо…" : "Готовий до перевірки"}</span>
           </div>
         </div>
-        <div className="cart-overview">
-          <div className="cart-payable">
+        <div className={styles["cart-overview"]}>
+          <div className={styles["cart-payable"]}>
             <span>До сплати</span>
             <strong>
               {idea.cart.total === undefined ? "Уточнюється" : formatPrice(idea.cart.total)}
@@ -60,17 +61,17 @@ export function IdeaCart({
           </Button>
         )}
         {idea.cart.warnings?.length ? (
-          <div className="cart-warnings" role="status">
+          <div className={styles["cart-warnings"]} role="status">
             <strong>Перевір товари перед замовленням</strong>
             {idea.cart.warnings.map((warning) => (
               <p key={warning}>{warning}</p>
             ))}
           </div>
         ) : null}
-        <details className="cart-details">
+        <details className={styles["cart-details"]}>
           <summary>Деталі кошика</summary>
-          <div className="cart-details-content">
-            <dl className="cart-breakdown">
+          <div className={styles["cart-details-content"]}>
+            <dl className={styles["cart-breakdown"]}>
               {idea.cart.productsTotal !== undefined && (
                 <div>
                   <dt>Товари</dt>
@@ -87,11 +88,11 @@ export function IdeaCart({
               </div>
             </dl>
             {idea.cart.discount !== undefined && idea.cart.discount > 0 && (
-              <p className="cart-discount">
+              <p className={styles["cart-discount"]}>
                 Вже враховано {formatPrice(idea.cart.discount)} знижки
               </p>
             )}
-            <p className="cart-note">
+            <p className={styles["cart-note"]}>
               Сума всього кошика разом із раніше доданими товарами. Остаточну суму Сільпо уточнить
               при оформленні.
             </p>
@@ -103,7 +104,7 @@ export function IdeaCart({
     action = (
       <Button
         type="button"
-        className="cart-button"
+        className={styles["cart-button"]}
         disabled={!canAddToCart || idea.cartPending === true}
         aria-busy={idea.cartPending === true}
         onClick={onAddToCart}

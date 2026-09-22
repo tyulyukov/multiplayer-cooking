@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/features/ideas/ui/idea-card.module.scss";
 import { productRegistryKey } from "@multiplayer-cooking/backend/convex/lib/ingredient";
 import LinkSquare01Icon from "@hugeicons/core-free-icons/LinkSquare01Icon";
 import ShoppingBasketAdd01Icon from "@hugeicons/core-free-icons/ShoppingBasketAdd01Icon";
@@ -6,7 +8,6 @@ import { useState } from "react";
 
 import type { Idea } from "@/features/ideas/model/types";
 
-import "./product-price.css";
 import { formatPrice, formatQuantity } from "../lib/idea-format";
 import { getIdeaProducts } from "../lib/idea-products";
 import { IdeaCart } from "./idea-cart";
@@ -14,7 +15,7 @@ import { IdeaCart } from "./idea-cart";
 function ProductThumbnail({ url }: { url: string }) {
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
   return (
-    <div className="product-thumbnail" data-state={state}>
+    <div className={styles["product-thumbnail"]} data-state={state}>
       {state !== "failed" && (
         <img
           src={url}
@@ -43,12 +44,12 @@ export function IdeaProducts({
 }) {
   const { matched, missing, total, noMatches } = getIdeaProducts(idea);
   return (
-    <section className="idea-products" aria-label="Продукти в Сільпо">
-      <h3 className="idea-section">Продукти в Сільпо</h3>
+    <section className={styles["idea-products"]} aria-label="Продукти в Сільпо">
+      <h3 className={styles["idea-section"]}>Продукти в Сільпо</h3>
       {noMatches ? (
         <ProductEmptyState ingredients={missing} status={idea.productsStatus} />
       ) : (
-        <ul className="products">
+        <ul className={styles["products"]}>
           {matched.map((product, index) => {
             const amount = idea.ingredients.find(
               (ingredient) =>
@@ -63,8 +64,8 @@ export function IdeaProducts({
                 {product.imageUrl && (
                   <ProductThumbnail key={product.imageUrl} url={product.imageUrl} />
                 )}
-                <div className="product-info">
-                  <span className="product-ingredient">
+                <div className={styles["product-info"]}>
+                  <span className={styles["product-ingredient"]}>
                     {product.ingredient}
                     {amount && ` · ${amount}`}
                   </span>
@@ -72,7 +73,7 @@ export function IdeaProducts({
                     <>
                       {product.productUrl ? (
                         <a
-                          className="product-title product-link"
+                          className={cn(styles["product-title"], styles["product-link"])}
                           href={product.productUrl}
                           target="_blank"
                           rel="noreferrer"
@@ -86,30 +87,30 @@ export function IdeaProducts({
                           />
                         </a>
                       ) : (
-                        <span className="product-title">{product.title ?? "Товар"}</span>
+                        <span className={styles["product-title"]}>{product.title ?? "Товар"}</span>
                       )}
-                      <span className="product-unit">
+                      <span className={styles["product-unit"]}>
                         {product.unit}
                         {product.quantity !== 1 && ` × ${formatQuantity(product.quantity)}`}
                       </span>
                     </>
                   ) : (
-                    <span className="product-title">Не знайдено в Сільпо</span>
+                    <span className={styles["product-title"]}>Не знайдено в Сільпо</span>
                   )}
                 </div>
                 {product.productId && (
-                  <span className="product-price">
+                  <span className={styles["product-price"]}>
                     {product.price === undefined ? (
                       "Ціна уточнюється"
                     ) : product.oldPrice !== undefined && product.oldPrice > product.price ? (
-                      <span className="product-price-sale">
-                        <span className="product-price-current">
+                      <span className={styles["product-price-sale"]}>
+                        <span className={styles["product-price-current"]}>
                           {formatPrice(product.price * product.quantity)}
                         </span>
-                        <s className="product-price-original">
+                        <s className={styles["product-price-original"]}>
                           {formatPrice(product.oldPrice * product.quantity)}
                         </s>
-                        <span className="product-price-discount">
+                        <span className={styles["product-price-discount"]}>
                           −{Math.round((1 - product.price / product.oldPrice) * 100)}%
                         </span>
                       </span>
@@ -124,7 +125,7 @@ export function IdeaProducts({
         </ul>
       )}
       {matched.length > 0 && missing.length > 0 && (
-        <section className="missing-ingredients" aria-label="Немає в Сільпо">
+        <section className={styles["missing-ingredients"]} aria-label="Немає в Сільпо">
           <h4>Немає в Сільпо, купи окремо</h4>
           <ul>
             {missing.map((ingredient, index) => (
@@ -137,13 +138,13 @@ export function IdeaProducts({
         </section>
       )}
       {matched.length > 0 && (
-        <p className="products-total">
+        <p className={styles["products-total"]}>
           <span>Разом, без доставки</span>
           <strong>{formatPrice(total)}</strong>
         </p>
       )}
       {matched.some((product) => product.price === undefined) && (
-        <p className="cart-note">Товари без ціни в суму не входять.</p>
+        <p className={styles["cart-note"]}>Товари без ціни в суму не входять.</p>
       )}
       {idea.cartError && <p className="address-error">{idea.cartError}</p>}
       <IdeaCart
@@ -190,7 +191,7 @@ function ProductEmptyState({
       };
 
   return (
-    <section className="products-empty" aria-label={title}>
+    <section className={styles["products-empty"]} aria-label={title}>
       {!imageFailed && (
         <img src="/images/ingredients-basket.webp" alt="" onError={() => setImageFailed(true)} />
       )}
@@ -198,7 +199,7 @@ function ProductEmptyState({
         <h4>{title}</h4>
         <p>{description}</p>
       </div>
-      <ul className="missing-ingredients-list">
+      <ul className={styles["missing-ingredients-list"]}>
         {ingredients.map((ingredient, index) => (
           <li key={`${ingredient.name}-${index}`}>
             <span>{ingredient.name}</span>

@@ -1,4 +1,5 @@
-.cooking-shell[data-completion="true"] {
+// Scoped product styles. Shared application primitives stay global.
+:global([data-completion="true"]) {
   overflow-x: clip;
   padding-bottom: max(24px, env(safe-area-inset-bottom));
 }

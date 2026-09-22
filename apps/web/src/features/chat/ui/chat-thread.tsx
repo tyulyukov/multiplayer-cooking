@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/features/chat/ui/chat-thread.module.scss";
 import { generationStatus } from "@/features/chat/lib/generation-status";
 import { collectAnswers, isToolPart } from "@/features/chat/lib/question-messages";
 import type { UIMessage } from "@convex-dev/agent";
@@ -22,7 +24,7 @@ function UserMessage({ message }: { message: UIMessage }) {
   const text = message.text.trim();
 
   return (
-    <div className="msg msg-user" data-photos={photos.length > 0}>
+    <div className={cn(styles["msg-user"], "msg")} data-photos={photos.length > 0}>
       <PhotoStrip urls={photos} alt="Фото від тебе" />
       {text}
     </div>
@@ -63,7 +65,7 @@ function AssistantMessage({
   }
 
   return (
-    <div className="msg msg-agent">
+    <div className={cn(styles["msg-agent"], "msg")}>
       {questions.map((part) => {
         const input = readQuestionInput(part.input);
 
@@ -79,7 +81,7 @@ function AssistantMessage({
       {memories.map((part) => (
         <button
           type="button"
-          className="memory-event"
+          className={styles["memory-event"]}
           key={part.toolCallId}
           onClick={onOpenMemories}
         >
@@ -89,7 +91,7 @@ function AssistantMessage({
       ))}
       {text && <AssistantText text={text} streaming={streaming} />}
       {message.status === "failed" && (
-        <p className="msg-error">Відповідь не вдалася. Спробуй надіслати ще раз.</p>
+        <p className={styles["msg-error"]}>Відповідь не вдалася. Спробуй надіслати ще раз.</p>
       )}
     </div>
   );
@@ -123,13 +125,13 @@ export function ChatThread({
   return (
     <div
       ref={viewportRef}
-      className="thread"
+      className={styles["thread"]}
       onScroll={(event) => {
         const viewport = event.currentTarget;
         pinnedRef.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 48;
       }}
     >
-      <ol className="thread-list" aria-live="polite">
+      <ol className={styles["thread-list"]} aria-live="polite">
         {messages.map((message) => (
           <li key={message.key}>
             {message.role === "user" ? (
@@ -157,9 +159,9 @@ export function ChatThread({
 export function GenerationStatus({ messages }: { messages: readonly UIMessage[] }) {
   const { activity, label } = generationStatus(messages);
   return (
-    <div className="generation-status" role="status" data-activity={activity}>
+    <div className={styles["generation-status"]} role="status" data-activity={activity}>
       <svg
-        className="generation-pot"
+        className={styles["generation-pot"]}
         width="32"
         height="32"
         viewBox="0 0 40 40"
@@ -170,8 +172,8 @@ export function GenerationStatus({ messages }: { messages: readonly UIMessage[] 
         strokeLinejoin="round"
         aria-hidden="true"
       >
-        <path className="pot-steam" d="M15 12c-2-2 2-3 0-5m10 5c-2-2 2-3 0-5" />
-        <circle className="pot-bubble" cx="20" cy="25" r="1" />
+        <path className={styles["pot-steam"]} d="M15 12c-2-2 2-3 0-5m10 5c-2-2 2-3 0-5" />
+        <circle className={styles["pot-bubble"]} cx="20" cy="25" r="1" />
         <path d="M8 17h24v10a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V17Z" />
         <path d="M8 19H5a2 2 0 0 0 0 4h3m24-4h3a2 2 0 0 1 0 4h-3M11 36h18" />
       </svg>

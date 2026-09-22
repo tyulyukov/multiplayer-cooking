@@ -1,3 +1,4 @@
+import styles from "@/features/cooking/ui/cook-together.module.scss";
 import MinusSignIcon from "@hugeicons/core-free-icons/MinusSignIcon";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
@@ -94,9 +95,9 @@ export function CooksForm({
   }
 
   return (
-    <div className="cook-form">
-      <KitchenIllustration name="oven-mitts" className="cooks-illustration" />
-      <div className="servings-stepper" role="group" aria-label="Кількість кухарів">
+    <div className={styles["cook-form"]}>
+      <KitchenIllustration name="oven-mitts" className={styles["cooks-illustration"]} />
+      <div className={styles["servings-stepper"]} role="group" aria-label="Кількість кухарів">
         <Button
           type="button"
           variant="outline"
@@ -107,7 +108,7 @@ export function CooksForm({
         >
           <HugeiconsIcon icon={MinusSignIcon} strokeWidth={2} aria-hidden />
         </Button>
-        <output className="servings-value" aria-live="polite">
+        <output className={styles["servings-value"]} aria-live="polite">
           {countLabel(count)}
         </output>
         <Button
@@ -122,7 +123,7 @@ export function CooksForm({
         </Button>
       </div>
       {needsName ? (
-        <label className="cook-setup-field">
+        <label className={styles["cook-setup-field"]}>
           <span>Твоє ім’я</span>
           <input
             value={name}

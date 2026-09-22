@@ -1,0 +1,195 @@
+// Styles local to this component boundary.
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 22px;
+  border-radius: 22px;
+  padding: 16px;
+  transition: box-shadow var(--duration-quick) var(--ease-smooth-out);
+}
+
+.composer:has(.request-textarea:focus-visible) {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--neon-blue) 45%, transparent);
+}
+
+/* Outranks the focus ring above: the over-limit state stays cherry while typing. */
+.composer.t-input[data-over-limit="true"] {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 45%, transparent);
+}
+
+/* Error state shake: replayed by removing and re-adding .is-shaking after a reflow. */
+.t-input {
+  will-change: transform;
+}
+
+.t-input.is-shaking {
+  animation: t-input-shake calc(var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2) linear;
+}
+
+/* Screen layout only; the ghost Textarea variant owns the chrome. */
+.request-textarea {
+  min-height: 6rem;
+  max-height: 14.5rem;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.character-count {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--duration-quick) var(--ease-smooth-out);
+}
+
+.character-count[data-over-limit="true"] {
+  color: var(--destructive);
+  font-weight: 600;
+}
+
+/* The pot rocks on hover and for as long as a request runs, like something simmering. */
+.pot-icon {
+  transform-origin: 50% 85%;
+}
+
+:global(.generate-button):hover:not(:disabled) .pot-icon,
+:global(.generate-button)[aria-busy="true"] .pot-icon {
+  animation:
+    pot-rock 1.1s ease-in-out infinite,
+    pot-bob 0.7s ease-in-out infinite;
+}
+
+.composer[data-mode="chat"] {
+  flex: none;
+  margin-top: 0;
+  padding: 12px;
+  border-radius: 18px;
+}
+
+.composer[data-mode="chat"] .request-textarea {
+  min-height: 2.5rem;
+  max-height: 9rem;
+}
+
+.send-button {
+  --press-rotate: 0deg;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--foreground);
+  color: var(--primary);
+}
+
+.send-button:hover:not(:disabled) {
+  background: color-mix(in oklch, var(--foreground), white 14%);
+  color: var(--primary);
+}
+
+.composer-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.composer-attachments [data-slot="attachment"] {
+  width: 72px;
+  border: 2px solid var(--foreground);
+  border-radius: 12px;
+}
+
+.composer-attachments [data-slot="attachment-media"] {
+  border-radius: 8px;
+}
+
+.composer-attachments [data-slot="attachment-actions"] {
+  top: 4px;
+  right: 4px;
+}
+
+.composer-attachments [data-slot="attachment-action"] {
+  background: var(--card);
+  border: 2px solid var(--foreground);
+  border-radius: 999px;
+}
+
+.attach-button {
+  margin-right: auto;
+}
+
+@media (min-width: 640px) {
+  .request-textarea {
+    font-size: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composer,
+  .character-count {
+    transition: none;
+  }
+}
+
+@keyframes t-input-shake {
+  0% {
+    transform: translateX(0);
+    animation-timing-function: var(--shake-ease);
+  }
+  28.57% {
+    transform: translateX(var(--shake-distance));
+    animation-timing-function: var(--shake-ease);
+  }
+  57.14% {
+    transform: translateX(calc(var(--shake-distance) * -1));
+    animation-timing-function: var(--shake-ease);
+  }
+  78.57% {
+    transform: translateX(var(--shake-overshoot));
+    animation-timing-function: var(--shake-ease);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pot-rock {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  22% {
+    rotate: -4deg;
+  }
+  48% {
+    rotate: 3deg;
+  }
+  74% {
+    rotate: -2deg;
+  }
+}
+
+@keyframes pot-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-input,
+  .pot-icon {
+    animation: none !important;
+    transform: none !important;
+  }
+}

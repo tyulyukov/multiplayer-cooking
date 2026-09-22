@@ -1,3 +1,4 @@
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -65,7 +66,7 @@ export function CookingTools({
         </Button>
       </DrawerTrigger>
       <DrawerContent
-        className="cooking-drawer"
+        className={cookingStyles["cooking-drawer"]}
         onCloseAutoFocus={(event) => {
           if (document.querySelector('[role="dialog"][data-state="open"]')) event.preventDefault();
         }}
@@ -86,14 +87,14 @@ export function CookingTools({
             Інструменти для спільного готування
           </DrawerDescription>
         </DrawerHeader>
-        <div className="cooking-drawer-body">
+        <div className={cookingStyles["cooking-drawer-body"]}>
           {tool && (
             <Button variant="ghost" size="chip" onClick={() => setTool(null)}>
               До інструментів
             </Button>
           )}
           {!tool && (
-            <div className="cooking-tool-menu">
+            <div className={cookingStyles["cooking-tool-menu"]}>
               <Button variant="outline" size="xl" onClick={() => setTool("ingredients")}>
                 Інгредієнти
               </Button>
@@ -126,7 +127,7 @@ export function CookingTools({
             </div>
           )}
           {tool === "ingredients" && (
-            <div className="cooking-tool-panel">
+            <div className={cookingStyles["cooking-tool-panel"]}>
               {data.room.plan?.ingredients.map((ingredient) => (
                 <label key={ingredient.id}>
                   <input
@@ -145,7 +146,7 @@ export function CookingTools({
             </div>
           )}
           {tool === "convert" && (
-            <div className="cooking-tool-panel">
+            <div className={cookingStyles["cooking-tool-panel"]}>
               <label htmlFor="cooking-amount">Кількість</label>
               <Input
                 id="cooking-amount"
@@ -153,7 +154,7 @@ export function CookingTools({
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
               />
-              <div className="cooking-unit-row">
+              <div className={cookingStyles["cooking-unit-row"]}>
                 <label>
                   З
                   <select
@@ -194,7 +195,7 @@ export function CookingTools({
             </div>
           )}
           {tool === "timer" && (
-            <div className="cooking-tool-panel">
+            <div className={cookingStyles["cooking-tool-panel"]}>
               {allowedSteps.length ? (
                 <>
                   <label htmlFor="manual-timer-step">Для якого кроку</label>
@@ -243,7 +244,7 @@ export function CookingTools({
             </div>
           )}
           {tool === "servings" && (
-            <div className="cooking-tool-panel">
+            <div className={cookingStyles["cooking-tool-panel"]}>
               <label htmlFor="cooking-servings">Нова кількість порцій</label>
               <Input
                 id="cooking-servings"

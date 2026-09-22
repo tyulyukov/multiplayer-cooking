@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/features/silpo/ui/address-prompt.module.scss";
 import Location01Icon from "@hugeicons/core-free-icons/Location01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
@@ -32,8 +34,12 @@ export function AddressPrompt({
   }
 
   return (
-    <form className="address-prompt chrome" onSubmit={handleSubmit} aria-label="Адреса доставки">
-      <div className="address-head">
+    <form
+      className={cn(styles["address-prompt"], "chrome")}
+      onSubmit={handleSubmit}
+      aria-label="Адреса доставки"
+    >
+      <div className={styles["address-head"]}>
         <HugeiconsIcon icon={Location01Icon} size={20} strokeWidth={1.5} aria-hidden />
         <h3>Адреса доставки</h3>
       </div>
@@ -41,7 +47,7 @@ export function AddressPrompt({
         Потрібна, щоб Сільпо показало ціни і зібрало кошик. Зберігається лише на сервері, модель її
         не бачить.
       </p>
-      <div className="address-field">
+      <div className={styles["address-field"]}>
         <label className="sr-only" htmlFor="delivery-address">
           Місто, вулиця, будинок
         </label>
@@ -58,7 +64,7 @@ export function AddressPrompt({
       </div>
       {error && <p className="address-error">{error}</p>}
       {pending ? (
-        <p className="thinking t-shimmer">Готуємо кошик Сільпо</p>
+        <p className={cn(styles["thinking"], "t-shimmer")}>Готуємо кошик Сільпо</p>
       ) : (
         <Button type="submit" disabled={value.trim().length < 5}>
           Зберегти адресу

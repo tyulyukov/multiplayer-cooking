@@ -1,3 +1,4 @@
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -63,7 +64,7 @@ export function StepControls({
   const actionVariant = primary ? "default" : "outline";
   return (
     <>
-      <div className="cooking-step-actions">
+      <div className={cookingStyles["cooking-step-actions"]}>
         {runtime?.status === "pending" && step.kind === "together" && canAct && (
           <Button
             size="xl"
@@ -151,7 +152,7 @@ export function StepControls({
       ))}
       <Dialog open={skipChecklistOpen} onOpenChange={setSkipChecklistOpen}>
         <DialogContent
-          className="cooking-skip-dialog"
+          className={cookingStyles["cooking-skip-dialog"]}
           aria-describedby="skip-checklist-description"
         >
           <DialogHeader>

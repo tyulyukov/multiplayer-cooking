@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/features/history/ui/history-panel.module.scss";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import HistoryIcon from "@hugeicons/core-free-icons/HistoryIcon";
 import CookingPotIcon from "@hugeicons/core-free-icons/CookingPotIcon";
@@ -63,7 +65,7 @@ function HistoryList({
 
   if (items.length === 0) {
     return (
-      <div className="history-empty illustrated-empty">
+      <div className={cn(styles["history-empty"], "illustrated-empty")}>
         <KitchenIllustration name="recipe-box" />
         <p>Тут з'являться попередні розмови.</p>
       </div>
@@ -71,23 +73,23 @@ function HistoryList({
   }
 
   return (
-    <ul className="history-list">
+    <ul className={styles["history-list"]}>
       {items.map((item) => (
         <li key={item.key} data-active={item.active}>
           <button
             type="button"
-            className="history-row"
+            className={styles["history-row"]}
             onClick={() => {
               if (item.threadId) onOpen(item.threadId);
               else if (item.rooms[0]) onOpenCooking?.(item.rooms[0]._id);
             }}
           >
-            <span className="history-photos" aria-hidden>
+            <span className={styles["history-photos"]} aria-hidden>
               {item.photos.map((url) => (
                 <img key={url} src={url} alt="" loading="lazy" />
               ))}
             </span>
-            <span className="history-text">
+            <span className={styles["history-text"]}>
               <strong>{item.title ?? "Без назви"}</strong>
               <span>
                 <time dateTime={new Date(item.createdAt).toISOString()}>
@@ -152,7 +154,7 @@ function HistoryCooking({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{button}</DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="history-cooking-menu">
+      <DropdownMenuContent align="end" className={styles["history-cooking-menu"]}>
         {rooms.map((room) => (
           <DropdownMenuItem key={room._id} onSelect={() => onOpen(room._id)}>
             <span>
@@ -163,7 +165,7 @@ function HistoryCooking({
                 minute: "2-digit",
               })}
             </span>
-            <span className="history-cooking-state">
+            <span className={styles["history-cooking-state"]}>
               {room.state === "done"
                 ? "Приготовано"
                 : room.state === "cooking"
@@ -197,7 +199,7 @@ export function HistoryPanel({
   const desktop = useMediaQuery("(min-width: 1024px)");
 
   const trigger: ReactNode = (
-    <Button type="button" variant="outline" size="chip" className="history-trigger">
+    <Button type="button" variant="outline" size="chip" className={styles["history-trigger"]}>
       <HugeiconsIcon icon={HistoryIcon} strokeWidth={1.5} aria-hidden />
       <span>Історія</span>
     </Button>
@@ -225,7 +227,7 @@ export function HistoryPanel({
     return (
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>{trigger}</SheetTrigger>
-        <SheetContent side="right" className="history-panel" aria-describedby={undefined}>
+        <SheetContent side="right" className={styles["history-panel"]} aria-describedby={undefined}>
           <SheetHeader>
             <SheetTitle>{title}</SheetTitle>
           </SheetHeader>
@@ -238,7 +240,7 @@ export function HistoryPanel({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-      <DrawerContent className="history-panel" aria-describedby={undefined}>
+      <DrawerContent className={styles["history-panel"]} aria-describedby={undefined}>
         <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>
         </DrawerHeader>

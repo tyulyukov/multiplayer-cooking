@@ -1,3 +1,4 @@
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { CooksForm } from "@/features/cooking/ui/cook-together";
 
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/shared/ui/drawer";
@@ -35,11 +36,11 @@ function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
     <div>
       <CookingSession data={model.read} actions={model.actions} />
       <Drawer autoFocus open={model.againOpen} onOpenChange={model.setAgainOpen}>
-        <DrawerContent className="cooking-drawer" aria-describedby={undefined}>
+        <DrawerContent className={cookingStyles["cooking-drawer"]} aria-describedby={undefined}>
           <DrawerHeader>
             <DrawerTitle>Приготувати ще раз</DrawerTitle>
           </DrawerHeader>
-          <div className="cooking-drawer-body">
+          <div className={cookingStyles["cooking-drawer-body"]}>
             <CooksForm {...model.setupProps} />
           </div>
         </DrawerContent>
@@ -47,7 +48,7 @@ function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
       <CookingInvite {...model.inviteProps} />
       {model.helperProps && <CookingHelper {...model.helperProps} />}
       {model.error && (
-        <p className="cooking-action-error" role="alert">
+        <p className={cookingStyles["cooking-action-error"]} role="alert">
           {model.error}
         </p>
       )}

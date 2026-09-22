@@ -1,3 +1,4 @@
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowTurnBackwardIcon from "@hugeicons/core-free-icons/ArrowTurnBackwardIcon";
 import CheckmarkCircle02Icon from "@hugeicons/core-free-icons/CheckmarkCircle02Icon";
@@ -51,11 +52,15 @@ export function Timer({
             ? "Пауза"
             : "";
   return (
-    <div className="cooking-timer" data-fired={timer.status === "fired"} data-ended={ended}>
-      <div className="cooking-timer-display">
+    <div
+      className={cookingStyles["cooking-timer"]}
+      data-fired={timer.status === "fired"}
+      data-ended={ended}
+    >
+      <div className={cookingStyles["cooking-timer-display"]}>
         <strong>{timerLabel(timer, now)}</strong>
         <span
-          className="cooking-timer-label"
+          className={cookingStyles["cooking-timer-label"]}
           title={[status, timer.label].filter(Boolean).join(" · ")}
         >
           {status ? `${status} · ${timer.label}` : timer.label}
@@ -64,7 +69,7 @@ export function Timer({
           {status}
         </span>
       </div>
-      <div className="cooking-timer-controls">
+      <div className={cookingStyles["cooking-timer-controls"]}>
         <Button
           size="icon"
           variant="ghost"

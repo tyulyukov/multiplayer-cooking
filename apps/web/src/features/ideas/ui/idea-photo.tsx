@@ -1,3 +1,4 @@
+import styles from "@/features/ideas/ui/idea-card.module.scss";
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
@@ -19,7 +20,7 @@ export function IdeaPhoto({ idea }: { idea: Idea }) {
   }
 
   return (
-    <figure className="idea-photo">
+    <figure className={styles["idea-photo"]}>
       <img
         src={proxyConvexStorageUrl(idea.imageUrl)}
         alt={idea.title}
@@ -44,9 +45,9 @@ function IdeaImageNotice({ message }: { message?: string }) {
   }
 
   return (
-    <div className="idea-image-notice">
+    <div className={styles["idea-image-notice"]}>
       <KitchenIllustration name="serving-dome" />
-      <Alert variant="destructive" className="idea-image-error">
+      <Alert variant="destructive" className={styles["idea-image-error"]}>
         <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
         <div>
           <AlertTitle>Фото страви не завантажилося</AlertTitle>

@@ -1,3 +1,5 @@
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+import { cn } from "@/shared/lib/utils";
 import { Fragment, useState } from "react";
 import { CookingMarkdown } from "./cooking-markdown";
 import type { CookingActions, CookingRoomData, RoomTimer } from "@/features/cooking/model/types";
@@ -50,20 +52,23 @@ export function StepCard({
   return (
     <article
       id={`step-${step.id}`}
-      className={`cooking-step ${expanded ? "cooking-step-active" : ""}`}
+      className={cn(
+        cookingStyles["cooking-step"],
+        expanded && cookingStyles["cooking-step-active"],
+      )}
       data-state={runtime?.status ?? "pending"}
     >
-      <div className="cooking-step-rail">
+      <div className={cookingStyles["cooking-step-rail"]}>
         <span>{done ? "✓" : index}</span>
       </div>
-      <div className="cooking-step-content">
+      <div className={cookingStyles["cooking-step-content"]}>
         <button
-          className="cooking-step-heading"
+          className={cookingStyles["cooking-step-heading"]}
           onClick={onExpand}
           aria-expanded={expanded}
           aria-controls={`step-body-${step.id}`}
         >
-          <span className="cooking-step-owner">
+          <span className={cookingStyles["cooking-step-owner"]}>
             {title}
             {done ? " · Виконано" : active ? " · Готує" : waiting ? " · Очікує" : ""}
           </span>
@@ -72,11 +77,11 @@ export function StepCard({
         {expanded && (
           <div id={`step-body-${step.id}`}>
             {blockers.length > 0 && (
-              <p className="cooking-wait-reason">Чекаємо: {blockers.join(", ")}</p>
+              <p className={cookingStyles["cooking-wait-reason"]}>Чекаємо: {blockers.join(", ")}</p>
             )}
-            <CookingMarkdown text={step.body} className="cooking-step-body" />
+            <CookingMarkdown text={step.body} className={cookingStyles["cooking-step-body"]} />
             {step.temperature && (
-              <p className="cooking-temperature">
+              <p className={cookingStyles["cooking-temperature"]}>
                 {step.temperature.label}:{" "}
                 <strong>
                   {step.temperature.value} °{step.temperature.unit}
@@ -100,7 +105,7 @@ export function StepCard({
                 onRetry={() => actions.requestReference(step.id)}
               />
             )}
-            <div className="cooking-checklist">
+            <div className={cookingStyles["cooking-checklist"]}>
               {timers
                 .filter(
                   (timer) =>
@@ -147,7 +152,7 @@ export function StepCard({
               ))}
             </div>
             {step.confirmation && !done && (
-              <label className="cooking-confirm">
+              <label className={cookingStyles["cooking-confirm"]}>
                 <input
                   type="checkbox"
                   checked={confirmed}
@@ -189,7 +194,7 @@ export function StepCard({
                 timer.status === "running" || timer.status === "paused" || timer.status === "fired",
             )
             .map((timer) => (
-              <p className="cooking-inline-timer" key={timer._id}>
+              <p className={cookingStyles["cooking-inline-timer"]} key={timer._id}>
                 {timer.label} ·{" "}
                 {timer.status === "fired"
                   ? "Час перевірити"

@@ -1,3 +1,4 @@
+import styles from "@/shared/ui/photo-lightbox.module.scss";
 import { useState } from "react";
 
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
@@ -12,12 +13,12 @@ export function PhotoStrip({ urls, alt }: { urls: readonly string[]; alt: string
 
   return (
     <>
-      <div className="photo-strip" data-count={urls.length}>
+      <div className={styles["photo-strip"]} data-count={urls.length}>
         {urls.map((url, index) => (
           <button
             key={url}
             type="button"
-            className="photo-thumb"
+            className={styles["photo-thumb"]}
             aria-label={`Відкрити фото ${index + 1}`}
             onClick={() => setOpenUrl(url)}
           >
@@ -26,7 +27,7 @@ export function PhotoStrip({ urls, alt }: { urls: readonly string[]; alt: string
         ))}
       </div>
       <Dialog open={openUrl !== null} onOpenChange={(open) => !open && setOpenUrl(null)}>
-        <DialogContent className="photo-lightbox" aria-describedby={undefined}>
+        <DialogContent className={styles["photo-lightbox"]} aria-describedby={undefined}>
           <DialogTitle className="sr-only">{alt}</DialogTitle>
           {openUrl && <img src={openUrl} alt={alt} />}
         </DialogContent>

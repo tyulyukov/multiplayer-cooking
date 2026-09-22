@@ -1,4 +1,5 @@
-import "./cooking.css";
+import { cn } from "@/shared/lib/utils";
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import Home01Icon from "@hugeicons/core-free-icons/Home01Icon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -40,10 +41,14 @@ export function CookingSession({
     running,
   } = useCookingSession(data);
   return (
-    <main className="cooking-shell" data-lobby={inLobby} data-completion={showCompletion}>
+    <main
+      className={cookingStyles["cooking-shell"]}
+      data-lobby={inLobby}
+      data-completion={showCompletion}
+    >
       <div className="checker-band" aria-hidden />
-      <header className="page-frame topbar cooking-header">
-        <a href="/" className="brand cooking-brand">
+      <header className={cn(cookingStyles["cooking-header"], "page-frame topbar")}>
+        <a href="/" className={cn(cookingStyles["cooking-brand"], "brand")}>
           <i aria-hidden /> Multiplayer Cooking
         </a>
         <div className="flex items-center gap-2">
@@ -76,7 +81,7 @@ export function CookingSession({
         />
       ) : (
         <>
-          <section className="cooking-title">
+          <section className={cookingStyles["cooking-title"]}>
             <div className="sign">
               <h1 ref={instructionsHeading} tabIndex={-1}>
                 {data.room.source.title}
@@ -84,12 +89,12 @@ export function CookingSession({
             </div>
           </section>
           {!actions.online && (
-            <p className="cooking-offline" role="status">
+            <p className={cookingStyles["cooking-offline"]} role="status">
               Немає зв’язку. План і відлік доступні. Спільні дії стануть доступні після підключення.
             </p>
           )}
           {!inLobby && (
-            <div className="cooking-tools-row">
+            <div className={cookingStyles["cooking-tools-row"]}>
               {data.room.state === "done" && (
                 <Button variant="outline" size="chip" onClick={() => setInstructionsRoom(null)}>
                   До завершення
@@ -123,8 +128,8 @@ export function CookingSession({
             <CookingStatus title="План ще готується" body="Інструкції з’являться тут." />
           ) : (
             <>
-              <section className="cooking-timeline" aria-label="Увесь рецепт">
-                <div className="cooking-progress">
+              <section className={cookingStyles["cooking-timeline"]} aria-label="Увесь рецепт">
+                <div className={cookingStyles["cooking-progress"]}>
                   <span>
                     {completed} з {plan.steps.length} кроків
                   </span>
@@ -153,7 +158,7 @@ export function CookingSession({
               </section>
               {data.room.state === "cooking" && allDone && (
                 <Button
-                  className="cooking-finish"
+                  className={cookingStyles["cooking-finish"]}
                   size="xl"
                   disabled={!actions.online || actions.busy}
                   onClick={actions.finish}
@@ -162,7 +167,11 @@ export function CookingSession({
                 </Button>
               )}
               {running.length > 0 && (
-                <aside className="cooking-timer-dock" aria-label="Активні таймери">
+                <aside
+                  className={cookingStyles["cooking-timer-dock"]}
+                  data-timer-dock
+                  aria-label="Активні таймери"
+                >
                   {running.map((timer) => (
                     <button
                       key={timer._id}

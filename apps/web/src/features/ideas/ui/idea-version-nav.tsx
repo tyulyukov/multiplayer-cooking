@@ -1,3 +1,4 @@
+import styles from "@/features/ideas/ui/idea-card.module.scss";
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import UndoIcon from "@hugeicons/core-free-icons/UndoIcon";
@@ -15,7 +16,7 @@ export function VersionNav({ versions }: { versions: IdeaVersions }) {
   const latest = versions.index === versions.count - 1;
 
   return (
-    <nav className="version-nav" aria-label="Версії ідеї">
+    <nav className={styles["version-nav"]} aria-label="Версії ідеї">
       <Button
         type="button"
         variant="ghost"
@@ -26,7 +27,7 @@ export function VersionNav({ versions }: { versions: IdeaVersions }) {
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={1.5} aria-hidden />
       </Button>
-      <span className="version-label">
+      <span className={styles["version-label"]}>
         Версія {versions.index + 1} з {versions.count}
       </span>
       <Button
@@ -39,7 +40,7 @@ export function VersionNav({ versions }: { versions: IdeaVersions }) {
       >
         <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={1.5} aria-hidden />
       </Button>
-      <div className="version-restore" data-available={!latest}>
+      <div className={styles["version-restore"]} data-available={!latest}>
         <Button
           type="button"
           variant="outline"

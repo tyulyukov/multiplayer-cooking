@@ -1,3 +1,4 @@
+import styles from "@/features/silpo/ui/silpo-connect.module.scss";
 import Location01Icon from "@hugeicons/core-free-icons/Location01Icon";
 import Store01Icon from "@hugeicons/core-free-icons/Store01Icon";
 import Unlink01Icon from "@hugeicons/core-free-icons/Unlink01Icon";
@@ -19,8 +20,8 @@ import {
 
 export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () => void }) {
   return (
-    <section className="connect-card" aria-label="Підключення Сільпо">
-      <KitchenIllustration name="starter-sign" className="connect-illustration" />
+    <section className={styles["connect-card"]} aria-label="Підключення Сільпо">
+      <KitchenIllustration name="starter-sign" className={styles["connect-illustration"]} />
       <h1>Що приготуємо сьогодні?</h1>
       <Button
         type="button"
@@ -33,7 +34,7 @@ export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () 
         <HugeiconsIcon icon={Store01Icon} className="size-5" strokeWidth={1.5} aria-hidden />
         {busy ? "Відкриваємо Сільпо…" : "Підключити Сільпо"}
       </Button>
-      <p className="connect-note">Вхід за номером телефону на сайті Сільпо.</p>
+      <p className={styles["connect-note"]}>Вхід за номером телефону на сайті Сільпо.</p>
     </section>
   );
 }
@@ -54,13 +55,13 @@ export function ProfileMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" size="chip" className="profile-trigger">
+        <Button type="button" variant="outline" size="chip" className={styles["profile-trigger"]}>
           <HugeiconsIcon icon={UserCircleIcon} strokeWidth={1.5} aria-hidden />
           <span>{title}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="profile-menu">
-        <div className="profile-label">
+      <DropdownMenuContent align="end" className={styles["profile-menu"]}>
+        <div className={styles["profile-label"]}>
           <strong>{connection.name ?? "Акаунт Сільпо"}</strong>
         </div>
         {connection.phone && <RedactedContact value={connection.phone} kind="phone" />}
@@ -105,7 +106,7 @@ function RedactedContact({ value, kind }: { value: string; kind: "phone" | "emai
 
   return (
     <DropdownMenuItem
-      className="profile-contact"
+      className={styles["profile-contact"]}
       data-kind={kind}
       aria-label={revealed ? `Сховати ${label}: ${value}` : `Показати ${label}`}
       onSelect={(event) => {

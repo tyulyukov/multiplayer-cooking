@@ -1,3 +1,4 @@
+// Scoped product styles. Shared application primitives stay global.
 .helper-launcher {
   position: fixed;
   right: max(16px, env(safe-area-inset-right));
@@ -11,7 +12,7 @@
 .helper-launcher[data-open="true"] {
   visibility: hidden;
 }
-body:has(.cooking-timer-dock) .helper-launcher {
+body:has([data-timer-dock]) .helper-launcher {
   bottom: calc(86px + env(safe-area-inset-bottom));
 }
 .helper-launcher > svg,
@@ -167,26 +168,26 @@ body:has(.cooking-timer-dock) .helper-launcher {
 .helper-message-user .helper-message-author {
   color: var(--teal);
 }
-.helper-window .markdown {
+.helper-window :global(.markdown) {
   font-size: 15px;
   line-height: 1.6;
 }
-.helper-window .markdown > :first-child {
+.helper-window :global(.markdown) > :first-child {
   margin-top: 0;
 }
-.helper-window .markdown > :last-child {
+.helper-window :global(.markdown) > :last-child {
   margin-bottom: 0;
 }
-.helper-window .markdown h1,
-.helper-window .markdown h2,
-.helper-window .markdown h3 {
+.helper-window :global(.markdown) h1,
+.helper-window :global(.markdown) h2,
+.helper-window :global(.markdown) h3 {
   font: 600 17px/1.4 var(--font-sans);
 }
-.helper-window .markdown pre {
+.helper-window :global(.markdown) pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.helper-window .markdown table {
+.helper-window :global(.markdown) table {
   display: block;
   max-width: 100%;
   overflow-x: auto;
@@ -292,26 +293,26 @@ body:has(.cooking-timer-dock) .helper-launcher {
 .helper-retry {
   margin-bottom: 8px;
 }
-.helper-window .composer {
+.helper-window [data-mode] {
   flex: none;
   margin: 0;
   gap: 4px;
   padding: 10px;
   border-radius: 18px;
 }
-.helper-window .request-textarea {
+.helper-window [name="request"] {
   min-height: 42px;
   max-height: min(100px, 18dvh);
   font-size: 16px;
   line-height: 1.5;
 }
-.helper-window .composer-actions {
+.helper-window [data-composer-actions] {
   gap: 8px;
 }
-.helper-window .composer-attachments {
+.helper-window [data-composer-attachments] {
   margin: 4px 0;
 }
-.helper-window .composer-attachments [data-slot="attachment"] {
+.helper-window [data-composer-attachments] [data-slot="attachment"] {
   width: 56px;
   height: 56px;
 }

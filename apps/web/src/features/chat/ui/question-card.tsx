@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/features/chat/ui/question-card.module.scss";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
@@ -29,14 +31,14 @@ export function QuestionSummary({
   answer: QuestionAnswer;
 }) {
   return (
-    <section className="question-card" data-answered aria-label="Твої відповіді">
+    <section className={styles["question-card"]} data-answered aria-label="Твої відповіді">
       {input.questions.map((question) => {
         const value = answer.answers.find((item) => item.questionId === question.id);
         if (!value) return null;
         return (
           <div key={question.id}>
-            <p className="question-title">{question.question}</p>
-            <p className="question-answer">
+            <p className={styles["question-title"]}>{question.question}</p>
+            <p className={styles["question-answer"]}>
               {[...value.selected, ...(value.custom ? [value.custom] : [])].join(", ")}
             </p>
           </div>
@@ -116,7 +118,7 @@ export function QuestionCard({
   return (
     <Questionnaire
       ref={formRef}
-      className="question-card composer-questionnaire"
+      className={cn(styles["question-card"], styles["composer-questionnaire"])}
       aria-label="Уточнення до страви"
       item={current}
       onItemChange={(id) => {
@@ -134,7 +136,7 @@ export function QuestionCard({
     >
       <button
         type="button"
-        className="question-progress"
+        className={styles["question-progress"]}
         aria-expanded={!collapsed}
         aria-label={collapsed ? "Розгорнути питання" : "Згорнути питання"}
         onClick={() => {
@@ -148,7 +150,7 @@ export function QuestionCard({
         </span>
         <HugeiconsIcon icon={ArrowDown01Icon} size={16} strokeWidth={1.5} aria-hidden />
       </button>
-      <div className="question-viewport" hidden={collapsed}>
+      <div className={styles["question-viewport"]} hidden={collapsed}>
         {input.questions.map((question) => (
           <QuestionnaireItem
             key={question.id}
@@ -157,7 +159,9 @@ export function QuestionCard({
             required
             disabled={pending}
           >
-            <QuestionnaireTitle className="question-title">{question.question}</QuestionnaireTitle>
+            <QuestionnaireTitle className={styles["question-title"]}>
+              {question.question}
+            </QuestionnaireTitle>
             <QuestionnaireDescription>
               {question.allowMultiple ? "Обери всі варіанти, які підходять" : "Обери один варіант"}
             </QuestionnaireDescription>
@@ -172,7 +176,7 @@ export function QuestionCard({
                   }}
                 >
                   {option.label}
-                  <span className="question-option-marker" aria-hidden>
+                  <span className={styles["question-option-marker"]} aria-hidden>
                     <span>{index + 1}</span>
                     <HugeiconsIcon icon={Tick02Icon} size={16} strokeWidth={2} />
                   </span>
@@ -199,10 +203,10 @@ export function QuestionCard({
       </div>
       <QuestionnaireActions>
         <QuestionnairePrevious disabled={pending}>Назад</QuestionnairePrevious>
-        <QuestionnaireNext disabled={pending} className="question-next">
+        <QuestionnaireNext disabled={pending} className={styles["question-next"]}>
           Далі
         </QuestionnaireNext>
-        <QuestionnaireSubmit disabled={pending} className="question-next">
+        <QuestionnaireSubmit disabled={pending} className={styles["question-next"]}>
           {pending ? "Надсилаємо…" : "Надіслати"}
         </QuestionnaireSubmit>
       </QuestionnaireActions>

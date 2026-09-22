@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/pages/home/home-page.module.scss";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 
@@ -60,12 +62,12 @@ export function ChatScreen(props: ChatScreenProps) {
   ) : null;
 
   return (
-    <main className="app-shell chat-shell" data-idea-open={showIdea}>
+    <main className={cn(styles["chat-shell"], "app-shell")} data-idea-open={showIdea}>
       <div className="checker-band" aria-hidden />
-      <div className="chat-frame">
-        <header className="topbar chat-topbar">
+      <div className={styles["chat-frame"]}>
+        <header className={cn(styles["chat-topbar"], "topbar")}>
           <Brand ready={backendReady} />
-          <div className="topbar-actions">
+          <div className={styles["topbar-actions"]}>
             <Button type="button" variant="outline" size="chip" onClick={onNew}>
               <HugeiconsIcon icon={PlusSignIcon} strokeWidth={1.5} aria-hidden />
               Нова
@@ -74,8 +76,8 @@ export function ChatScreen(props: ChatScreenProps) {
           </div>
         </header>
 
-        <div className="chat-layout">
-          <section className="chat-column" aria-label="Розмова">
+        <div className={styles["chat-layout"]}>
+          <section className={styles["chat-column"]} aria-label="Розмова">
             <ChatThread messages={messages} working={working} onOpenMemories={onOpenMemories}>
               {showAddressPrompt && (
                 <AddressPrompt
@@ -124,7 +126,8 @@ export function ChatScreen(props: ChatScreenProps) {
           </section>
           {desktop && (
             <aside
-              className="idea-column t-panel-slide"
+              data-idea-column
+              className={cn(styles["idea-column"], styles["t-panel-slide"])}
               aria-label="Ідея"
               data-open={showIdea}
               inert={!showIdea}
@@ -134,7 +137,7 @@ export function ChatScreen(props: ChatScreenProps) {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="idea-hide"
+                  className={styles["idea-hide"]}
                   aria-label="Приховати ідею"
                   onClick={() => setHidden(true)}
                 >
@@ -148,11 +151,11 @@ export function ChatScreen(props: ChatScreenProps) {
       </div>
       {!desktop && (
         <Drawer open={mobileOpen && Boolean(visibleIdea)} onOpenChange={setMobileOpen}>
-          <DrawerContent className="mobile-idea-drawer" aria-describedby={undefined}>
+          <DrawerContent className={styles["mobile-idea-drawer"]} aria-describedby={undefined}>
             <DrawerHeader>
               <DrawerTitle>Страва і товари</DrawerTitle>
             </DrawerHeader>
-            <div className="mobile-idea-scroll">{pane}</div>
+            <div className={styles["mobile-idea-scroll"]}>{pane}</div>
           </DrawerContent>
         </Drawer>
       )}

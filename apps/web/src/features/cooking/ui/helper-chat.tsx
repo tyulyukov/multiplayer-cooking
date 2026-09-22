@@ -1,3 +1,5 @@
+import styles from "@/features/cooking/ui/cooking-helper.module.scss";
+import { cn } from "@/shared/lib/utils";
 import ArrowDown02Icon from "@hugeicons/core-free-icons/ArrowDown02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Composer } from "@/shared/ui/composer/composer";
@@ -75,7 +77,7 @@ export function HelperChat({
 }: HelperChatProps) {
   return (
     <>
-      <label className="helper-context">
+      <label className={styles["helper-context"]}>
         <span>Про що говоримо</span>
         <select
           aria-label="Крок для помічника"
@@ -92,7 +94,7 @@ export function HelperChat({
       </label>
       <div
         ref={scrollRef}
-        className="helper-conversation"
+        className={styles["helper-conversation"]}
         role="log"
         aria-label="Розмова з помічником"
         aria-live="polite"
@@ -103,14 +105,14 @@ export function HelperChat({
           setNearBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 60);
         }}
       >
-        {!loaded && <p className="helper-muted">Завантажуємо розмову…</p>}
+        {!loaded && <p className={styles["helper-muted"]}>Завантажуємо розмову…</p>}
         {loaded && entries.length === 0 && (
-          <div className="helper-welcome">
+          <div className={styles["helper-welcome"]}>
             <p>
               {context ? `Допоможу з кроком «${context.title}».` : "Допоможу під час готування."}{" "}
               Запитай, що незрозуміло, або покажи фото.
             </p>
-            <div className="helper-suggestions">
+            <div className={styles["helper-suggestions"]}>
               {["Хочу замінити інгредієнт", "Як зрозуміти, що готово?"].map((text) => (
                 <Button
                   key={text}
@@ -131,15 +133,15 @@ export function HelperChat({
           entry.kind === "message" ? (
             <div
               key={entry.value._id}
-              className={`helper-message helper-message-${entry.value.role}`}
+              className={cn(styles["helper-message"], styles[`helper-message-${entry.value.role}`])}
             >
-              <span className="helper-message-author">
+              <span className={styles["helper-message-author"]}>
                 {entry.value.role === "assistant"
                   ? "Помічник"
                   : (entry.value.authorName ?? "Кухар")}
               </span>
               {entry.value.attachmentUrls && entry.value.attachmentUrls.length > 0 && (
-                <div className="helper-message-photos">
+                <div className={styles["helper-message-photos"]}>
                   {entry.value.attachmentUrls.map((url) => (
                     <a
                       key={url}
@@ -183,14 +185,19 @@ export function HelperChat({
           ),
         )}
       </div>
-      <footer className="helper-footer">
+      <footer className={styles["helper-footer"]}>
         {!nearBottom && (
-          <Button className="helper-latest" variant="outline" size="chip" onClick={scrollToLatest}>
+          <Button
+            className={styles["helper-latest"]}
+            variant="outline"
+            size="chip"
+            onClick={scrollToLatest}
+          >
             <HugeiconsIcon icon={ArrowDown02Icon} size={16} strokeWidth={1.5} aria-hidden />
             До останнього повідомлення
           </Button>
         )}
-        <div className="helper-status" role="status">
+        <div className={styles["helper-status"]} role="status">
           {busy ? (
             <>
               <Spinner />
@@ -204,7 +211,7 @@ export function HelperChat({
           ) : null}
         </div>
         {(!online || error || helperError || attachmentError) && (
-          <p className="helper-error" role="alert">
+          <p className={styles["helper-error"]} role="alert">
             {!online
               ? "Немає з’єднання. Повідомлення можна надіслати, коли воно відновиться."
               : (error ??
@@ -217,7 +224,7 @@ export function HelperChat({
           <Button
             variant="outline"
             size="chip"
-            className="helper-retry"
+            className={styles["helper-retry"]}
             disabled={!online || busy}
             onClick={() => {
               scrollToLatest();
@@ -228,7 +235,7 @@ export function HelperChat({
           </Button>
         )}
         {finished ? (
-          <p className="helper-muted">Готування завершено. Розмова збережена тут.</p>
+          <p className={styles["helper-muted"]}>Готування завершено. Розмова збережена тут.</p>
         ) : (
           <Composer
             mode="helper"

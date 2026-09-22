@@ -1,3 +1,4 @@
+import styles from "@/features/cooking/ui/cooking-helper.module.scss";
 import type { CookingRoomData, HelperProposal } from "@/features/cooking/model/types";
 import { Button } from "@/shared/ui/button";
 import { CookingMarkdown } from "./cooking-markdown";
@@ -28,7 +29,7 @@ export function HelperProposalCard({
     (item) => !proposal.plan.ingredients.some((next) => next.id === item.id),
   );
   return (
-    <article className="helper-proposal" aria-label="Зміни до рецепта">
+    <article className={styles["helper-proposal"]} aria-label="Зміни до рецепта">
       <strong>
         {proposal.status === "approved" ? "Рецепт оновлено" : "Пропоную змінити рецепт"}
       </strong>
@@ -37,7 +38,7 @@ export function HelperProposalCard({
         <>
           <details>
             <summary>Що зміниться</summary>
-            <div className="helper-proposal-details">
+            <div className={styles["helper-proposal-details"]}>
               {proposal.plan.servings !== currentPlan.servings && (
                 <p>Порцій буде: {proposal.plan.servings}</p>
               )}
@@ -66,7 +67,7 @@ export function HelperProposalCard({
                 ))}
             </div>
           </details>
-          <div className="helper-proposal-actions">
+          <div className={styles["helper-proposal-actions"]}>
             <Button disabled={disabled} onClick={onApprove}>
               Застосувати зміни
             </Button>
@@ -77,13 +78,15 @@ export function HelperProposalCard({
         </>
       )}
       {proposal.status === "approved" && (
-        <p className="helper-receipt">Зміни вже бачать усі кухарі.</p>
+        <p className={styles["helper-receipt"]}>Зміни вже бачать усі кухарі.</p>
       )}
       {proposal.status === "rejected" && (
-        <p className="helper-receipt">Залишили рецепт без змін.</p>
+        <p className={styles["helper-receipt"]}>Залишили рецепт без змін.</p>
       )}
       {proposal.status === "stale" && (
-        <p className="helper-receipt">Ви вже просунулися далі. Попроси оновити цю пропозицію.</p>
+        <p className={styles["helper-receipt"]}>
+          Ви вже просунулися далі. Попроси оновити цю пропозицію.
+        </p>
       )}
     </article>
   );

@@ -1,0 +1,168 @@
+// Styles local to this component boundary.
+.connect-illustration {
+  width: 132px;
+  height: 140px;
+}
+
+.connect-card {
+  display: grid;
+  gap: 24px;
+  justify-items: center;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.connect-card h1 {
+  margin: 0 0 12px;
+  font: 600 clamp(2rem, 3.2vw, 2.75rem) / 1.2 var(--font-sign);
+}
+
+.starter-screen {
+  min-height: max(760px, 100svh);
+  background-image: url("/images/starter-kitchen-mobile.webp");
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+}
+
+.starter-screen :global(.checker-band) {
+  height: calc(28px + env(safe-area-inset-top));
+  background-size: 28px 28px;
+}
+
+.starter-screen :global(.home-layout) {
+  max-width: 680px;
+}
+
+@media (min-width: 640px) {
+  .starter-screen {
+    min-height: max(800px, 100svh);
+    background-image: url("/images/starter-kitchen-tablet.webp");
+  }
+
+  .connect-card {
+    margin-top: 28px;
+  }
+
+  .connect-illustration {
+    width: 160px;
+    height: 164px;
+  }
+
+  .connect-card :global(.generate-button) {
+    min-width: 320px;
+  }
+}
+
+.connect-card .connect-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+@media (min-width: 1200px) {
+  .starter-screen {
+    background-image: url("/images/starter-kitchen.webp");
+    background-image: image-set(
+      url("/images/starter-kitchen.webp") 1x,
+      url("/images/starter-kitchen-retina.webp") 2x
+    );
+  }
+}
+
+.profile-trigger {
+  max-width: 200px;
+}
+
+.profile-trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Two chips and the brand do not fit at 390px: the name shows from 640px. */
+@media (max-width: 639px) {
+  .profile-trigger span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+.profile-menu {
+  width: max-content;
+  min-width: min(260px, calc(100vw - 24px));
+  max-width: min(360px, calc(100vw - 24px));
+  border: 2px solid var(--foreground);
+  border-radius: 14px;
+  padding: 6px;
+}
+
+.profile-menu [role="menuitem"] {
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.profile-menu [role="menuitem"] svg {
+  color: var(--teal-deep);
+}
+
+.profile-menu [role="menuitem"][data-variant="destructive"] svg {
+  color: inherit;
+}
+
+.profile-label {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+}
+
+.profile-label strong {
+  font-family: var(--font-sign);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.profile-label span {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.profile-menu .profile-contact {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.profile-contact > span:first-child {
+  flex-shrink: 0;
+}
+
+.profile-contact > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-contact[data-kind="phone"] > span:last-child {
+  white-space: nowrap;
+}
+
+.profile-contact span[data-hidden="true"] {
+  filter: blur(3px);
+  user-select: none;
+}
+
+.profile-contact:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}

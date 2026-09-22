@@ -1,3 +1,4 @@
+import styles from "@/features/personalization/ui/personal-settings.module.scss";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
 import type { AgentSettings } from "@/features/personalization/model/types";
@@ -21,7 +22,7 @@ export function AgentSettingsForm({
   loading,
 }: Props) {
   return (
-    <section className="personal-settings__form">
+    <section className={styles["personal-settings__form"]}>
       <label>
         Твоє ім’я на кухні
         <Input
@@ -35,7 +36,7 @@ export function AgentSettingsForm({
       </label>
       <fieldset>
         <legend>Тон агента</legend>
-        <div className="personal-settings__tone-options">
+        <div className={styles["personal-settings__tone-options"]}>
           {tones.map((tone) => (
             <label key={tone.value} data-selected={draft.tone === tone.value}>
               <input

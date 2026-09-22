@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/shared/ui/composer/composer.module.scss";
 import ArrowUp02Icon from "@hugeicons/core-free-icons/ArrowUp02Icon";
 import CookingPotIcon from "@hugeicons/core-free-icons/CookingPotIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -46,7 +48,7 @@ export function ComposerSubmit({
             >
               <HugeiconsIcon
                 icon={CookingPotIcon}
-                className="size-5 pot-icon"
+                className={cn(styles["pot-icon"], "size-5")}
                 strokeWidth={1.5}
                 aria-hidden
               />
@@ -66,7 +68,7 @@ export function ComposerSubmit({
               }
               aria-label={busy ? "Готуємо відповідь…" : "Надіслати"}
               aria-busy={busy}
-              className="send-button"
+              className={styles["send-button"]}
             >
               {busy ? (
                 <Spinner className="size-5" />

@@ -1,3 +1,4 @@
+import styles from "@/features/personalization/ui/personal-settings.module.scss";
 import AiBrain01Icon from "@hugeicons/core-free-icons/AiBrain01Icon";
 import LaptopIcon from "@hugeicons/core-free-icons/LaptopIcon";
 import UserSettings02Icon from "@hugeicons/core-free-icons/UserSettings02Icon";
@@ -6,7 +7,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 
-import "./personal-settings.css";
 import type { PersonalSettingsProps } from "../model/personal-settings-types";
 import { usePersonalSettings } from "../model/use-personal-settings";
 import { PersonalMemories } from "./personal-memories";
@@ -26,8 +26,8 @@ export function PersonalSettings(props: PersonalSettingsProps) {
   } = model;
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="personal-settings" aria-describedby={undefined}>
-        <DialogHeader className="personal-settings__header">
+      <DialogContent className={styles["personal-settings"]} aria-describedby={undefined}>
+        <DialogHeader className={styles["personal-settings__header"]}>
           <DialogTitle>
             {activeTab === "memories"
               ? "Що агент пам'ятає про тебе"
@@ -36,7 +36,7 @@ export function PersonalSettings(props: PersonalSettingsProps) {
                 : "Клавіатура в чаті"}
           </DialogTitle>
         </DialogHeader>
-        <div className="personal-settings__tabs" aria-label="Профіль">
+        <div className={styles["personal-settings__tabs"]} aria-label="Профіль">
           <button
             type="button"
             aria-pressed={activeTab === "memories"}
@@ -64,7 +64,7 @@ export function PersonalSettings(props: PersonalSettingsProps) {
             </button>
           ) : null}
         </div>
-        <div className="personal-settings__body">
+        <div className={styles["personal-settings__body"]}>
           {activeTab === "memories" ? (
             <PersonalMemories loading={loading} {...model} />
           ) : activeTab === "settings" ? (
@@ -74,7 +74,7 @@ export function PersonalSettings(props: PersonalSettingsProps) {
           )}
         </div>
         <div
-          className="personal-settings__save-status"
+          className={styles["personal-settings__save-status"]}
           data-state={saveState}
           aria-live={activeTab === "settings" ? "polite" : undefined}
         >

@@ -1,3 +1,4 @@
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
@@ -21,7 +22,7 @@ export function CookingStatus({
 }) {
   const [failed, setFailed] = useState(false);
   return (
-    <section className="cooking-status">
+    <section className={cookingStyles["cooking-status"]}>
       {image && !failed && (
         <img
           src={`/images/${image}`}
@@ -32,7 +33,7 @@ export function CookingStatus({
         />
       )}
       <div role={loading ? "status" : undefined}>
-        {loading && <Spinner className="cooking-generation-spinner" />}
+        {loading && <Spinner className={cookingStyles["cooking-generation-spinner"]} />}
         <h2>{title}</h2>
         <p>{body}</p>
       </div>

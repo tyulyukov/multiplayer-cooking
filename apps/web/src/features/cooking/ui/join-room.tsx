@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import type { SessionId } from "convex-helpers/server/sessions";
 import { useState } from "react";
 
@@ -57,7 +59,7 @@ export function JoinRoom({
   }
 
   return (
-    <main className="cooking-shell cooking-join">
+    <main className={cn(cookingStyles["cooking-shell"], cookingStyles["cooking-join"])}>
       <div className="checker-band" aria-hidden />
       <header className="topbar page-frame">
         <a href="/" className="brand">

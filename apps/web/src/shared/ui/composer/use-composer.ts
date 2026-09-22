@@ -9,6 +9,7 @@ import { useComposerShortcut } from "@/shared/hooks/use-composer-shortcut";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 import type { ComposerProps } from "./types";
+import styles from "./composer.module.scss";
 const counterThreshold = Math.floor(AI_REQUEST_MAX_CHARACTERS * 0.8);
 const shakeDurationMs = 300;
 
@@ -64,10 +65,10 @@ export function useComposer({
       return;
     }
 
-    composer.classList.remove("is-shaking");
+    composer.classList.remove(styles["is-shaking"]);
     void composer.offsetWidth;
-    composer.classList.add("is-shaking");
-    window.setTimeout(() => composer.classList.remove("is-shaking"), shakeDurationMs);
+    composer.classList.add(styles["is-shaking"]);
+    window.setTimeout(() => composer.classList.remove(styles["is-shaking"]), shakeDurationMs);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {

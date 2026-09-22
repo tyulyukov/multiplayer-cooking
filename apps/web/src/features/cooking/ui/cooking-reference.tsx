@@ -1,3 +1,5 @@
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+import { cn } from "@/shared/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import type { CookingRoomData } from "@/features/cooking/model/types";
 import { Button } from "@/shared/ui/button";
@@ -31,7 +33,7 @@ export function CookingReference({
 
   if (failed)
     return (
-      <p className="cooking-image-error" role="alert">
+      <p className={cookingStyles["cooking-image-error"]} role="alert">
         Зображення не завантажилось.{" "}
         <Button
           size="chip"
@@ -52,13 +54,18 @@ export function CookingReference({
   // shows the static grid and the caption, so a reload never looks like another generation.
   if (imageUrl || status === "pending")
     return (
-      <figure className={`cooking-reference-figure ${loaded ? "is-revealed" : ""}`}>
-        <div className="cooking-reference-slot">
+      <figure
+        className={cn(
+          cookingStyles["cooking-reference-figure"],
+          loaded && cookingStyles["is-revealed"],
+        )}
+      >
+        <div className={cookingStyles["cooking-reference-slot"]}>
           {showPlaceholder && <ReferencePlaceholder animate={!imageUrl} />}
           {imageUrl && (
             <img
               key={attempt}
-              className="cooking-reference"
+              className={cookingStyles["cooking-reference"]}
               src={proxyConvexStorageUrl(imageUrl)}
               alt={alt}
               decoding="async"
@@ -81,7 +88,7 @@ export function CookingReference({
     );
 
   return (
-    <p className="cooking-image-error">
+    <p className={cookingStyles["cooking-image-error"]}>
       {status === "error"
         ? "Не вдалося створити зображення."
         : "Для цього кроку є візуальна підказка."}{" "}
@@ -174,5 +181,7 @@ function ReferencePlaceholder({ animate }: { animate: boolean }) {
     };
   }, [animate]);
 
-  return <canvas className="cooking-reference-placeholder" ref={canvas} aria-hidden />;
+  return (
+    <canvas className={cookingStyles["cooking-reference-placeholder"]} ref={canvas} aria-hidden />
+  );
 }

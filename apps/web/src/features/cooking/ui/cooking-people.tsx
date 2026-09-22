@@ -1,4 +1,5 @@
-import "./cooking-people.css";
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+import styles from "@/features/cooking/ui/cooking-people.module.scss";
 import MoreHorizontalIcon from "@hugeicons/core-free-icons/MoreHorizontalIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 
@@ -51,29 +52,32 @@ export function People({
 
   return (
     <Drawer autoFocus open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="cooking-people-drawer" aria-describedby={undefined}>
+      <DrawerContent
+        className={cookingStyles["cooking-people-drawer"]}
+        aria-describedby={undefined}
+      >
         <DrawerHeader>
           <DrawerTitle>Кухарі</DrawerTitle>
         </DrawerHeader>
-        <section className="cooking-people">
+        <section className={styles["cooking-people"]}>
           {error && (
-            <p className="cooking-people-error" role="alert">
+            <p className={styles["cooking-people-error"]} role="alert">
               {error}
             </p>
           )}
-          <ul className="cooking-people-list" aria-label="Учасники кухні">
+          <ul className={styles["cooking-people-list"]} aria-label="Учасники кухні">
             {room.members.map((member) => {
               const mine = member._id === room.me._id;
               const canManage = !done && !mine;
               return (
-                <li className="cooking-people-member" key={member._id}>
-                  <span className="cooking-people-avatar" data-mine={mine} aria-hidden>
+                <li className={styles["cooking-people-member"]} key={member._id}>
+                  <span className={styles["cooking-people-avatar"]} data-mine={mine} aria-hidden>
                     {member.name.slice(0, 1)}
                   </span>
-                  <span className="cooking-people-member-copy">
+                  <span className={styles["cooking-people-member-copy"]}>
                     <strong>
                       {member.name}
-                      {mine && <small className="cooking-people-me">Ти</small>}
+                      {mine && <small className={styles["cooking-people-me"]}>Ти</small>}
                     </strong>
                     <span>
                       {member.role === "host" && "Господар · "}
@@ -92,7 +96,7 @@ export function People({
                           <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={1.5} aria-hidden />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="cooking-people-menu">
+                      <DropdownMenuContent align="end" className={styles["cooking-people-menu"]}>
                         <DropdownMenuItem disabled={disabled} onSelect={() => onSwap(member._id)}>
                           Помінятися місцями
                         </DropdownMenuItem>
@@ -123,7 +127,7 @@ export function People({
           </ul>
 
           {!done && vacantSlots.length > 0 && (
-            <div className="cooking-people-places">
+            <div className={styles["cooking-people-places"]}>
               <span>Вільні місця</span>
               <div>
                 {vacantSlots.map((slot) => (
@@ -147,7 +151,7 @@ export function People({
               (member) => member._id === room.me._id || member.slots.length === 0,
             ) && (
               <Button
-                className="cooking-people-alone"
+                className={styles["cooking-people-alone"]}
                 disabled={disabled}
                 size="sm"
                 variant="ghost"
@@ -159,7 +163,7 @@ export function People({
 
           {!done && !host && (
             <Button
-              className="cooking-people-leave"
+              className={styles["cooking-people-leave"]}
               disabled={disabled}
               size="sm"
               variant="ghost"
@@ -170,7 +174,7 @@ export function People({
           )}
 
           {host && !done && (
-            <footer className="cooking-people-footer">
+            <footer className={styles["cooking-people-footer"]}>
               <Button disabled={disabled} size="xl" onClick={onRotateInvite}>
                 Запросити кухарів
               </Button>

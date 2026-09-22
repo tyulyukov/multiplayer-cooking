@@ -23,7 +23,7 @@ function render(overrides: Partial<ComposerProps> = {}) {
 }
 
 function sendButton(html: string) {
-  const button = html.match(/<button[^>]*class="[^"]*send-button[^"]*"[^>]*>/)?.[0];
+  const button = html.match(/<button[^>]*aria-label="Надіслати"[^>]*>/)?.[0];
   expect(button).toBeDefined();
   return button!;
 }

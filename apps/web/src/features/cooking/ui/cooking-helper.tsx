@@ -1,3 +1,4 @@
+import styles from "@/features/cooking/ui/cooking-helper.module.scss";
 import BubbleChatIcon from "@hugeicons/core-free-icons/BubbleChatIcon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -6,7 +7,6 @@ import { Button } from "@/shared/ui/button";
 import { Dialog, DialogClose, DialogTitle, DialogTrigger } from "@/shared/ui/dialog";
 import { Spinner } from "@/shared/ui/spinner";
 
-import "./cooking-helper.css";
 import type { CookingHelperProps } from "../model/helper-types";
 import { useCookingHelper } from "../model/use-cooking-helper";
 import { HelperChat } from "./helper-chat";
@@ -41,7 +41,7 @@ export function CookingHelper(props: CookingHelperProps) {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="helper-launcher"
+          className={styles["helper-launcher"]}
           aria-label="Відкрити помічника"
           data-open={open}
         >
@@ -50,15 +50,15 @@ export function CookingHelper(props: CookingHelperProps) {
           {helperBusy ? (
             <Spinner />
           ) : unread ? (
-            <span className="helper-unread-dot" aria-hidden />
+            <span className={styles["helper-unread-dot"]} aria-hidden />
           ) : null}
         </Button>
       </DialogTrigger>
       <DialogPrimitive.Portal>
-        {mobile && <DialogPrimitive.Overlay className="helper-backdrop" />}
+        {mobile && <DialogPrimitive.Overlay className={styles["helper-backdrop"]} />}
         <DialogPrimitive.Content
           ref={contentRef}
-          className="helper-window"
+          className={styles["helper-window"]}
           aria-describedby={undefined}
           onInteractOutside={(event) => {
             if (!mobile) event.preventDefault();
@@ -71,7 +71,7 @@ export function CookingHelper(props: CookingHelperProps) {
             else contentRef.current?.querySelector("textarea")?.focus({ preventScroll: true });
           }}
         >
-          <header className="helper-header">
+          <header className={styles["helper-header"]}>
             <HugeiconsIcon icon={BubbleChatIcon} size={24} strokeWidth={1.5} aria-hidden />
             <DialogTitle>Помічник</DialogTitle>
             <DialogClose asChild>
@@ -80,7 +80,7 @@ export function CookingHelper(props: CookingHelperProps) {
               </Button>
             </DialogClose>
           </header>
-          <div className="helper-tabs" aria-label="Розділи помічника">
+          <div className={styles["helper-tabs"]} aria-label="Розділи помічника">
             <Button
               variant="ghost"
               size="chip"

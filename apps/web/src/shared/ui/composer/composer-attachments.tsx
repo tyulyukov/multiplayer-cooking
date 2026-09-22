@@ -1,3 +1,4 @@
+import styles from "@/shared/ui/composer/composer.module.scss";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 
@@ -18,7 +19,11 @@ export function ComposerAttachments({
   return (
     <>
       {attachments.length > 0 && (
-        <AttachmentGroup className="composer-attachments" aria-label="Додані фото">
+        <AttachmentGroup
+          className={styles["composer-attachments"]}
+          data-composer-attachments
+          aria-label="Додані фото"
+        >
           {attachments.map((item) => (
             <Attachment key={item.id} state={item.state} size="sm" orientation="vertical">
               <AttachmentMedia variant="image">

@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import styles from "@/features/ideas/ui/idea-card.module.scss";
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
@@ -17,7 +19,7 @@ export { IdeaCompact } from "./idea-compact";
 
 function IdeaMeta({ idea }: { idea: Idea }) {
   return (
-    <p className="idea-meta">
+    <p className={styles["idea-meta"]}>
       <span>
         <HugeiconsIcon icon={Clock01Icon} size={16} strokeWidth={1.5} aria-hidden />
         {idea.timeMinutes} хв
@@ -46,26 +48,31 @@ export function IdeaPane({
   profileName?: string;
 }) {
   return (
-    <article className="idea-pane chrome" aria-label={idea.title}>
-      <div className="idea-pane-scroll" role="region" aria-label={idea.title} tabIndex={0}>
+    <article className={cn(styles["idea-pane"], "chrome")} aria-label={idea.title}>
+      <div
+        className={styles["idea-pane-scroll"]}
+        role="region"
+        aria-label={idea.title}
+        tabIndex={0}
+      >
         <VersionNav versions={versions} />
         {versions.restoreError && (
-          <Alert variant="destructive" className="idea-image-error">
+          <Alert variant="destructive" className={styles["idea-image-error"]}>
             <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
             <AlertDescription>{versions.restoreError}</AlertDescription>
           </Alert>
         )}
         <IdeaPhoto key={idea.imageUrl ?? idea._id} idea={idea} />
-        <header className="idea-head">
+        <header className={styles["idea-head"]}>
           <div className="plate plate-sm">
             <h2>{idea.title}</h2>
           </div>
         </header>
         <IdeaMeta idea={idea} />
-        <p className="idea-summary">{idea.summary}</p>
+        <p className={styles["idea-summary"]}>{idea.summary}</p>
         <Markdown text={idea.body} className="idea-body" />
         <IdeaProducts idea={idea} canAddToCart={canAddToCart} onAddToCart={onAddToCart} />
-        <div className="idea-actions">
+        <div className={styles["idea-actions"]}>
           <CookTogether
             servings={idea.servings}
             cookCount={idea.cookCount ?? 1}

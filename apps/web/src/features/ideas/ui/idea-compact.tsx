@@ -1,3 +1,4 @@
+import styles from "@/features/ideas/ui/idea-card.module.scss";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
@@ -11,7 +12,7 @@ export function IdeaCompact({ idea, onOpen }: { idea: Idea; onOpen: () => void }
   return (
     <button
       type="button"
-      className="idea-peek"
+      className={styles["idea-peek"]}
       onClick={onOpen}
       aria-label={`Відкрити ідею: ${idea.title}`}
     >

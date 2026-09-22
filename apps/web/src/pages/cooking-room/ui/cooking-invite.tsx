@@ -1,3 +1,5 @@
+import { cn } from "@/shared/lib/utils";
+import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/shared/ui/drawer";
@@ -21,11 +23,11 @@ export function CookingInvite({
 }: InviteProps) {
   return (
     <Drawer autoFocus open={inviteOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className="cooking-drawer" aria-describedby={undefined}>
+      <DrawerContent className={cookingStyles["cooking-drawer"]} aria-describedby={undefined}>
         <DrawerHeader>
           <DrawerTitle>Запросити кухарів</DrawerTitle>
         </DrawerHeader>
-        <div className="cooking-drawer-body cooking-invite">
+        <div className={cn(cookingStyles["cooking-drawer-body"], cookingStyles["cooking-invite"])}>
           {error && <p role="alert">{error}</p>}
           {inviteUrl && read.room.inviteOpen && read.room.inviteExpiresAt > read.serverNow ? (
             <>
