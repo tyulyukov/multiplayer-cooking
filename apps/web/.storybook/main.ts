@@ -1,0 +1,19 @@
+import type { StorybookConfig } from "@storybook/react-vite";
+import { fileURLToPath } from "node:url";
+
+const config: StorybookConfig = {
+  stories: ["../src/**/*.stories.@(ts|tsx)"],
+  addons: ["@storybook/addon-docs", "@storybook/addon-a11y"],
+  framework: "@storybook/react-vite",
+  core: {
+    builder: {
+      name: "@storybook/builder-vite",
+      options: {
+        // The app config also starts Router and PWA; stories only need CSS and imports.
+        viteConfigPath: fileURLToPath(new URL("./vite.config.ts", import.meta.url)),
+      },
+    },
+  },
+};
+
+export default config;
