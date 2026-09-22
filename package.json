@@ -10,6 +10,8 @@
   "scripts": {
     "dev": "bun --cwd apps/backend dev:with-web",
     "dev:web": "bun --cwd apps/web dev",
+    "storybook": "bun --cwd apps/web storybook",
+    "build:storybook": "bun --cwd apps/web build:storybook",
     "dev:backend": "bun --cwd apps/backend dev",
     "build": "bun --cwd apps/web build",
     "typecheck": "bun --cwd packages/theme typecheck && bun --cwd apps/backend typecheck && bun --cwd apps/web typecheck",
