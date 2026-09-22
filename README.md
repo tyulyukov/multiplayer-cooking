@@ -83,9 +83,9 @@ railway up infra/searxng --service searxng --path-as-root --ci
 
 **Convex.** Production server variables live in the Convex dashboard under **Settings > Environment Variables**. Set `APP_URL=https://cooking.tyulyukov.com`. Keep `OPENROUTER_API_KEY` and the Axiom variables on Convex, outside the browser build.
 
-The [GitHub Actions workflow](.github/workflows/ci.yml) runs `bun run check` on pull requests and commits to `main`. After a successful check on `main`, it deploys the backend using the `CONVEX_DEPLOY_KEY` repository secret. The key must target the production deployment `diligent-kingfisher-436`; a missing key fails the deploy step.
+The [GitHub Actions workflow](.github/workflows/ci.yml) runs `bun run check` on pull requests and commits to `main`. After a successful check on `main`, it deploys changed production targets in order: Convex, then Cloudflare Pages. Convex deployment requires the `CONVEX_DEPLOY_KEY` repository secret for `diligent-kingfisher-436`. Pages deployment requires a Cloudflare token with account-scoped **Cloudflare Pages: Edit** permission in the `CLOUDFLARE_API_TOKEN` secret and the account ID in the `CLOUDFLARE_ACCOUNT_ID` repository variable.
 
-Cloudflare Pages builds the web app independently when `main` changes. Keep changes compatible with both the old and new backend while those deployments run. If a web change requires a new backend contract, release the compatible backend change in an earlier commit, then release the web change.
+Changes under `apps/backend/convex` deploy Convex, except tests and generated files. Changes under `apps/web` or `packages/theme` deploy Pages. Backend, web, and theme package manifests follow those targets. Root `package.json` or a lockfile-only change deploys both; a mobile manifest and its lockfile change deploy neither. Mobile-only, test-only, and documentation-only changes run checks without deploying. Keep backend changes compatible with the currently deployed web app until Pages finishes.
 
 **Cloudflare Pages.** The Git-connected Pages project uses these settings:
 
@@ -98,7 +98,7 @@ Cloudflare Pages builds the web app independently when `main` changes. Keep chan
 | `BUN_VERSION`          | `1.3.11`                                             |
 | `VITE_CONVEX_URL`      | `https://diligent-kingfisher-436.convex.cloud`       |
 
-Pages builds the web app when a commit reaches `main`. It serves React routes through its built-in SPA fallback. The custom domain is `cooking.tyulyukov.com`.
+Keep Git preview deployments enabled and turn off automatic production branch deployments in Pages branch control. GitHub Actions uploads the checked web build for `main`; Pages still builds previews for pull requests. Pages serves React routes through its built-in SPA fallback. The custom domain is `cooking.tyulyukov.com`.
 
 ### Change production Axiom credentials
 
