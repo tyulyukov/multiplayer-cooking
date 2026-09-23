@@ -29,6 +29,14 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 96
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
       ]
     ],
     "experiments": {
