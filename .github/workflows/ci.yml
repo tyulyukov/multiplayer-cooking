@@ -1,0 +1,89 @@
+name: Check and release
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-${{ github.ref }}
+      queue: max
+      cancel-in-progress: false
+    env:
+      VITE_CONVEX_URL: https://diligent-kingfisher-436.convex.cloud
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - name: Detect release targets
+        if: github.event_name == 'push'
+        id: changes
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          backend=false
+          web=false
+          lock_changed=false
+          manifest_changed=false
+          git diff --name-only -z "$BEFORE" "$GITHUB_SHA" > "$RUNNER_TEMP/changed-files"
+          while IFS= read -r -d '' path; do
+            case "$path" in
+              apps/backend/convex/_generated/*|apps/backend/convex/*.test.ts) ;;
+              apps/backend/convex/*) backend=true ;;
+            esac
+            case "$path" in
+              apps/web/design/*|apps/web/*.test.ts|apps/web/*.test.tsx|packages/theme/*.test.ts) ;;
+              apps/web/*|packages/theme/*) web=true ;;
+            esac
+            case "$path" in
+              apps/backend/package.json) backend=true; manifest_changed=true ;;
+              apps/web/package.json|packages/theme/package.json) web=true; manifest_changed=true ;;
+              apps/mobile/package.json) manifest_changed=true ;;
+              package.json) backend=true; web=true; manifest_changed=true ;;
+              bun.lock) lock_changed=true ;;
+            esac
+          done < "$RUNNER_TEMP/changed-files"
+          if [ "$lock_changed" = true ] && [ "$manifest_changed" = false ]; then
+            backend=true
+            web=true
+          fi
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
+          echo "Release targets: backend=$backend web=$web"
+      - name: Deploy Convex
+        if: steps.changes.outputs.backend == 'true'
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: |
+          if [ -z "$CONVEX_DEPLOY_KEY" ]; then
+            echo "Set CONVEX_DEPLOY_KEY in GitHub Actions secrets." >&2
+            exit 1
+          fi
+          bun run deploy:backend
+      - name: Deploy Pages
+        if: steps.changes.outputs.web == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub Actions." >&2
+            exit 1
+          fi
+          bunx wrangler@4.131.0 pages deploy dist \
+            --cwd apps/web \
+            --project-name multiplayer-cooking \
+            --branch main \
+            --commit-hash "$GITHUB_SHA"

@@ -40,7 +40,7 @@ Set the server variables on that deployment. Replace each placeholder; never pas
 ```sh
 cd apps/backend
 bunx convex env set OPENROUTER_API_KEY '<openrouter-api-key>'
-bunx convex env set OPENROUTER_MODEL 'openai/gpt-5.6-luna'
+bunx convex env set OPENROUTER_MODEL 'openai/gpt-6-luna'
 bunx convex env set OPENROUTER_IMAGE_MODEL 'openai/gpt-image-2.5-flare'
 bunx convex env set SEARXNG_URL 'https://<your-searxng-host>'
 bunx convex env set APP_URL 'http://localhost:5173'
@@ -83,24 +83,22 @@ railway up infra/searxng --service searxng --path-as-root --ci
 
 **Convex.** Production server variables live in the Convex dashboard under **Settings > Environment Variables**. Set `APP_URL=https://cooking.tyulyukov.com`. Keep `OPENROUTER_API_KEY` and the Axiom variables on Convex, outside the browser build.
 
-Merge the release PR into `main`, then deploy from that commit:
+The [GitHub Actions workflow](.github/workflows/ci.yml) runs `bun run check` on pull requests and commits to `main`. After a successful check on `main`, it deploys changed production targets in order: Convex, then Cloudflare Pages. Convex deployment requires the `CONVEX_DEPLOY_KEY` repository secret for `diligent-kingfisher-436`. Pages deployment requires a Cloudflare token with account-scoped **Cloudflare Pages: Edit** permission in the `CLOUDFLARE_API_TOKEN` secret and the account ID in the `CLOUDFLARE_ACCOUNT_ID` repository variable.
 
-```sh
-git switch main
-git pull --ff-only
-bun install --frozen-lockfile
-VITE_CONVEX_URL=https://diligent-kingfisher-436.convex.cloud bun run check
-CONVEX_DEPLOYMENT=prod:diligent-kingfisher-436 bun run deploy:backend
-```
+Changes under `apps/backend/convex` deploy Convex, except tests and generated files. Changes under `apps/web` or `packages/theme` deploy Pages. Backend, web, and theme package manifests follow those targets. Root `package.json` or a lockfile-only change deploys both; a mobile manifest and its lockfile change deploy neither. Mobile-only, test-only, and documentation-only changes run checks without deploying. Keep backend changes compatible with the currently deployed web app until Pages finishes.
 
-**Cloudflare Pages.** The `multiplayer-cooking` project uses Direct Upload with `main` as its production branch. Deploy the verified `dist/` directory:
+**Cloudflare Pages.** The Git-connected Pages project uses these settings:
 
-```sh
-bunx wrangler@4.131.0 login
-(cd apps/web && bunx wrangler@4.131.0 pages deploy dist --project-name multiplayer-cooking --branch main)
-```
+| Setting                | Value                                                |
+| ---------------------- | ---------------------------------------------------- |
+| Production branch      | `main`                                               |
+| Root directory         | Repository root (leave the field empty)              |
+| Build command          | `bun install --frozen-lockfile && bun run build:web` |
+| Build output directory | `apps/web/dist`                                      |
+| `BUN_VERSION`          | `1.3.11`                                             |
+| `VITE_CONVEX_URL`      | `https://diligent-kingfisher-436.convex.cloud`       |
 
-Pages serves React routes through its built-in SPA fallback. The custom domain is `cooking.tyulyukov.com`. Direct Upload does not deploy automatically when you push to GitHub. Run the commands above after merging each release PR.
+Keep Git preview deployments enabled and turn off automatic production branch deployments in Pages branch control. GitHub Actions uploads the checked web build for `main`; Pages still builds previews for pull requests. Pages serves React routes through its built-in SPA fallback. The custom domain is `cooking.tyulyukov.com`.
 
 ### Change production Axiom credentials
 
