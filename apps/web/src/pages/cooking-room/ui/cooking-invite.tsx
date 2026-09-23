@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { Button } from "@/shared/ui/button";
@@ -9,7 +10,7 @@ type InviteProps = Extract<
   ReturnType<typeof useCookingRoomPage>,
   { screen: "room" }
 >["inviteProps"];
-export function CookingInvite({
+export const CookingInvite: FC<InviteProps> = ({
   read,
   online,
   pending,
@@ -20,7 +21,7 @@ export function CookingInvite({
   copyInvite,
   rotateInviteLink,
   onOpenChange,
-}: InviteProps) {
+}) => {
   return (
     <Drawer autoFocus open={inviteOpen} onOpenChange={onOpenChange}>
       <DrawerContent className={cookingStyles["cooking-drawer"]} aria-describedby={undefined}>
@@ -78,4 +79,4 @@ export function CookingInvite({
       </DrawerContent>
     </Drawer>
   );
-}
+};

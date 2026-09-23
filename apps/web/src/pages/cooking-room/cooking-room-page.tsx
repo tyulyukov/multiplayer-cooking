@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { CooksForm } from "@/features/cooking/ui/cook-together";
 
@@ -12,7 +13,9 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 
 import { useCookingRoomPage } from "./model/use-cooking-room-page";
 import { CookingInvite } from "./ui/cooking-invite";
-export function CookingRoomPage({ roomId }: { roomId: string }) {
+type CookingRoomPageProps = { roomId: string };
+
+export const CookingRoomPage: FC<CookingRoomPageProps> = ({ roomId }) => {
   if (!isConvexConfigured)
     return (
       <RoomNotice
@@ -25,9 +28,11 @@ export function CookingRoomPage({ roomId }: { roomId: string }) {
       <RoomNotice title="Посилання не працює" body="Перевір запрошення та відкрий його ще раз." />
     );
   return <CookingRoom key={roomId} roomId={roomId as Id<"cookingRooms">} />;
-}
+};
 
-function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
+type CookingRoomProps = { roomId: Id<"cookingRooms"> };
+
+const CookingRoom: FC<CookingRoomProps> = ({ roomId }) => {
   const model = useCookingRoomPage(roomId);
   if (model.screen === "join") return <JoinRoom {...model.joinProps} />;
   if (model.screen === "loading")
@@ -55,4 +60,4 @@ function CookingRoom({ roomId }: { roomId: Id<"cookingRooms"> }) {
       {model.peopleOpen && <People {...model.peopleProps} />}
     </div>
   );
-}
+};

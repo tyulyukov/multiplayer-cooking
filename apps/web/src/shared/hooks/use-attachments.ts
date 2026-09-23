@@ -6,7 +6,7 @@ import { AI_MAX_IMAGES } from "@multiplayer-cooking/backend/convex/lib/ai_config
 type PendingAttachment = ComposerAttachment & { storageId?: string };
 
 // Photos are resized and uploaded as soon as they are picked; the send carries only storage ids.
-export function useAttachments(upload: ((blob: Blob) => Promise<string>) | null) {
+export const useAttachments = (upload: ((blob: Blob) => Promise<string>) | null) => {
   const [items, setItems] = useState<PendingAttachment[]>([]);
   const itemsRef = useRef(items);
   const mounted = useRef(true);
@@ -19,19 +19,19 @@ export function useAttachments(upload: ((blob: Blob) => Promise<string>) | null)
     };
   }, []);
 
-  function changeItems(change: (current: PendingAttachment[]) => PendingAttachment[]) {
+  const changeItems = (change: (current: PendingAttachment[]) => PendingAttachment[]) => {
     if (!mounted.current) return;
     itemsRef.current = change(itemsRef.current);
     setItems(itemsRef.current);
-  }
+  };
 
-  function update(id: string, patch: Partial<PendingAttachment>) {
+  const update = (id: string, patch: Partial<PendingAttachment>) => {
     changeItems((current) =>
       current.map((item) => (item.id === id ? { ...item, ...patch } : item)),
     );
-  }
+  };
 
-  async function add(files: File[]) {
+  const add = async (files: File[]) => {
     if (!upload) {
       return;
     }
@@ -56,9 +56,9 @@ export function useAttachments(upload: ((blob: Blob) => Promise<string>) | null)
         update(id, { state: "error" });
       }
     }
-  }
+  };
 
-  function remove(id: string) {
+  const remove = (id: string) => {
     changeItems((current) => {
       const item = current.find((entry) => entry.id === id);
 
@@ -68,11 +68,11 @@ export function useAttachments(upload: ((blob: Blob) => Promise<string>) | null)
 
       return current.filter((entry) => entry.id !== id);
     });
-  }
+  };
 
   // Replaces the finished tiles with photos already in storage, for example a draft saved on
   // another device. A photo still uploading keeps its tile so its result is not lost.
-  function restore(images: readonly { storageId: string; url: string }[]) {
+  const restore = (images: readonly { storageId: string; url: string }[]) => {
     changeItems((current) => {
       const uploading = current.filter((item) => item.state === "uploading");
 
@@ -90,11 +90,11 @@ export function useAttachments(upload: ((blob: Blob) => Promise<string>) | null)
         ...uploading,
       ];
     });
-  }
+  };
 
   const storageIds = items.flatMap((item) =>
     item.state === "done" && item.storageId ? [item.storageId] : [],
   );
 
   return { items, storageIds, add, remove, clear: () => restore([]), restore };
-}
+};

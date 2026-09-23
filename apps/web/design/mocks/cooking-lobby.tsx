@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { createRoot } from "react-dom/client";
 import type { Id } from "../../convex/_generated/dataModel";
 import { useState } from "react";
@@ -30,7 +31,7 @@ const plan = {
   ],
 };
 
-function member(index: number, role: "host" | "cook" = "cook") {
+const member = (index: number, role: "host" | "cook" = "cook") => {
   return {
     _id: `member-${index}` as Id<"cookingMembers">,
     name: index === 1 ? "Оля" : `Кухар ${index}`,
@@ -39,9 +40,9 @@ function member(index: number, role: "host" | "cook" = "cook") {
     slots: [index],
     lastSeenAt: now,
   };
-}
+};
 
-function createData(name: string): CookingRoomData {
+const createData = (name: string): CookingRoomData => {
   const cookCount = name === "solo" ? 1 : name === "12cooks" ? 12 : name === "long-title" ? 2 : 3;
   const full = ["lobby-full-generating", "lobby-ready", "guest", "solo", "12cooks"].includes(name);
   const started = ["started-generating", "error-afterstart"].includes(name);
@@ -88,9 +89,9 @@ function createData(name: string): CookingRoomData {
     steps: [],
     timers: [],
   };
-}
+};
 
-export function Fixture() {
+export const Fixture: FC = () => {
   const [data, setData] = useState(() => createData(mode));
   const actions: CookingActions = {
     online: true,
@@ -137,6 +138,6 @@ export function Fixture() {
       <CookingSession data={data} actions={actions} />
     </>
   );
-}
+};
 
 createRoot(document.getElementById("root")!).render(<Fixture />);

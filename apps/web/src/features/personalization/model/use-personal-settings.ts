@@ -16,15 +16,15 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 
 const saveDelayMs = 500;
 
-function sameSettings(first: AgentSettings, second: AgentSettings) {
+const sameSettings = (first: AgentSettings, second: AgentSettings) => {
   return (
     first.tone === second.tone &&
     first.customInstructions === second.customInstructions &&
     first.about === second.about
   );
-}
+};
 
-export function usePersonalSettings({
+export const usePersonalSettings = ({
   open,
   onOpenChange,
   initialTab,
@@ -33,7 +33,7 @@ export function usePersonalSettings({
   onDelete,
   onSave,
   loading = false,
-}: PersonalSettingsProps) {
+}: PersonalSettingsProps) => {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [draft, setDraft] = useState<AgentSettings>(settings);
   const [cookName, setCookName] = useState(() => readSavedCookName());
@@ -86,11 +86,11 @@ export function usePersonalSettings({
     [],
   );
 
-  function isDirty() {
+  const isDirty = () => {
     return !sameSettings(draftRef.current, savedDraftRef.current);
-  }
+  };
 
-  function scheduleSave() {
+  const scheduleSave = () => {
     if (saveTimerRef.current !== null) {
       window.clearTimeout(saveTimerRef.current);
     }
@@ -99,9 +99,9 @@ export function usePersonalSettings({
       saveTimerRef.current = null;
       void saveSettings();
     }, saveDelayMs);
-  }
+  };
 
-  async function saveSettings() {
+  const saveSettings = async () => {
     if (saveTimerRef.current !== null) {
       window.clearTimeout(saveTimerRef.current);
       saveTimerRef.current = null;
@@ -144,9 +144,9 @@ export function usePersonalSettings({
         void saveSettings();
       }
     }
-  }
+  };
 
-  function changeDraft(changes: Partial<AgentSettings>) {
+  const changeDraft = (changes: Partial<AgentSettings>) => {
     const next = { ...draftRef.current, ...changes };
     draftRef.current = next;
     changeVersionRef.current += 1;
@@ -154,9 +154,9 @@ export function usePersonalSettings({
     setSaveState("saving");
     setSaveError(null);
     scheduleSave();
-  }
+  };
 
-  function changeCookName(value: string) {
+  const changeCookName = (value: string) => {
     setCookName(value);
     const nextName = normalizeCookName(value);
 
@@ -165,17 +165,17 @@ export function usePersonalSettings({
     } else if (!value.trim()) {
       clearSavedCookName();
     }
-  }
+  };
 
-  function handleOpenChange(nextOpen: boolean) {
+  const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       void saveSettings();
     }
 
     onOpenChange(nextOpen);
-  }
+  };
 
-  async function deleteMemory(id: Memory["_id"]) {
+  const deleteMemory = async (id: Memory["_id"]) => {
     setDeletingId(id);
     setDeleteError(null);
     try {
@@ -185,7 +185,7 @@ export function usePersonalSettings({
     } finally {
       setDeletingId(null);
     }
-  }
+  };
   return {
     setTab,
     draft,
@@ -205,4 +205,4 @@ export function usePersonalSettings({
     handleOpenChange,
     deleteMemory,
   };
-}
+};

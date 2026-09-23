@@ -1,21 +1,21 @@
 const storageKey = "multiplayer-cooking.cook-name";
 const maxCookNameLength = 80;
 
-export function normalizeCookName(value: string) {
+export const normalizeCookName = (value: string) => {
   const name = value.trim();
 
   return name.length > 0 && name.length <= maxCookNameLength ? name : "";
-}
+};
 
-export function resolveCookName(initialName: string, savedName: string, suggestedName: string) {
+export const resolveCookName = (initialName: string, savedName: string, suggestedName: string) => {
   return (
     normalizeCookName(savedName) ||
     normalizeCookName(initialName) ||
     normalizeCookName(suggestedName)
   );
-}
+};
 
-export function readSavedCookName() {
+export const readSavedCookName = () => {
   if (typeof window === "undefined") return "";
 
   try {
@@ -23,9 +23,9 @@ export function readSavedCookName() {
   } catch {
     return "";
   }
-}
+};
 
-export function saveCookName(value: string) {
+export const saveCookName = (value: string) => {
   const name = normalizeCookName(value);
 
   if (!name || typeof window === "undefined") return;
@@ -35,9 +35,9 @@ export function saveCookName(value: string) {
   } catch {
     return;
   }
-}
+};
 
-export function clearSavedCookName() {
+export const clearSavedCookName = () => {
   if (typeof window === "undefined") return;
 
   try {
@@ -45,4 +45,4 @@ export function clearSavedCookName() {
   } catch {
     return;
   }
-}
+};

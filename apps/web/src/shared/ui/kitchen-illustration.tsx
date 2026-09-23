@@ -1,11 +1,9 @@
+import type { FC } from "react";
 import { useState } from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-export function KitchenIllustration({
-  name,
-  className,
-}: {
+type KitchenIllustrationProps = {
   name:
     | "starter-sign"
     | "recipe-box"
@@ -16,7 +14,9 @@ export function KitchenIllustration({
     | "basket-filled"
     | "oven-mitts";
   className?: string;
-}) {
+};
+
+export const KitchenIllustration: FC<KitchenIllustrationProps> = ({ name, className }) => {
   const [failed, setFailed] = useState(false);
 
   if (failed) return null;
@@ -32,4 +32,4 @@ export function KitchenIllustration({
       onError={() => setFailed(true)}
     />
   );
-}
+};

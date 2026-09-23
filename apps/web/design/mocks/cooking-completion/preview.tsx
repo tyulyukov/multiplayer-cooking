@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { createRoot } from "react-dom/client";
 import { StrictMode, useMemo, useState } from "react";
 
@@ -84,7 +85,7 @@ const plan = {
   ],
 };
 
-function member(index: number, role: "host" | "cook", name: string) {
+const member = (index: number, role: "host" | "cook", name: string) => {
   return {
     _id: `member-${index}` as Id<"cookingMembers">,
     name,
@@ -93,9 +94,9 @@ function member(index: number, role: "host" | "cook", name: string) {
     slots: [index],
     lastSeenAt: now,
   };
-}
+};
 
-function createData(name: FixtureMode): CookingRoomData {
+const createData = (name: FixtureMode): CookingRoomData => {
   const solo = name === "solo";
   const guest = name === "guest";
   const title =
@@ -180,9 +181,9 @@ function createData(name: FixtureMode): CookingRoomData {
       },
     ],
   };
-}
+};
 
-export function Fixture() {
+export const Fixture: FC = () => {
   const [data, setData] = useState(() => createData(fixtureMode));
   const [againOpen, setAgainOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -248,7 +249,7 @@ export function Fixture() {
       )}
     </>
   );
-}
+};
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { ComponentProps } from "react";
@@ -146,7 +147,7 @@ const initialProposal: Props["proposals"][number] = {
   createdAt: now - 500,
 };
 
-export function Fixture() {
+export const Fixture: FC = () => {
   const [data, setData] = useState(initialData);
   const [open, setOpen] = useState(mode !== "closed");
   const [prompt, setPrompt] = useState("");
@@ -301,6 +302,6 @@ export function Fixture() {
       />
     </>
   );
-}
+};
 
 createRoot(document.getElementById("root")!).render(<Fixture />);

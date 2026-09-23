@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/history/ui/history-panel.module.scss";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
@@ -35,7 +36,7 @@ import { useMediaQuery } from "@/shared/hooks/use-media-query";
 const title = "Історія";
 
 // Relative labels ("5 хвилин тому") go stale while the panel is open; tick once a minute.
-function useNow() {
+const useNow = () => {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -44,19 +45,16 @@ function useNow() {
   }, []);
 
   return now;
-}
+};
 
-function HistoryList({
-  items,
-  onOpen,
-  onDelete,
-  onOpenCooking,
-}: {
+type HistoryListProps = {
   items: readonly HistoryEntry[] | undefined;
   onOpen: (threadId: string) => void;
   onDelete: (threadId: string) => void;
   onOpenCooking?: (roomId: CookingHistoryItem["_id"]) => void;
-}) {
+};
+
+const HistoryList: FC<HistoryListProps> = ({ items, onOpen, onDelete, onOpenCooking }) => {
   const now = useNow();
 
   if (items === undefined) {
@@ -123,17 +121,15 @@ function HistoryList({
       ))}
     </ul>
   );
-}
+};
 
-function HistoryCooking({
-  rooms,
-  title,
-  onOpen,
-}: {
+type HistoryCookingProps = {
   rooms: readonly CookingHistoryItem[];
   title: string;
   onOpen: (roomId: CookingHistoryItem["_id"]) => void;
-}) {
+};
+
+const HistoryCooking: FC<HistoryCookingProps> = ({ rooms, title, onOpen }) => {
   const firstRoom = rooms[0];
   if (!firstRoom) return null;
   const button = (
@@ -179,22 +175,24 @@ function HistoryCooking({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
 
 // A sheet from the right on desktop, a bottom drawer on mobile; the same list inside.
-export function HistoryPanel({
-  items,
-  onOpen,
-  onDelete,
-  cookingRooms = [],
-  onOpenCooking,
-}: {
+type HistoryPanelProps = {
   items: readonly HistoryItem[] | undefined;
   onOpen: (threadId: string) => void;
   onDelete: (threadId: string) => void;
   cookingRooms?: readonly CookingHistoryItem[];
   onOpenCooking?: (roomId: CookingHistoryItem["_id"]) => void;
-}) {
+};
+
+export const HistoryPanel: FC<HistoryPanelProps> = ({
+  items,
+  onOpen,
+  onDelete,
+  cookingRooms = [],
+  onOpenCooking,
+}) => {
   const [open, setOpen] = useState(false);
   const desktop = useMediaQuery("(min-width: 1024px)");
 
@@ -248,4 +246,4 @@ export function HistoryPanel({
       </DrawerContent>
     </Drawer>
   );
-}
+};

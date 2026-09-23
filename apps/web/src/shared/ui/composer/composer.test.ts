@@ -5,7 +5,7 @@ import { AI_REQUEST_MAX_CHARACTERS } from "@multiplayer-cooking/backend/convex/l
 import { Composer } from "./composer";
 import type { ComposerProps } from "./types";
 
-function render(overrides: Partial<ComposerProps> = {}) {
+const render = (overrides: Partial<ComposerProps> = {}) => {
   return renderToStaticMarkup(
     createElement(Composer, {
       mode: "chat",
@@ -20,13 +20,13 @@ function render(overrides: Partial<ComposerProps> = {}) {
       ...overrides,
     }),
   );
-}
+};
 
-function sendButton(html: string) {
+const sendButton = (html: string) => {
   const button = html.match(/<button[^>]*aria-label="Надіслати"[^>]*>/)?.[0];
   expect(button).toBeDefined();
   return button!;
-}
+};
 
 describe("Composer rendering", () => {
   test("домашній режим зберігає текст і основну кнопку", () => {

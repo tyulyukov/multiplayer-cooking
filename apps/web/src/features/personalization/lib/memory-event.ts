@@ -1,4 +1,4 @@
-export function readMemoryEvent(output: unknown) {
+export const readMemoryEvent = (output: unknown) => {
   if (
     typeof output !== "object" ||
     output === null ||
@@ -12,4 +12,4 @@ export function readMemoryEvent(output: unknown) {
     return null;
   }
   return { action: output.action, text: output.text };
-}
+};

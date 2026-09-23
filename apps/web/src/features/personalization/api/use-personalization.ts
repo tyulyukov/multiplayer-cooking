@@ -10,7 +10,7 @@ const defaultAgentSettings: AgentSettings = {
   about: "",
 };
 
-export function usePersonalization(sessionId: SessionId | undefined) {
+export const usePersonalization = (sessionId: SessionId | undefined) => {
   const data = useQuery(api.personalization.get, sessionId ? { sessionId } : "skip");
   const removeMemoryMutation = useMutation(api.personalization.removeMemory);
   const saveSettingsMutation = useMutation(api.personalization.saveSettings);
@@ -28,4 +28,4 @@ export function usePersonalization(sessionId: SessionId | undefined) {
       await saveSettingsMutation({ sessionId, settings });
     },
   };
-}
+};

@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/ideas/ui/idea-card.module.scss";
 import { productRegistryKey } from "@multiplayer-cooking/backend/convex/lib/ingredient";
@@ -12,7 +13,9 @@ import { formatPrice, formatQuantity } from "../lib/idea-format";
 import { getIdeaProducts } from "../lib/idea-products";
 import { IdeaCart } from "./idea-cart";
 
-function ProductThumbnail({ url }: { url: string }) {
+type ProductThumbnailProps = { url: string };
+
+const ProductThumbnail: FC<ProductThumbnailProps> = ({ url }) => {
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
   return (
     <div className={styles["product-thumbnail"]} data-state={state}>
@@ -31,17 +34,15 @@ function ProductThumbnail({ url }: { url: string }) {
       )}
     </div>
   );
-}
+};
 
-export function IdeaProducts({
-  idea,
-  canAddToCart,
-  onAddToCart,
-}: {
+type IdeaProductsProps = {
   idea: Idea;
   canAddToCart: boolean;
   onAddToCart: () => void;
-}) {
+};
+
+export const IdeaProducts: FC<IdeaProductsProps> = ({ idea, canAddToCart, onAddToCart }) => {
   const { matched, missing, total, noMatches } = getIdeaProducts(idea);
   return (
     <section className={styles["idea-products"]} aria-label="Продукти в Сільпо">
@@ -155,15 +156,14 @@ export function IdeaProducts({
       />
     </section>
   );
-}
+};
 
-function ProductEmptyState({
-  ingredients,
-  status,
-}: {
+type ProductEmptyStateProps = {
   ingredients: Idea["ingredients"];
   status: Idea["productsStatus"];
-}) {
+};
+
+const ProductEmptyState: FC<ProductEmptyStateProps> = ({ ingredients, status }) => {
   const [imageFailed, setImageFailed] = useState(false);
   const messages = {
     unavailable: {
@@ -209,4 +209,4 @@ function ProductEmptyState({
       </ul>
     </section>
   );
-}
+};

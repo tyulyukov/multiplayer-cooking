@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
@@ -19,11 +20,9 @@ const textareaVariants = cva(
   },
 );
 
-function Textarea({
-  className,
-  variant = "default",
-  ...props
-}: React.ComponentProps<"textarea"> & VariantProps<typeof textareaVariants>) {
+type TextareaProps = React.ComponentProps<"textarea"> & VariantProps<typeof textareaVariants>;
+
+const Textarea: FC<TextareaProps> = ({ className, variant = "default", ...props }) => {
   return (
     <textarea
       data-slot="textarea"
@@ -32,6 +31,6 @@ function Textarea({
       {...props}
     />
   );
-}
+};
 
 export { Textarea };

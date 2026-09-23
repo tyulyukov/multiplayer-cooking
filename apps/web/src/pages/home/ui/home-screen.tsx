@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/pages/home/home-page.module.scss";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactNode } from "react";
@@ -10,15 +11,7 @@ import { useAttachments } from "@/shared/hooks/use-attachments";
 import { Brand, SendError } from "./home-shell";
 type AttachmentsState = ReturnType<typeof useAttachments>;
 
-export function HomeScreen({
-  backendReady,
-  menu,
-  draft,
-  attachments,
-  busy,
-  error,
-  onSubmit,
-}: {
+type HomeScreenProps = {
   backendReady: boolean;
   menu?: ReactNode;
   draft: ReturnType<typeof useComposerDraft>;
@@ -26,7 +19,17 @@ export function HomeScreen({
   busy: boolean;
   error: string | null;
   onSubmit: (text: string) => void;
-}) {
+};
+
+export const HomeScreen: FC<HomeScreenProps> = ({
+  backendReady,
+  menu,
+  draft,
+  attachments,
+  busy,
+  error,
+  onSubmit,
+}) => {
   return (
     <main className="app-shell">
       <div className="checker-band" aria-hidden />
@@ -75,4 +78,4 @@ export function HomeScreen({
       </div>
     </main>
   );
-}
+};

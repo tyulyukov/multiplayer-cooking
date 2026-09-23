@@ -2,12 +2,12 @@ import type { UIMessage } from "@convex-dev/agent";
 import type { ToolUIPart } from "ai";
 import { readQuestionAnswer, readQuestionInput, type QuestionAnswer } from "./question";
 
-export function isToolPart(part: UIMessage["parts"][number]): part is ToolUIPart {
+export const isToolPart = (part: UIMessage["parts"][number]): part is ToolUIPart => {
   return part.type.startsWith("tool-");
-}
+};
 
 // Tool results saved later live in their own message; map them back by call id.
-export function collectAnswers(messages: readonly UIMessage[]) {
+export const collectAnswers = (messages: readonly UIMessage[]) => {
   const answers = new Map<string, QuestionAnswer>();
 
   for (const message of messages) {
@@ -23,9 +23,9 @@ export function collectAnswers(messages: readonly UIMessage[]) {
   }
 
   return answers;
-}
+};
 
-export function pendingQuestion(messages: readonly UIMessage[]) {
+export const pendingQuestion = (messages: readonly UIMessage[]) => {
   const answers = collectAnswers(messages);
   const latest = messages.filter((message) => message.role === "assistant").at(-1);
   if (!latest || latest.status === "failed") return null;
@@ -41,4 +41,4 @@ export function pendingQuestion(messages: readonly UIMessage[]) {
     if (input) return { toolCallId: part.toolCallId, input };
   }
   return null;
-}
+};

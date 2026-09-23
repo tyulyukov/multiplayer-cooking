@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
@@ -23,16 +24,18 @@ const attachmentVariants = cva(
   },
 );
 
-function Attachment({
+type AttachmentProps = React.ComponentProps<"div"> &
+  VariantProps<typeof attachmentVariants> & {
+    state?: "idle" | "uploading" | "processing" | "error" | "done";
+  };
+
+const Attachment: FC<AttachmentProps> = ({
   className,
   state = "done",
   size = "default",
   orientation = "horizontal",
   ...props
-}: React.ComponentProps<"div"> &
-  VariantProps<typeof attachmentVariants> & {
-    state?: "idle" | "uploading" | "processing" | "error" | "done";
-  }) {
+}) => {
   return (
     <div
       data-slot="attachment"
@@ -43,7 +46,7 @@ function Attachment({
       {...props}
     />
   );
-}
+};
 
 const attachmentMediaVariants = cva(
   "relative flex aspect-square w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted text-foreground group-data-[orientation=vertical]/attachment:w-full group-data-[size=sm]/attachment:w-8 group-data-[size=xs]/attachment:w-7 group-data-[size=xs]/attachment:rounded-md group-data-[state=error]/attachment:bg-destructive/10 group-data-[state=error]/attachment:text-destructive group-data-[orientation=vertical]/attachment:*:data-[slot=spinner]:size-6! [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 group-data-[orientation=vertical]/attachment:[&_svg:not([class*='size-'])]:size-6 group-data-[size=xs]/attachment:[&_svg:not([class*='size-'])]:size-3.5",
@@ -61,11 +64,10 @@ const attachmentMediaVariants = cva(
   },
 );
 
-function AttachmentMedia({
-  className,
-  variant = "icon",
-  ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof attachmentMediaVariants>) {
+type AttachmentMediaProps = React.ComponentProps<"div"> &
+  VariantProps<typeof attachmentMediaVariants>;
+
+const AttachmentMedia: FC<AttachmentMediaProps> = ({ className, variant = "icon", ...props }) => {
   return (
     <div
       data-slot="attachment-media"
@@ -74,9 +76,11 @@ function AttachmentMedia({
       {...props}
     />
   );
-}
+};
 
-function AttachmentContent({ className, ...props }: React.ComponentProps<"div">) {
+type AttachmentContentProps = React.ComponentProps<"div">;
+
+const AttachmentContent: FC<AttachmentContentProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="attachment-content"
@@ -87,9 +91,11 @@ function AttachmentContent({ className, ...props }: React.ComponentProps<"div">)
       {...props}
     />
   );
-}
+};
 
-function AttachmentTitle({ className, ...props }: React.ComponentProps<"span">) {
+type AttachmentTitleProps = React.ComponentProps<"span">;
+
+const AttachmentTitle: FC<AttachmentTitleProps> = ({ className, ...props }) => {
   return (
     <span
       data-slot="attachment-title"
@@ -100,9 +106,11 @@ function AttachmentTitle({ className, ...props }: React.ComponentProps<"span">) 
       {...props}
     />
   );
-}
+};
 
-function AttachmentDescription({ className, ...props }: React.ComponentProps<"span">) {
+type AttachmentDescriptionProps = React.ComponentProps<"span">;
+
+const AttachmentDescription: FC<AttachmentDescriptionProps> = ({ className, ...props }) => {
   return (
     <span
       data-slot="attachment-description"
@@ -114,9 +122,11 @@ function AttachmentDescription({ className, ...props }: React.ComponentProps<"sp
       {...props}
     />
   );
-}
+};
 
-function AttachmentActions({ className, ...props }: React.ComponentProps<"div">) {
+type AttachmentActionsProps = React.ComponentProps<"div">;
+
+const AttachmentActions: FC<AttachmentActionsProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="attachment-actions"
@@ -127,14 +137,16 @@ function AttachmentActions({ className, ...props }: React.ComponentProps<"div">)
       {...props}
     />
   );
-}
+};
 
-function AttachmentAction({
+type AttachmentActionProps = React.ComponentProps<typeof Button>;
+
+const AttachmentAction: FC<AttachmentActionProps> = ({
   className,
   variant,
   size = "icon-xs",
   ...props
-}: React.ComponentProps<typeof Button>) {
+}) => {
   return (
     <Button
       data-slot="attachment-action"
@@ -144,16 +156,18 @@ function AttachmentAction({
       {...props}
     />
   );
-}
+};
 
-function AttachmentTrigger({
+type AttachmentTriggerProps = React.ComponentProps<"button"> & {
+  asChild?: boolean;
+};
+
+const AttachmentTrigger: FC<AttachmentTriggerProps> = ({
   className,
   asChild = false,
   type,
   ...props
-}: React.ComponentProps<"button"> & {
-  asChild?: boolean;
-}) {
+}) => {
   const Comp = asChild ? Slot.Root : "button";
 
   return (
@@ -164,9 +178,11 @@ function AttachmentTrigger({
       {...props}
     />
   );
-}
+};
 
-function AttachmentGroup({ className, ...props }: React.ComponentProps<"div">) {
+type AttachmentGroupProps = React.ComponentProps<"div">;
+
+const AttachmentGroup: FC<AttachmentGroupProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="attachment-group"
@@ -177,7 +193,7 @@ function AttachmentGroup({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   );
-}
+};
 
 export {
   Attachment,

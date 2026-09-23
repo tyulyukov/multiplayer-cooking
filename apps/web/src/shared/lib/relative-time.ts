@@ -17,14 +17,14 @@ const otherYear = new Intl.DateTimeFormat("uk-UA", {
 const minute = 60_000;
 const hour = 60 * minute;
 
-function startOfDay(at: number) {
+const startOfDay = (at: number) => {
   const date = new Date(at);
   date.setHours(0, 0, 0, 0);
   return date.getTime();
-}
+};
 
 // "щойно", "5 хвилин тому", "3 години тому", "вчора, 14:30", then the full local date with time.
-export function formatRelativeTime(at: number, now: number) {
+export const formatRelativeTime = (at: number, now: number) => {
   const elapsed = Math.max(0, now - at);
 
   if (elapsed < minute) {
@@ -48,4 +48,4 @@ export function formatRelativeTime(at: number, now: number) {
   const format = new Date(at).getFullYear() === new Date(now).getFullYear() ? thisYear : otherYear;
 
   return format.format(at);
-}
+};

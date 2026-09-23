@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { fn } from "storybook/test";
@@ -8,7 +9,7 @@ import { QuestionCard } from "@/features/chat/ui/question-card";
 import { Composer } from "./composer";
 import type { ComposerProps } from "./types";
 
-function InteractiveComposer(args: ComposerProps) {
+const InteractiveComposer: FC<ComposerProps> = (args) => {
   const [value, setValue] = useState(args.value);
 
   return (
@@ -23,7 +24,7 @@ function InteractiveComposer(args: ComposerProps) {
       />
     </div>
   );
-}
+};
 
 const meta = {
   title: "Shared/Composer",

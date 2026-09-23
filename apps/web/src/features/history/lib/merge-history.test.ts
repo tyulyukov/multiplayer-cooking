@@ -12,7 +12,7 @@ const item: HistoryItem = {
   active: true,
   photos: ["/dish.jpg"],
 };
-function room(id: string, patch: Partial<CookingHistoryItem> = {}): CookingHistoryItem {
+const room = (id: string, patch: Partial<CookingHistoryItem> = {}): CookingHistoryItem => {
   return {
     _id: id as Id<"cookingRooms">,
     sourceIdeaId: ideaId,
@@ -24,7 +24,7 @@ function room(id: string, patch: Partial<CookingHistoryItem> = {}): CookingHisto
     createdAt: 200,
     ...patch,
   };
-}
+};
 
 test("cooked versions and repeated sessions stay in one unchanged conversation row", () => {
   const older = room("older");

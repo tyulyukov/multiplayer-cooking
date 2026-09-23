@@ -5,11 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Idea, IdeaVersions } from "@/features/ideas/model/types";
 
-export function useIdeaVersions(
+export const useIdeaVersions = (
   sessionId: SessionId | undefined,
   threadId: string | null,
   latest: Idea | null | undefined,
-) {
+) => {
   const threadArgs = sessionId && threadId ? { sessionId, threadId } : ("skip" as const);
   const list = useQuery(api.ideas.listForThread, threadArgs) ?? [];
   const restore = useMutation(api.ideas.restore);
@@ -29,7 +29,7 @@ export function useIdeaVersions(
     previousLatestId.current = latestId;
   }, [latestId]);
 
-  async function restoreSelected() {
+  const restoreSelected = async () => {
     const target = idea;
 
     if (!sessionId || !target || restoring) {
@@ -47,7 +47,7 @@ export function useIdeaVersions(
     } finally {
       setRestoring(false);
     }
-  }
+  };
 
   const versions: IdeaVersions = {
     index: Math.max(index, 0),
@@ -59,4 +59,4 @@ export function useIdeaVersions(
   };
 
   return { idea, ideas: list, versions, reset: () => setSelectedId(null), select: setSelectedId };
-}
+};

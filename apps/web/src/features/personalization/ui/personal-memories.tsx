@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/personalization/ui/personal-settings.module.scss";
 import Delete01Icon from "@hugeicons/core-free-icons/Delete01Icon";
@@ -17,13 +18,13 @@ type Props = Pick<
   ReturnType<typeof usePersonalSettings>,
   "sortedMemories" | "deletingId" | "deleteMemory" | "deleteError"
 > & { loading: boolean };
-export function PersonalMemories({
+export const PersonalMemories: FC<Props> = ({
   sortedMemories,
   deletingId,
   deleteMemory,
   deleteError,
   loading,
-}: Props) {
+}) => {
   return (
     <section className={styles["personal-settings__memories"]} aria-live="polite">
       {loading ? <p className={styles["personal-settings__quiet"]}>Завантажуємо спогади…</p> : null}
@@ -68,4 +69,4 @@ export function PersonalMemories({
       ) : null}
     </section>
   );
-}
+};

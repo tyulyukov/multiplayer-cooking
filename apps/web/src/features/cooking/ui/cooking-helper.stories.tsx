@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
@@ -11,7 +12,7 @@ import { CookingHelper } from "./cooking-helper";
 
 type HelperStoryArgs = Omit<CookingHelperProps, "attachments">;
 
-function InteractiveHelper(args: HelperStoryArgs) {
+const InteractiveHelper: FC<HelperStoryArgs> = (args) => {
   const attachments = useAttachments(null);
   const [open, setOpen] = useState(args.open);
   const [prompt, setPrompt] = useState(args.prompt);
@@ -32,7 +33,7 @@ function InteractiveHelper(args: HelperStoryArgs) {
       }}
     />
   );
-}
+};
 
 const message = {
   _id: "story-helper-message",

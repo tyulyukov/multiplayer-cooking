@@ -10,11 +10,11 @@ export type ComposerKeyboardEvent = Readonly<{
   shiftKey: boolean;
 }>;
 
-export function shouldSubmitComposerShortcut(
+export const shouldSubmitComposerShortcut = (
   event: ComposerKeyboardEvent,
   shortcut: ComposerSendShortcut,
   desktop: boolean,
-) {
+) => {
   if (
     !desktop ||
     event.key !== "Enter" ||
@@ -28,4 +28,4 @@ export function shouldSubmitComposerShortcut(
   }
 
   return shortcut === "enter" ? !event.shiftKey : event.shiftKey;
-}
+};

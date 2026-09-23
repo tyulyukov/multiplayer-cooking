@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/ideas/ui/idea-card.module.scss";
 import LinkSquare01Icon from "@hugeicons/core-free-icons/LinkSquare01Icon";
 import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
@@ -10,17 +11,14 @@ import type { Idea } from "@/features/ideas/model/types";
 
 import { formatPrice, itemsLabel } from "../lib/idea-format";
 
-export function IdeaCart({
-  idea,
-  canAddToCart,
-  onAddToCart,
-  matchedCount,
-}: {
+type IdeaCartProps = {
   idea: Idea;
   canAddToCart: boolean;
   onAddToCart: () => void;
   matchedCount: number;
-}) {
+};
+
+export const IdeaCart: FC<IdeaCartProps> = ({ idea, canAddToCart, onAddToCart, matchedCount }) => {
   let action = null;
 
   if (idea.cart) {
@@ -120,4 +118,4 @@ export function IdeaCart({
   }
 
   return action;
-}
+};

@@ -103,7 +103,7 @@ const phrases: Record<string, readonly [string, ...string[]]> = {
   ],
 };
 
-export function generationStatus(messages: readonly UIMessage[]) {
+export const generationStatus = (messages: readonly UIMessage[]) => {
   const latest = messages.at(-1);
   const active =
     latest?.role === "assistant"
@@ -121,4 +121,4 @@ export function generationStatus(messages: readonly UIMessage[]) {
   let hash = 0;
   for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   return { activity, label: options[hash % options.length] ?? options[0] };
-}
+};

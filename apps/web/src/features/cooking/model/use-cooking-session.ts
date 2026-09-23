@@ -4,7 +4,7 @@ import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 import { preloadImages } from "@/shared/lib/images";
 
 import type { PlanStep } from "./types";
-export function useCookingSession(data: CookingRoomData) {
+export const useCookingSession = (data: CookingRoomData) => {
   const [now, setNow] = useState(Date.now);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sound, setSound] = useState(false);
@@ -163,4 +163,4 @@ export function useCookingSession(data: CookingRoomData) {
     isMine,
     running,
   };
-}
+};

@@ -10,11 +10,11 @@ import {
   saveCookingCredential,
 } from "@/features/cooking/lib/cooking-session";
 
-export function useCreateCookingRoom(sessionId: SessionId | undefined) {
+export const useCreateCookingRoom = (sessionId: SessionId | undefined) => {
   const navigate = useNavigate();
   const createRoomMutation = useMutation(api.cookingRooms.create);
 
-  return async function createRoom(sourceIdeaId: Idea["_id"], setup: CookingSetup) {
+  return async (sourceIdeaId: Idea["_id"], setup: CookingSetup) => {
     if (!sessionId) return;
     const credential = createCookingCredential(createCookingCredential().participantToken);
     const result = await createRoomMutation({
@@ -28,4 +28,4 @@ export function useCreateCookingRoom(sessionId: SessionId | undefined) {
     saveCookingCredential(result.roomId, credential);
     await navigate({ to: "/cook/$roomId", params: { roomId: result.roomId } });
   };
-}
+};

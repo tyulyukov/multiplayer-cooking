@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -106,7 +107,7 @@ const initialData: CookingRoomData = {
   timers: [],
 };
 
-export function Fixture() {
+export const Fixture: FC = () => {
   const [data, setData] = useState(initialData);
   const [state, setState] = useState(mode);
   useEffect(() => {
@@ -199,6 +200,6 @@ export function Fixture() {
       </nav>
     </>
   );
-}
+};
 
 createRoot(document.getElementById("root")!).render(<Fixture />);

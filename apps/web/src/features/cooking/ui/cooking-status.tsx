@@ -1,17 +1,10 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 
-export function CookingStatus({
-  title,
-  body,
-  image,
-  action,
-  onAction,
-  disabled,
-  loading = false,
-}: {
+type CookingStatusProps = {
   title: string;
   body: string;
   image?: string;
@@ -19,7 +12,17 @@ export function CookingStatus({
   onAction?: () => void;
   disabled?: boolean;
   loading?: boolean;
-}) {
+};
+
+export const CookingStatus: FC<CookingStatusProps> = ({
+  title,
+  body,
+  image,
+  action,
+  onAction,
+  disabled,
+  loading = false,
+}) => {
   const [failed, setFailed] = useState(false);
   return (
     <section className={cookingStyles["cooking-status"]}>
@@ -44,4 +47,4 @@ export function CookingStatus({
       )}
     </section>
   );
-}
+};

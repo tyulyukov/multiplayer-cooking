@@ -166,14 +166,14 @@ const baseRoom = {
   timers: [storyTimer],
 } satisfies CookingRoomData;
 
-export function cookingRoomFixture(
+export const cookingRoomFixture = (
   overrides: Partial<Omit<CookingRoomData, "room">> & {
     room?: Partial<CookingRoomData["room"]>;
   } = {},
-): CookingRoomData {
+): CookingRoomData => {
   const { room, ...rest } = overrides;
   return { ...baseRoom, ...rest, room: { ...baseRoom.room, ...room } };
-}
+};
 
 export const cookingActions = {
   online: true,

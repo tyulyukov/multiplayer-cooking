@@ -1,7 +1,7 @@
 export const convexUrl = import.meta.env.VITE_CONVEX_URL?.trim();
 export const useConvexProxy = import.meta.env.DEV && import.meta.env.VITE_CONVEX_PROXY === "true";
 
-export function proxyConvexStorageUrl(url: string) {
+export const proxyConvexStorageUrl = (url: string) => {
   if (!useConvexProxy || !convexUrl) return url;
 
   try {
@@ -17,4 +17,4 @@ export function proxyConvexStorageUrl(url: string) {
   } catch {
     return url;
   }
-}
+};

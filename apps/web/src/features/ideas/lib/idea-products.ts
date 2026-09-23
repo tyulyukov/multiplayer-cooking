@@ -1,6 +1,6 @@
 import { productRegistryKey } from "@multiplayer-cooking/backend/convex/lib/ingredient";
 import type { Idea } from "../model/types";
-export function getIdeaProducts(idea: Pick<Idea, "products" | "ingredients">) {
+export const getIdeaProducts = (idea: Pick<Idea, "products" | "ingredients">) => {
   const products = idea.products ?? [];
 
   const matched = products.filter((product) => product.productId);
@@ -14,4 +14,4 @@ export function getIdeaProducts(idea: Pick<Idea, "products" | "ingredients">) {
   const noMatches = matched.length === 0;
 
   return { matched, missing, total, noMatches };
-}
+};

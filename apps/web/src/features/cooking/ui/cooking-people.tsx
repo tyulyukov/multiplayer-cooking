@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import styles from "@/features/cooking/ui/cooking-people.module.scss";
 import MoreHorizontalIcon from "@hugeicons/core-free-icons/MoreHorizontalIcon";
@@ -12,10 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
-import type { CookingRoomData } from "@/features/cooking/model/types";
+import type { PeopleProps } from "@/features/cooking/model/component-props";
 
-export function People({
+export const People: FC<PeopleProps> = ({
   disabled,
   error,
   open,
@@ -29,21 +29,7 @@ export function People({
   onLeave,
   onTakeover,
   onSwap,
-}: {
-  disabled: boolean;
-  error: string | null;
-  open: boolean;
-  room: CookingRoomData;
-  onOpenChange: (open: boolean) => void;
-  onCloseInvite: () => void;
-  onRotateInvite: () => void;
-  onRemove: (memberId: Id<"cookingMembers">) => void;
-  onTransfer: (memberId: Id<"cookingMembers">) => void;
-  onContinueAlone: () => void;
-  onLeave: () => void;
-  onTakeover: (slot: number) => void;
-  onSwap: (memberId: Id<"cookingMembers">) => void;
-}) {
+}) => {
   const host = room.me.role === "host";
   const done = room.room.state === "done";
   const vacantSlots = Array.from({ length: room.room.cookCount }, (_, index) => index + 1).filter(
@@ -193,4 +179,4 @@ export function People({
       </DrawerContent>
     </Drawer>
   );
-}
+};

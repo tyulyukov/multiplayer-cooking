@@ -1,7 +1,8 @@
+import type { FC } from "react";
 import styles from "@/features/cooking/ui/cooking-completion.module.scss";
 import { useEffect, useRef } from "react";
 
-export function CompletionConfetti() {
+export const CompletionConfetti: FC = () => {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -74,4 +75,4 @@ export function CompletionConfetti() {
   }, []);
 
   return <canvas ref={ref} className={styles["completion-confetti"]} aria-hidden />;
-}
+};

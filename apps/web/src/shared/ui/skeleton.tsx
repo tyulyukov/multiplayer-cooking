@@ -1,6 +1,9 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+type SkeletonProps = React.ComponentProps<"div">;
+
+const Skeleton: FC<SkeletonProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="skeleton"
@@ -8,6 +11,6 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   );
-}
+};
 
 export { Skeleton };

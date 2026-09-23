@@ -4,17 +4,17 @@ const hryvnia = new Intl.NumberFormat("uk-UA", {
   maximumFractionDigits: 2,
 });
 
-export function formatPrice(value: number) {
+export const formatPrice = (value: number) => {
   return hryvnia.format(value);
-}
+};
 
 const quantityFormat = new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 2 });
 
-export function formatQuantity(value: number) {
+export const formatQuantity = (value: number) => {
   return quantityFormat.format(value);
-}
+};
 
-export function itemsLabel(count: number) {
+export const itemsLabel = (count: number) => {
   const tens = count % 100;
   const ones = count % 10;
 
@@ -27,9 +27,9 @@ export function itemsLabel(count: number) {
   }
 
   return `${count} товарів`;
-}
+};
 
-export function servingsLabel(count: number) {
+export const servingsLabel = (count: number) => {
   if (count === 1) {
     return "1 порція";
   }
@@ -39,4 +39,4 @@ export function servingsLabel(count: number) {
   }
 
   return `${count} порцій`;
-}
+};

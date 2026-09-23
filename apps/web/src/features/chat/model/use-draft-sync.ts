@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DRAFT_MAX_CHARACTERS } from "@multiplayer-cooking/backend/convex/lib/ai_config";
 
 type RemoteDraft = { text: string; images: readonly { storageId: string; url: string }[] };
 
-function draftKey(text: string, imageIds: readonly string[]) {
+const draftKey = (text: string, imageIds: readonly string[]) => {
   return JSON.stringify([text, imageIds]);
-}
+};
 
 const draftSaveDelayMs = 500;
 const draftRetryDelayMs = 3000;
@@ -15,7 +15,7 @@ const emptyDraftKey = draftKey("", []);
 // Keeps the composer and the drafts table in step. The server copy wins only while the local
 // composer has no edits the server has not seen; a typing user is never overwritten.
 // threadId is undefined until the active thread is known; nothing syncs before that.
-export function useDraftSync({
+export const useDraftSync = ({
   threadId,
   remote,
   text,
@@ -29,10 +29,11 @@ export function useDraftSync({
   imageIds: readonly string[];
   adopt: (draft: RemoteDraft) => void;
   save: (threadId: string | null, text: string, imageIds: readonly string[]) => Promise<boolean>;
-}) {
+}) => {
   // The last draft the server confirmed; null until the current thread's draft has loaded.
   const syncedRef = useRef<string | null>(null);
   const pendingRef = useRef<{ timer: number; run: () => void } | null>(null);
+  const scheduleRef = useRef<((target: string | null, delay?: number) => void) | null>(null);
   const hadThreadRef = useRef(false);
   const sendThreadRef = useRef<string | null | undefined>(undefined);
   const createdThreadRef = useRef<string | undefined>(undefined);
@@ -51,40 +52,50 @@ export function useDraftSync({
     latestRef.current = latest;
   });
 
-  function cancel() {
+  const cancel = useCallback(() => {
     if (pendingRef.current) {
       window.clearTimeout(pendingRef.current.timer);
       pendingRef.current = null;
     }
-  }
+  }, []);
 
   // Writes the latest composer state to `target` after `delay`. The state counts as synced only
   // once the server confirms; a refused or failed write is retried while the thread stays open.
-  function schedule(target: string | null, delay = draftSaveDelayMs) {
-    cancel();
-    const { text: draftText, imageIds: draftImageIds } = latestRef.current;
-
-    const run = () => {
+  const schedule = useCallback(
+    (target: string | null, delay = draftSaveDelayMs) => {
       cancel();
+      const { text: draftText, imageIds: draftImageIds } = latestRef.current;
 
-      const key = draftKey(draftText, draftImageIds);
-      const retry = () => {
-        if (latestRef.current.threadId === target && !pendingRef.current) {
-          schedule(target, draftRetryDelayMs);
-        }
+      const run = () => {
+        cancel();
+
+        const key = draftKey(draftText, draftImageIds);
+        const retry = () => {
+          if (latestRef.current.threadId === target && !pendingRef.current) {
+            scheduleRef.current?.(target, draftRetryDelayMs);
+          }
+        };
+
+        saveRef.current(target, draftText, draftImageIds).then((saved) => {
+          if (saved && latestRef.current.threadId === target) {
+            syncedRef.current = key;
+          } else if (!saved) {
+            retry();
+          }
+        }, retry);
       };
 
-      saveRef.current(target, draftText, draftImageIds).then((saved) => {
-        if (saved && latestRef.current.threadId === target) {
-          syncedRef.current = key;
-        } else if (!saved) {
-          retry();
-        }
-      }, retry);
-    };
+      pendingRef.current = { timer: window.setTimeout(run, delay), run };
+    },
+    [cancel],
+  );
 
-    pendingRef.current = { timer: window.setTimeout(run, delay), run };
-  }
+  useEffect(() => {
+    scheduleRef.current = schedule;
+    return () => {
+      scheduleRef.current = null;
+    };
+  }, [schedule]);
 
   useEffect(() => {
     if (threadId === undefined) {
@@ -111,7 +122,7 @@ export function useDraftSync({
     }
 
     hadThreadRef.current = true;
-  }, [threadId]);
+  }, [threadId, cancel]);
 
   useEffect(() => {
     if (!remote || threadId === undefined || sending) {
@@ -137,7 +148,7 @@ export function useDraftSync({
 
       syncedRef.current = remoteKey;
     }
-  }, [remote, localKey, threadId, sending]);
+  }, [remote, localKey, threadId, sending, schedule]);
 
   useEffect(() => {
     if (
@@ -155,7 +166,7 @@ export function useDraftSync({
     }
 
     schedule(threadId);
-  }, [localKey, threadId, sending]);
+  }, [localKey, threadId, sending, cancel, schedule]);
 
   useEffect(() => {
     // A reload or tab close inside the debounce window must not lose the last keystrokes.
@@ -199,4 +210,4 @@ export function useDraftSync({
       setSending(false);
     },
   };
-}
+};

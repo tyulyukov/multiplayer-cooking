@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/pages/home/home-page.module.scss";
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
@@ -5,16 +6,20 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 
-export function Brand({ ready }: { ready: boolean }) {
+type BrandProps = { ready: boolean };
+
+export const Brand: FC<BrandProps> = ({ ready }) => {
   return (
     <div className="brand" data-backend-ready={ready}>
       <i aria-hidden />
       Multiplayer Cooking
     </div>
   );
-}
+};
 
-export function SendError({ message }: { message: string }) {
+type SendErrorProps = { message: string };
+
+export const SendError: FC<SendErrorProps> = ({ message }) => {
   return (
     <Alert
       variant="destructive"
@@ -29,4 +34,4 @@ export function SendError({ message }: { message: string }) {
       </AlertDescription>
     </Alert>
   );
-}
+};

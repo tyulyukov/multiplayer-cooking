@@ -7,19 +7,19 @@ type PromptSelection = Readonly<{
   baseRequest: string;
 }>;
 
-export function useComposerDraft() {
+export const useComposerDraft = () => {
   const [request, setRequest] = useState("");
   const revision = useRef(0);
   const [selection, setSelection] = useState<PromptSelection | null>(null);
   const [quickPrompts, setQuickPrompts] = useState(() => pickQuickPrompts());
 
-  function change(value: string) {
+  const change = (value: string) => {
     revision.current += 1;
     setRequest(value);
     setSelection(null);
-  }
+  };
 
-  function togglePrompt(prompt: QuickPrompt) {
+  const togglePrompt = (prompt: QuickPrompt) => {
     revision.current += 1;
     if (selection?.promptId === prompt.id) {
       setRequest(selection.baseRequest);
@@ -31,14 +31,14 @@ export function useComposerDraft() {
     const trimmedBase = baseRequest.trim();
     setRequest(trimmedBase ? `${trimmedBase}\n${prompt.label}` : prompt.label);
     setSelection({ promptId: prompt.id, baseRequest });
-  }
+  };
 
-  function reset() {
+  const reset = () => {
     revision.current += 1;
     setRequest("");
     setSelection(null);
     setQuickPrompts(pickQuickPrompts());
-  }
+  };
 
   return { request, revision, selection, quickPrompts, change, togglePrompt, reset };
-}
+};

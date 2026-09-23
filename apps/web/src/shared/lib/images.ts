@@ -6,7 +6,7 @@ import {
 const jpegQuality = 0.85;
 
 // Photos are resized in the browser so uploads stay small and the model gets a bounded image.
-export async function resizeImage(file: File): Promise<Blob> {
+export const resizeImage = async (file: File): Promise<Blob> => {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, IMAGE_UPLOAD_MAX_EDGE / Math.max(bitmap.width, bitmap.height));
   const width = Math.max(1, Math.round(bitmap.width * scale));
@@ -38,9 +38,9 @@ export async function resizeImage(file: File): Promise<Blob> {
   }
 
   return blob;
-}
+};
 
-export async function uploadImage(uploadUrl: string, blob: Blob): Promise<string> {
+export const uploadImage = async (uploadUrl: string, blob: Blob): Promise<string> => {
   const response = await fetch(uploadUrl, {
     method: "POST",
     headers: { "content-type": blob.type },
@@ -54,16 +54,16 @@ export async function uploadImage(uploadUrl: string, blob: Blob): Promise<string
   const { storageId } = (await response.json()) as { storageId: string };
 
   return storageId;
-}
+};
 
 // Convex serves stored files with a 30-day private cache, so a warm request now means the step
 // image is already local when the cook expands the step or reloads the page.
 const preloaded = new Set<string>();
 
-export function preloadImages(urls: readonly string[]) {
+export const preloadImages = (urls: readonly string[]) => {
   for (const url of urls) {
     if (preloaded.has(url)) continue;
     preloaded.add(url);
     new Image().src = url;
   }
-}
+};

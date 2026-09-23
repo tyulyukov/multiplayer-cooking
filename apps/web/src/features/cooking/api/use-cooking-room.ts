@@ -5,7 +5,10 @@ import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import type { CookingCredential } from "@/features/cooking/lib/cooking-session";
 
-export function useCookingRoom(roomId: Id<"cookingRooms">, credential: CookingCredential | null) {
+export const useCookingRoom = (
+  roomId: Id<"cookingRooms">,
+  credential: CookingCredential | null,
+) => {
   const connection = useConvexConnectionState();
   const [browserOnline, setBrowserOnline] = useState(navigator.onLine);
   const online = browserOnline && connection.isWebSocketConnected;
@@ -65,4 +68,4 @@ export function useCookingRoom(roomId: Id<"cookingRooms">, credential: CookingCr
     leave,
     cookAgain,
   };
-}
+};
