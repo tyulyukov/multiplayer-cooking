@@ -27,7 +27,7 @@ Constraints that are not visible in the code:
 
 ## Architecture
 
-- This repository is a Bun workspace. `apps/web` contains the React app, `apps/backend` contains Convex, and `packages/theme` contains cross-platform design tokens. Add the future React Native client at `apps/mobile`.
+- This repository is a Bun workspace. `apps/web` contains the React app, `apps/backend` contains Convex, `apps/mobile` contains the Expo React Native client, and `packages/theme` contains cross-platform design tokens. The mobile app has only a mock Сільпо connect screen; `apps/mobile/AGENTS.md` covers its commands and conventions.
 - Convex is the backend for data, realtime state, and server-side integrations.
 - React and Vite are the frontend. TanStack Router handles routes.
 - Import browser-safe Convex contracts through the explicit `@multiplayer-cooking/backend` exports. Do not expose the whole backend library tree.

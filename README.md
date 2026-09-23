@@ -17,7 +17,8 @@ The app today: you connect your Сільпо account, describe what you want to 
 
 - `apps/web` contains the React and Vite app.
 - `apps/backend` contains the Convex app and backend tests.
-- `packages/theme` contains platform-neutral design tokens and the web CSS binding. A future React Native app can import the TypeScript tokens from `@multiplayer-cooking/theme`.
+- `apps/mobile` contains the Expo React Native app. It has one mock Сільпо connect screen and no backend connection yet.
+- `packages/theme` contains platform-neutral design tokens and the web CSS binding. The web and mobile apps import the TypeScript tokens from `@multiplayer-cooking/theme`.
 
 ## Run locally
 
@@ -57,6 +58,8 @@ bun run check
 ```
 
 The Сільпо OAuth callback is served by Convex at `<CONVEX_SITE_URL>/silpo/callback`. On the local deployment that is `http://127.0.0.1:3211/silpo/callback`; the Сільпо authorization server accepts it, so the login works locally. Each deployment registers its own OAuth client on first use.
+
+Start the mobile app with `bun run dev:mobile`, then open it in Expo Go, an iOS Simulator, an Android Emulator, or the browser from the Expo CLI menu.
 
 ## Environment variables
 
