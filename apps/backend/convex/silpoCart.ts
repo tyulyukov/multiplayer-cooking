@@ -11,7 +11,7 @@ import {
   readCartId,
   readCartSummary,
   readCheckoutLink,
-  shapeAddress,
+  readAddress,
 } from "./lib/silpo_shapes";
 
 const cartFollowUp = "Адресу доставки збережено. Підбери продукти в Сільпо для цієї страви.";
@@ -32,7 +32,7 @@ export const setupCart = internalAction({
 
     try {
       const cart = await withSilpoClient(ctx, userId, async (client) => {
-        const found = shapeAddress(await client.callTool("silpo_find_address", { address }));
+        const found = readAddress(await client.callTool("silpo_find_address", { address }));
 
         if (!found) {
           throw new Error("Сільпо не знайшло цю адресу. Перевір місто, вулицю і будинок.");
@@ -75,6 +75,7 @@ export const setupCart = internalAction({
           timeslot,
           branchId: delivery.branchId,
         });
+
         const shoppingCartId = readCartId(created);
 
         if (!shoppingCartId) {
@@ -116,10 +117,12 @@ export const addIdeaToCart = internalAction({
   returns: v.null(),
   handler: async (ctx, { ideaId, userId: requestedUserId, refreshOnly }) => {
     const userId = await ctx.runQuery(internal.accounts.resolveUserId, { userId: requestedUserId });
+
     const [idea, connection] = await Promise.all([
       ctx.runQuery(internal.ideas.get, { ideaId }),
       ctx.runQuery(internal.silpo.connectionByUser, { userId }),
     ]);
+
     const context = connection?.cart;
     const products = idea?.products?.filter((product) => product.productId) ?? [];
 
@@ -128,6 +131,7 @@ export const addIdeaToCart = internalAction({
         ideaId,
         message: "Кошик Сільпо ще не готовий. Вкажи адресу доставки.",
       });
+
       return null;
     }
 

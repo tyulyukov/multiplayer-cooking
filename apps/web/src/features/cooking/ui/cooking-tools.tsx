@@ -39,25 +39,31 @@ export function CookingTools({
   const [stepKey, setStepKey] = useState("");
   const [servings, setServings] = useState(String(data.room.requestedServings));
   let result: number | null = null;
+
   try {
     const value = parseCookingQuantity(amount);
+
     if (value !== null) result = convertCookingQuantity(value, from, to);
   } catch {
     /* Incompatible units stay unconverted. */
   }
+
   const allowedSteps = data.steps.filter(
     (step) =>
       step.startedAt &&
       step.status !== "done" &&
       (data.me.role === "host" || step.slots.some((slot) => data.me.slots.includes(slot))),
   );
+
   const selectedStep = stepKey || allowedSteps[0]?.stepKey;
   const duration = parseCookingQuantity(minutes);
   const validDuration = duration !== null && duration > 0 && duration <= 10080;
+
   const ask = (prompt?: string) => {
     setOpen(false);
     actions.ask(prompt);
   };
+
   return (
     <Drawer autoFocus open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>

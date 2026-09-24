@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
-import { htmlToText, isPublicHttpUrl, parseWebResults, READ_PAGE_MAX_CHARACTERS } from "./web";
+import {
+  htmlToText,
+  isPublicHttpUrl,
+  parseWebResults,
+  READ_PAGE_MAX_CHARACTERS,
+  searxResponseSchema,
+} from "./web";
 
 describe("isPublicHttpUrl", () => {
   test("accepts public http and https hosts", () => {
@@ -38,7 +44,7 @@ describe("parseWebResults", () => {
       ],
     };
 
-    const results = parseWebResults(payload);
+    const results = parseWebResults(searxResponseSchema.parse(payload));
 
     expect(results).toEqual([
       { title: "Борщ", url: "https://a.example/1", snippet: "x".repeat(300) },
@@ -47,9 +53,16 @@ describe("parseWebResults", () => {
   });
 
   test("returns nothing for malformed payloads", () => {
-    expect(parseWebResults(null)).toEqual([]);
-    expect(parseWebResults({ results: "nope" })).toEqual([]);
-    expect(parseWebResults("text")).toEqual([]);
+    expect(parseWebResults(searxResponseSchema.parse(null))).toEqual([]);
+    expect(parseWebResults(searxResponseSchema.parse({ results: "nope" }))).toEqual([]);
+    expect(parseWebResults(searxResponseSchema.parse("text"))).toEqual([]);
+    expect(
+      parseWebResults(
+        searxResponseSchema.parse({
+          results: [null, "x", { url: "https://a.example/1", title: "Борщ" }],
+        }),
+      ),
+    ).toEqual([{ title: "Борщ", url: "https://a.example/1", snippet: "" }]);
   });
 
   test("honours the result limit", () => {
@@ -60,7 +73,7 @@ describe("parseWebResults", () => {
       })),
     };
 
-    expect(parseWebResults(payload, 2)).toHaveLength(2);
+    expect(parseWebResults(searxResponseSchema.parse(payload), 2)).toHaveLength(2);
   });
 });
 

@@ -13,6 +13,7 @@ import type { CookingActions, CookingRoomData } from "@/features/cooking/model/t
 import type { PlanStep, RuntimeStep } from "../model/types";
 
 import type { getCookingStepState } from "../lib/cooking-step-state";
+
 type StepControlsProps = Pick<
   ReturnType<typeof getCookingStepState>,
   | "active"
@@ -38,6 +39,7 @@ type StepControlsProps = Pick<
   setSkipChecklistOpen: (open: boolean) => void;
   complete: (skipChecklist?: boolean) => void;
 };
+
 export function StepControls({
   step,
   runtime,
@@ -62,6 +64,7 @@ export function StepControls({
   done,
 }: StepControlsProps) {
   const actionVariant = primary ? "default" : "outline";
+
   return (
     <>
       <div className={cookingStyles["cooking-step-actions"]}>
@@ -103,8 +106,10 @@ export function StepControls({
             onClick={() => {
               if (!checked) {
                 setSkipChecklistOpen(true);
+
                 return;
               }
+
               complete();
             }}
           >

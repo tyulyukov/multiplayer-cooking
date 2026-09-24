@@ -5,6 +5,7 @@ import { HistoryPanel } from "../../src/components/history-panel";
 import "../../src/index.css";
 
 const mode = new URLSearchParams(location.search).get("mode") ?? "unavailable";
+
 const idea = {
   _id: "fixture",
   _creationTime: Date.now(),
@@ -53,6 +54,7 @@ const idea = {
     ? { image: { storageId: "fixture", generated: true }, imageUrl: "/missing-dish.webp" }
     : {}),
 };
+
 if (mode === "matched") {
   idea.products = idea.ingredients.map((ingredient, index) => ({
     ingredient: ingredient.name,
@@ -63,6 +65,7 @@ if (mode === "matched") {
     unit: "1 кг",
   }));
 }
+
 createRoot(document.getElementById("root")).render(
   <>
     <div className="checker" aria-hidden="true" />

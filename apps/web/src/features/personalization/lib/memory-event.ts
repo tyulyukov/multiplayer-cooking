@@ -1,15 +1,15 @@
-export function readMemoryEvent(output: unknown) {
-  if (
-    typeof output !== "object" ||
-    output === null ||
-    !("changed" in output) ||
-    output.changed !== true ||
-    !("action" in output) ||
-    (output.action !== "added" && output.action !== "removed") ||
-    !("text" in output) ||
-    typeof output.text !== "string"
-  ) {
-    return null;
-  }
-  return { action: output.action, text: output.text };
+import { isPlainObject, isString } from "@/shared/lib/type-guards";
+
+export function isMemoryEvent(
+  output: unknown,
+): output is { changed: true; action: "added" | "removed"; text: string } {
+  return (
+    isPlainObject(output) &&
+    "changed" in output &&
+    output.changed === true &&
+    "action" in output &&
+    (output.action === "added" || output.action === "removed") &&
+    "text" in output &&
+    isString(output.text)
+  );
 }

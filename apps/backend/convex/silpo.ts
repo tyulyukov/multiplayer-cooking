@@ -153,6 +153,7 @@ export const saveCartContext = internalMutation({
 
     if (!found || found.address !== expectedAddress) return false;
     await ctx.db.patch(found._id, { cart, cartError: undefined, cartPending: false });
+
     return true;
   },
 });

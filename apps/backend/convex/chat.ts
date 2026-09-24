@@ -22,7 +22,7 @@ import {
   AI_REQUEST_MAX_CHARACTERS,
   DRAFT_MAX_CHARACTERS,
 } from "./lib/ai_config";
-import { readQuestionInput, validateQuestionSubmission } from "./lib/questions";
+import { questionInputSchema, validateQuestionSubmission } from "./lib/questions";
 import {
   findUser,
   findSession,
@@ -36,6 +36,7 @@ const rateLimiter = new RateLimiter(components.rateLimiter, AI_RATE_LIMITS);
 export async function ownsThread(ctx: QueryCtx, user: Doc<"users">, threadId: string) {
   try {
     const thread = await getThreadMetadata(ctx, components.agent, { threadId });
+
     return thread.userId === user._id;
   } catch {
     return false;
@@ -51,6 +52,7 @@ export const activeThread = query({
     if (!user) return null;
     const session = await findSession(ctx, sessionId);
     const threadId = session ? session.activeThreadId : user.activeThreadId;
+
     return threadId && (await ownsThread(ctx, user, threadId)) ? { threadId } : null;
   },
 });
@@ -255,6 +257,7 @@ export const newThread = mutation({
   returns: v.null(),
   handler: async (ctx, { sessionId }) => {
     await setActiveThread(ctx, sessionId, undefined);
+
     return null;
   },
 });
@@ -266,7 +269,9 @@ export const followUp = internalMutation({
   handler: async (ctx, { userId: requestedUserId, threadId, text }) => {
     const userId = await resolveUserId(ctx, requestedUserId);
     const user = await ctx.db.get(userId);
+
     if (!user || !(await ownsThread(ctx, user, threadId))) return null;
+
     const { messageId } = await saveMessage(ctx, components.agent, {
       threadId,
       userId,
@@ -289,6 +294,7 @@ async function pendingQuestionInput(ctx: QueryCtx, threadId: string, toolCallId:
     threadId,
     paginationOpts: { cursor: null, numItems: 40 },
   });
+
   let input: unknown;
 
   for (const doc of recent.page) {
@@ -310,7 +316,7 @@ async function pendingQuestionInput(ctx: QueryCtx, threadId: string, toolCallId:
     }
   }
 
-  return input === undefined ? null : readQuestionInput(input);
+  return input === undefined ? null : (questionInputSchema.safeParse(input).data ?? null);
 }
 
 export const answerQuestion = mutation({
@@ -340,11 +346,13 @@ export const answerQuestion = mutation({
     }
 
     const input = await pendingQuestionInput(ctx, threadId, toolCallId);
+
     if (!input) {
       return { ok: false as const, message: "Це питання вже закрите." };
     }
 
     const value = validateQuestionSubmission(input, answer);
+
     if (!value) {
       return { ok: false as const, message: "Перевір відповіді та спробуй ще раз." };
     }
@@ -399,6 +407,7 @@ async function threadPhotos(ctx: QueryCtx, threadId: string) {
     .withIndex("by_thread", (q) => q.eq("threadId", threadId))
     .order("desc")
     .take(12);
+
   const seen = new Set<Id<"_storage">>();
   const photos: string[] = [];
 
@@ -430,6 +439,7 @@ export const history = query({
 
     const session = await findSession(ctx, sessionId);
     const activeThreadId = session ? session.activeThreadId : user.activeThreadId;
+
     const threads = await ctx.runQuery(components.agent.threads.listThreadsByUserId, {
       userId: user._id,
       order: "desc",
@@ -453,8 +463,10 @@ export const openThread = mutation({
   returns: v.null(),
   handler: async (ctx, { sessionId, threadId }) => {
     const user = await findUser(ctx, sessionId);
+
     if (!user || !(await ownsThread(ctx, user, threadId))) return null;
     await setActiveThread(ctx, sessionId, threadId);
+
     return null;
   },
 });
@@ -473,6 +485,7 @@ export const deleteThread = mutation({
       .query("ideas")
       .withIndex("by_thread", (q) => q.eq("threadId", threadId))
       .collect();
+
     // Versions share a photo when the model reuses "img_previous"; delete each file once.
     const storageIds = new Set(ideas.flatMap((idea) => (idea.image ? [idea.image.storageId] : [])));
 
@@ -489,6 +502,7 @@ export const deleteThread = mutation({
     if (savedDraft) await ctx.db.delete(savedDraft._id);
 
     const session = await findSession(ctx, sessionId);
+
     if ((session ? session.activeThreadId : user.activeThreadId) === threadId) {
       await setActiveThread(ctx, sessionId, undefined);
     }

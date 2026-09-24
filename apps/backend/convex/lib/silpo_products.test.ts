@@ -2,11 +2,14 @@ import { describe, expect, test } from "bun:test";
 
 import type { SilpoClient } from "./silpo_client";
 import { findSilpoProducts } from "./silpo_products";
+import type { JsonInputRecord } from "./silpo_shapes";
 
 type Cart = Parameters<typeof findSilpoProducts>[1];
-type Call = Readonly<{ name: string; args: Record<string, unknown> }>;
+
+type Call = Readonly<{ name: string; args: JsonInputRecord }>;
 
 const now = Date.parse("2026-09-08T10:00:00Z");
+
 const items = [
   { ingredient: "Кабачки", query: "кабачок", quantity: 2 },
   { ingredient: "Пармезан", query: "пармезан", quantity: 1 },
@@ -21,26 +24,26 @@ function cart(start: string): Cart {
   };
 }
 
-function client(
-  callTool: SilpoClient["callTool"],
-): Readonly<{ client: SilpoClient; calls: Call[] }> {
+function client(callTool: SilpoClient["callTool"]) {
   const calls: Call[] = [];
 
   return {
     client: {
       callTool: async (name, args) => {
         calls.push({ name, args });
+
         return callTool(name, args);
       },
       listTools: async () => [],
     },
     calls,
-  };
+  } satisfies Readonly<{ client: SilpoClient; calls: Call[] }>;
 }
 
 describe("findSilpoProducts", () => {
   test("refreshes an expired slot before searching with the refreshed slot", async () => {
     const products = { queries: [{ query: "кабачок", products: [{ id: "p1", name: "Кабачок" }] }] };
+
     const fixture = client(async (name, args) => {
       if (name === "silpo_get_time_slots") {
         return [{ start: "2026-09-08T12:00:00Z", end: "2026-09-08T13:00:00Z", available: true }];

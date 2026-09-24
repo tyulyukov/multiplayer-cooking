@@ -15,6 +15,7 @@ import { servingsLabel } from "../lib/idea-format";
 import { IdeaPhoto } from "./idea-photo";
 import { IdeaProducts } from "./idea-products";
 import { VersionNav } from "./idea-version-nav";
+
 export { IdeaCompact } from "./idea-compact";
 
 function IdeaMeta({ idea }: { idea: Idea }) {
@@ -70,7 +71,7 @@ export function IdeaPane({
         </header>
         <IdeaMeta idea={idea} />
         <p className={styles["idea-summary"]}>{idea.summary}</p>
-        <Markdown text={idea.body} className="idea-body" />
+        <Markdown text={idea.body} />
         <IdeaProducts idea={idea} canAddToCart={canAddToCart} onAddToCart={onAddToCart} />
         <div className={styles["idea-actions"]}>
           <CookTogether

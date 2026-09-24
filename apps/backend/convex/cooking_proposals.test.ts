@@ -44,6 +44,7 @@ function plan() {
 describe("cooking plan proposals", () => {
   test("identifies changed and added future steps", () => {
     const current = plan();
+
     const next = {
       ...current,
       steps: [
@@ -64,6 +65,7 @@ describe("cooking plan proposals", () => {
 
   test("accepts text changes for a started step without changing its work state", () => {
     const current = plan();
+
     const next = {
       ...current,
       steps: [{ ...current.steps[0], body: "Подрібніть томати." }, current.steps[1]],
@@ -94,6 +96,7 @@ describe("cooking plan proposals", () => {
       },
       2,
     );
+
     const next = { ...current, steps: [{ ...current.steps[0], checklist: [] }, current.steps[1]] };
 
     expect(
@@ -110,10 +113,12 @@ describe("cooking plan proposals", () => {
   test("accepts a selected-step change while another cook works on an unchanged step", () => {
     const current = plan();
     current.steps[1].dependsOn = [];
+
     const next = {
       ...current,
       steps: [{ ...current.steps[0], body: "Готуй без чилі." }, current.steps[1]],
     };
+
     expect(
       assessProposal(
         current,
@@ -131,6 +136,7 @@ describe("cooking plan proposals", () => {
   test("rejects relabeling an already checked action", () => {
     const current = plan();
     current.steps[0].checklist = [{ id: "cut", label: "Наріж томати." }];
+
     const next = {
       ...current,
       steps: [
@@ -138,6 +144,7 @@ describe("cooking plan proposals", () => {
         current.steps[1],
       ],
     };
+
     expect(
       assessProposal(
         current,
@@ -151,6 +158,7 @@ describe("cooking plan proposals", () => {
 
   test("rejects a started-step change outside the selected step", () => {
     const current = plan();
+
     const next = {
       ...current,
       steps: [{ ...current.steps[0], body: "Подрібніть томати." }, current.steps[1]],
@@ -172,6 +180,7 @@ describe("cooking plan proposals", () => {
 
   test("rejects a proposal after a dependent step starts", () => {
     const current = plan();
+
     const next = {
       ...current,
       steps: [{ ...current.steps[0], body: "Розріжте томати навпіл." }, current.steps[1]],
@@ -184,6 +193,7 @@ describe("cooking plan proposals", () => {
 
   test("accepts a change when all affected work remains pending", () => {
     const current = plan();
+
     const next = {
       ...current,
       steps: [current.steps[0], { ...current.steps[1], body: "Тушкуйте 12 хвилин." }],
@@ -211,6 +221,7 @@ describe("cooking plan proposals", () => {
       },
       2,
     );
+
     const next = { ...current, equipment: [{ ...current.equipment[0], capacity: 2 }] };
 
     expect(assessProposal(current, next, [{ stepKey: "prep", status: "active" }], [])).toEqual({
@@ -223,6 +234,7 @@ describe("cooking plan proposals", () => {
 describe("keepStartedSteps", () => {
   test("restores finished steps the model rewrote and keeps future edits", () => {
     const current = plan();
+
     const next = {
       ...current,
       ingredients: [],
@@ -244,6 +256,7 @@ describe("keepStartedSteps", () => {
 
   test("leaves the selected started step editable", () => {
     const current = plan();
+
     const next = {
       ...current,
       steps: [{ ...current.steps[0], body: "Дрібно." }, current.steps[1]],

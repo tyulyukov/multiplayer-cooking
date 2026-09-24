@@ -14,11 +14,15 @@ describe("generated dish images", () => {
       let request: Request | undefined;
       process.env.OPENROUTER_API_KEY = "test-key";
       process.env.OPENROUTER_IMAGE_MODEL = model;
+
       const mockedFetch = async (input: URL | RequestInfo, init?: RequestInit) => {
         request = new Request(input, init);
+
         return new Response(JSON.stringify({ data: [{ b64_json: png }], usage: { cost: 0.04 } }));
       };
+
       Object.defineProperty(globalThis, "fetch", { configurable: true, value: mockedFetch });
+
       try {
         const result = await generateDishImage({
           title: "Курка",
@@ -26,6 +30,7 @@ describe("generated dish images", () => {
           body: "Ніжна",
           ingredients: [{ name: "курка" }],
         });
+
         expect(request?.url).toBe("https://openrouter.ai/api/v1/images");
         expect(request?.method).toBe("POST");
         expect(request?.headers.get("authorization")).toBe("Bearer test-key");
@@ -47,8 +52,10 @@ describe("generated dish images", () => {
         expect(result.blob.type).toBe("image/png");
       } finally {
         Object.defineProperty(globalThis, "fetch", { configurable: true, value: originalFetch });
+
         if (originalKey === undefined) delete process.env.OPENROUTER_API_KEY;
         else process.env.OPENROUTER_API_KEY = originalKey;
+
         if (originalModel === undefined) delete process.env.OPENROUTER_IMAGE_MODEL;
         else process.env.OPENROUTER_IMAGE_MODEL = originalModel;
       }
@@ -58,6 +65,7 @@ describe("generated dish images", () => {
   test("requires an explicit image model configuration", () => {
     const originalModel = process.env.OPENROUTER_IMAGE_MODEL;
     delete process.env.OPENROUTER_IMAGE_MODEL;
+
     try {
       expect(dishImageModel).toThrow("Image model is not configured");
     } finally {
@@ -72,6 +80,7 @@ describe("generated dish images", () => {
       body: "Ніжна курка з рисом",
       ingredients: [{ name: "курка", amount: "200 г" }, { name: "рис" }],
     });
+
     expect(prompt).toContain('"name":"курка"');
     expect(prompt).toContain("No extra visible ingredients");
     expect(prompt).toContain("Warm cream tabletop");

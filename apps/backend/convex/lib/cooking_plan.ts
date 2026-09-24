@@ -9,7 +9,9 @@ const idSchema = z
     /^[A-Za-z0-9][A-Za-z0-9._-]*$/,
     "ID must use letters, numbers, dots, underscores, or hyphens",
   );
+
 const shortTextSchema = z.string().trim().min(1).max(140);
+
 const markdownSchema = z.string().trim().min(1).max(6_000);
 
 const checklistItemSchema = z.object({ id: idSchema, label: shortTextSchema }).strict();
@@ -84,9 +86,11 @@ export const cookingPlanSchema = z
     if (new TextEncoder().encode(JSON.stringify(plan)).byteLength > 200_000) {
       ctx.addIssue({ code: "custom", message: "Cooking plan exceeds 200 KB" });
     }
+
     if (plan.steps.reduce((count, step) => count + step.timers.length, 0) > 24) {
       ctx.addIssue({ code: "custom", message: "Cooking plan exceeds 24 timers" });
     }
+
     addDuplicateIdIssues(ctx, plan.ingredients, "ingredients");
     addDuplicateIdIssues(ctx, plan.equipment, "equipment");
     addDuplicateIdIssues(ctx, plan.steps, "steps");
@@ -115,6 +119,7 @@ export const cookingPlanSchema = z
       );
       addDuplicateIdIssues(ctx, step.checklist, `steps.${index}.checklist`);
       addDuplicateIdIssues(ctx, step.timers, `steps.${index}.timers`);
+
       for (const [timerIndex, timer] of step.timers.entries()) {
         if (
           timer.afterChecklistItemId &&
@@ -127,6 +132,7 @@ export const cookingPlanSchema = z
           });
         }
       }
+
       addDuplicateIdIssues(ctx, step.choices ?? [], `steps.${index}.choices`);
 
       if (step.kind === "task" && step.slots.length !== 1) {
@@ -136,6 +142,7 @@ export const cookingPlanSchema = z
           message: "A task needs one cook slot",
         });
       }
+
       if (step.kind === "together" && step.slots.length < 2) {
         ctx.addIssue({
           code: "custom",
@@ -143,6 +150,7 @@ export const cookingPlanSchema = z
           message: "A shared step needs at least two cook slots",
         });
       }
+
       if (step.kind === "handoff" && step.slots.length !== 2) {
         ctx.addIssue({
           code: "custom",
@@ -188,14 +196,16 @@ export const cookingPlanSchema = z
   });
 
 export type CookingPlan = z.output<typeof cookingPlanSchema>;
+
 export type CookingStep = z.output<typeof cookingStepSchema>;
 
-export function validateCookingPlan(input: unknown, cookCount: number): CookingPlan {
+export function validateCookingPlan(input: CookingPlan, cookCount: number): CookingPlan {
   if (!Number.isInteger(cookCount) || cookCount < 1 || cookCount > 12) {
     throw new Error("Cook count must be an integer from 1 to 12");
   }
 
   const parsed = cookingPlanSchema.safeParse(input);
+
   if (!parsed.success) {
     throw new Error(`Invalid cooking plan: ${formatIssues(parsed.error.issues)}`);
   }
@@ -204,6 +214,7 @@ export function validateCookingPlan(input: unknown, cookCount: number): CookingP
     if (step.slots.some((slot) => slot > cookCount)) {
       throw new Error(`Step ${step.id} assigns a cook slot outside 1..${cookCount}`);
     }
+
     if (cookCount === 1 && (step.kind !== "task" || step.slots[0] !== 1)) {
       throw new Error("A solo cooking plan may only contain task steps assigned to slot 1");
     }
@@ -212,7 +223,7 @@ export function validateCookingPlan(input: unknown, cookCount: number): CookingP
   return parsed.data;
 }
 
-export function validateGeneratedCookingPlan(input: unknown, cookCount: number): CookingPlan {
+export function validateGeneratedCookingPlan(input: CookingPlan, cookCount: number): CookingPlan {
   const plan = validateCookingPlan(input, cookCount);
 
   if (!plan.steps.some((step) => step.timers.length > 0)) {
@@ -231,9 +242,11 @@ export function topologicalOrder(plan: CookingPlan): CookingStep[] {
       (step) =>
         remaining.has(step.id) && step.dependsOn.every((dependency) => !remaining.has(dependency)),
     );
+
     if (!next) {
       throw new Error("Step dependencies must not contain a cycle");
     }
+
     remaining.delete(next.id);
     ordered.push(next);
   }
@@ -243,8 +256,10 @@ export function topologicalOrder(plan: CookingPlan): CookingStep[] {
 
 export function normalizeSoloPlan(plan: CookingPlan): CookingPlan {
   const ordered = topologicalOrder(plan);
+
   const steps = ordered.map((step, index) => {
     const previous = index === 0 ? undefined : ordered[index - 1];
+
     return {
       ...step,
       kind: "task" as const,
@@ -258,6 +273,7 @@ export function normalizeSoloPlan(plan: CookingPlan): CookingPlan {
 
 export function availableSteps(plan: CookingPlan, doneStepIds: Iterable<string>): CookingStep[] {
   const done = new Set(doneStepIds);
+
   return plan.steps.filter(
     (step) => !done.has(step.id) && step.dependsOn.every((dependency) => done.has(dependency)),
   );
@@ -295,9 +311,11 @@ function hasCycle(steps: readonly CookingStep[]): boolean {
       (step) =>
         remaining.has(step.id) && step.dependsOn.every((dependency) => !remaining.has(dependency)),
     );
+
     if (!next) {
       return true;
     }
+
     remaining.delete(next.id);
   }
 

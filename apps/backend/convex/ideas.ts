@@ -26,6 +26,7 @@ export const finishRun = internalMutation({
   returns: v.null(),
   handler: async (ctx, { threadId, promptMessageId, userId: requestedUserId }) => {
     const userId = await resolveUserId(ctx, requestedUserId);
+
     const ideas = await ctx.db
       .query("ideas")
       .withIndex("by_thread_prompt", (q) =>
@@ -74,6 +75,7 @@ export const latest = query({
       .withIndex("by_thread", (q) => q.eq("threadId", threadId))
       .order("desc")
       .take(IDEA_VERSIONS_LIMIT);
+
     const idea = ideas.find((item) => !item.pending);
 
     if (!idea || idea.userId !== user._id) {
@@ -166,6 +168,7 @@ export const listForThread = query({
       .take(IDEA_VERSIONS_LIMIT);
 
     const visibleIdeas = ideas.filter((idea) => idea.userId === user._id && !idea.pending);
+
     return Promise.all(
       visibleIdeas.map(async (idea) => ({
         ...idea,
@@ -200,13 +203,14 @@ export const restore = mutation({
       return { ok: false as const, message: "Повідомлення цієї версії вже видалено." };
     }
 
-    let cursor = { startOrder: prompt.order + 1, startStepOrder: undefined as number | undefined };
+    let startOrder = prompt.order + 1;
+    let startStepOrder: number | undefined;
 
     for (let round = 0; round < 20; round += 1) {
       const result = await ctx.runMutation(components.agent.messages.deleteByOrder, {
         threadId: idea.threadId,
-        startOrder: cursor.startOrder,
-        startStepOrder: cursor.startStepOrder,
+        startOrder,
+        startStepOrder,
         endOrder: Number.MAX_SAFE_INTEGER,
       });
 
@@ -214,7 +218,8 @@ export const restore = mutation({
         break;
       }
 
-      cursor = { startOrder: result.lastOrder, startStepOrder: result.lastStepOrder };
+      startOrder = result.lastOrder;
+      startStepOrder = result.lastStepOrder;
     }
 
     const later = await ctx.db
@@ -260,11 +265,15 @@ export const saveImage = internalMutation({
   returns: v.boolean(),
   handler: async (ctx, { ideaId, image }) => {
     const idea = await ctx.db.get(ideaId);
+
     if (!idea || idea.image?.generated) {
       await ctx.storage.delete(image.storageId);
+
       return Boolean(idea?.image?.generated);
     }
+
     await ctx.db.patch(ideaId, { image, imageError: undefined });
+
     return true;
   },
 });
@@ -274,6 +283,7 @@ export const saveImageError = internalMutation({
   returns: v.null(),
   handler: async (ctx, { ideaId, message }) => {
     if (await ctx.db.get(ideaId)) await ctx.db.patch(ideaId, { imageError: message });
+
     return null;
   },
 });

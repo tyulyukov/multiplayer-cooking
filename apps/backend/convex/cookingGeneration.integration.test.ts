@@ -16,10 +16,12 @@ test("generates and saves a cooking plan through the agent without reading the o
         customInstructions: "Пояснюй простими кроками",
       },
     });
+
     const steps = await ctx.db
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", roomId))
       .take(80);
+
     for (const step of steps) await ctx.db.delete(step._id);
     await ctx.db.patch(roomId, { state: "generating", plan: undefined, planVersion: 0 });
   });
@@ -29,13 +31,17 @@ test("generates and saves a cooking plan through the agent without reading the o
   process.env.OPENROUTER_API_KEY = "test-key";
   process.env.OPENROUTER_MODEL = "test-model";
   const requests: Request[] = [];
+
   const providerFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = new Request(input, init);
+
     if (request.url !== "https://openrouter.ai/api/v1/chat/completions") {
       throw new Error("Unexpected network request");
     }
+
     requests.push(request);
     const proposedPlan = requests.length === 1 ? plan : generatedPlan;
+
     return Response.json({
       id: `plan-response-${requests.length}`,
       created: 1,
@@ -63,7 +69,9 @@ test("generates and saves a cooking plan through the agent without reading the o
       usage: { prompt_tokens: 100, completion_tokens: 200, total_tokens: 300 },
     });
   };
+
   Object.defineProperty(globalThis, "fetch", { configurable: true, value: providerFetch });
+
   try {
     await t.action(internal.cookingGeneration.generate, { roomId, attempt: "fixture" });
     const room = await t.query(api.cookingRooms.read, host);
@@ -81,8 +89,10 @@ test("generates and saves a cooking plan through the agent without reading the o
     expect(JSON.stringify(body)).not.toContain("private-prompt");
   } finally {
     Object.defineProperty(globalThis, "fetch", { configurable: true, value: originalFetch });
+
     if (originalKey === undefined) delete process.env.OPENROUTER_API_KEY;
     else process.env.OPENROUTER_API_KEY = originalKey;
+
     if (originalModel === undefined) delete process.env.OPENROUTER_MODEL;
     else process.env.OPENROUTER_MODEL = originalModel;
   }

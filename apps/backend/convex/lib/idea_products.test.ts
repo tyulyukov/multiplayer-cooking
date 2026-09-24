@@ -21,6 +21,7 @@ test("preserves an unmatched ingredient even if the model omits it from products
     [{ ingredient: " рис ", quantity: 2, productId: "rice-1" }],
     registry,
   );
+
   expect(products[0]).toMatchObject({
     ingredient: "Рис",
     productId: "rice-1",
@@ -57,6 +58,7 @@ test("only final ingredients become products, with normalized duplicates removed
     ],
     registry,
   );
+
   expect(result).toHaveLength(1);
   expect(result[0]?.ingredient).toBe("Рис");
 });

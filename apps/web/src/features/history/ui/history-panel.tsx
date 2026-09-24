@@ -40,6 +40,7 @@ function useNow() {
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 60_000);
+
     return () => window.clearInterval(id);
   }, []);
 
@@ -135,7 +136,9 @@ function HistoryCooking({
   onOpen: (roomId: CookingHistoryItem["_id"]) => void;
 }) {
   const firstRoom = rooms[0];
+
   if (!firstRoom) return null;
+
   const button = (
     <Button
       type="button"
@@ -148,9 +151,11 @@ function HistoryCooking({
       <HugeiconsIcon icon={CookingPotIcon} strokeWidth={1.5} aria-hidden />
     </Button>
   );
+
   if (rooms.length === 1) {
     return button;
   }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{button}</DropdownMenuTrigger>
@@ -204,6 +209,7 @@ export function HistoryPanel({
       <span>Історія</span>
     </Button>
   );
+
   const list = (
     <HistoryList
       items={items === undefined ? undefined : mergeHistory(items, cookingRooms)}

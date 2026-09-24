@@ -22,6 +22,8 @@ bunx expo-doctor             # diagnose dependency and config issues
 
 ## Design
 
+Use the `apple-design` skill for every mobile app task: screens, components, navigation, and design review.
+
 Screens follow `apps/web/DESIGN.md` and take colours and radii from `@multiplayer-cooking/theme`. Fonts load at runtime from `src/shared/fonts.ts` so the app runs in Expo Go.
 
 ## Navigation & Routing

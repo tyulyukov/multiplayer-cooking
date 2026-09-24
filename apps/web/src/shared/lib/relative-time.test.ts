@@ -2,7 +2,9 @@ import { expect, test } from "bun:test";
 import { formatRelativeTime } from "./relative-time";
 
 const now = new Date(2026, 8, 7, 12, 0).getTime();
+
 const minute = 60_000;
+
 const hour = 60 * minute;
 
 test("recent moments are relative", () => {

@@ -40,8 +40,8 @@ export type AiTelemetryEvent =
 
 let cachedAxiom: Readonly<{ client: Axiom; edge: string; token: string }> | undefined;
 
-function reportAxiomFailure(error: unknown) {
-  console.error("Axiom ingestion failed", classifyFailure(error));
+function reportAxiomFailure(cause: unknown) {
+  console.error("Axiom ingestion failed", classifyFailure(cause));
 }
 
 function createAxiomFetch() {

@@ -23,5 +23,6 @@ export async function admitAiGeneration({ limit }: AiLimitPort) {
   }
 
   await limit("chatBurst", { count: -1 });
+
   return false;
 }

@@ -1,10 +1,11 @@
 import { expect, test } from "bun:test";
-import type { SessionId } from "convex-helpers/server/sessions";
 
 import { api, internal } from "./_generated/api";
 import { cookingFixture, guestToken, inviteToken, task } from "../tests/cooking-fixture";
+import { testSessionId } from "../tests/convex-doubles";
 
 const extraToken = "extra-".padEnd(40, "d");
+
 const replacementToken = "replacement-".padEnd(40, "e");
 
 test("join is idempotent, rejects a full room, and leaves active guests readable after invite closure", async () => {
@@ -70,7 +71,7 @@ test("transferring host control prevents the original account from replacing the
   expect(
     await t.mutation(api.cookingRooms.recoverHost, {
       roomId,
-      sessionId: "host-session" as SessionId,
+      sessionId: testSessionId("host-session"),
       newParticipantToken: replacementToken,
     }),
   ).toBe(false);
@@ -124,8 +125,10 @@ for (const recovery of ["continueAlone", "takeover"] as const) {
     const { t, host, guest } = await cookingFixture([
       task("together", 1, { kind: "together", slots: [1, 2] }),
     ]);
+
     await t.mutation(api.cookingSteps.markReady, { ...host, stepKey: "together" });
     await t.mutation(api.cookingRooms.leave, guest);
+
     if (recovery === "continueAlone") await t.mutation(api.cookingRooms.continueAlone, host);
     else await t.mutation(api.cookingSteps.takeover, { ...host, slot: 2 });
     const recovered = await t.query(api.cookingRooms.read, host);

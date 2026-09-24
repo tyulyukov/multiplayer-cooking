@@ -7,7 +7,9 @@ import { requireActiveMember } from "./lib/cooking_access";
 import { ensureStepStarted } from "./lib/cooking_step_access";
 
 const tokenValidator = v.string();
+
 const MAX_TIMERS = 24;
+
 const MAX_MANUAL_SECONDS = 7 * 24 * 60 * 60;
 
 export const createManual = mutation({
@@ -22,18 +24,23 @@ export const createManual = mutation({
   returns: v.boolean(),
   handler: async (ctx, args) => {
     const member = await requireActiveMember(ctx, args.roomId, args.participantToken);
+
     if (!validManual(args)) return false;
+
     const timers = await ctx.db
       .query("cookingTimers")
       .withIndex("by_room_status", (q) => q.eq("roomId", args.roomId))
       .take(24);
+
     if (timers.length >= MAX_TIMERS) throw new ConvexError("У цій сесії вже є 24 активні таймери.");
+
     const existing = await ctx.db
       .query("cookingTimers")
       .withIndex("by_room_step_key", (q) =>
         q.eq("roomId", args.roomId).eq("stepKey", args.stepKey).eq("timerKey", args.timerKey),
       )
       .unique();
+
     if (existing) return false;
     await requireTimerAccess(ctx, args.roomId, member, args.stepKey);
     await ctx.db.insert("cookingTimers", {
@@ -45,6 +52,7 @@ export const createManual = mutation({
       durationMs: args.seconds * 1000,
       version: 1,
     });
+
     return true;
   },
 });
@@ -66,17 +74,22 @@ export const start = mutation({
       args.timerKey,
       ["ready", "paused"],
     );
+
     if (!member || !timer || !["ready", "paused"].includes(timer.status)) return false;
     const now = Date.now();
+
     const remainingMs =
       timer.status === "paused" ? (timer.remainingMs ?? timer.durationMs) : timer.durationMs;
+
     const version = timer.version + 1;
     const deadline = now + remainingMs;
+
     const jobId = await ctx.scheduler.runAt(deadline, internal.cookingTimers.expire, {
       timerId: timer._id,
       version,
       deadline,
     });
+
     await ctx.db.patch(timer._id, {
       status: "running",
       remainingMs: undefined,
@@ -85,6 +98,7 @@ export const start = mutation({
       startedBy: member._id,
       jobId,
     });
+
     return true;
   },
 });
@@ -106,6 +120,7 @@ export const pause = mutation({
       args.timerKey,
       ["running"],
     );
+
     if (!timer || timer.status !== "running" || !timer.deadline) return false;
     const remainingMs = Math.max(0, timer.deadline - Date.now());
     await ctx.db.patch(timer._id, {
@@ -115,6 +130,7 @@ export const pause = mutation({
       version: timer.version + 1,
       jobId: undefined,
     });
+
     return true;
   },
 });
@@ -136,15 +152,18 @@ export const resume = mutation({
       args.timerKey,
       ["paused"],
     );
+
     if (!member || !timer || timer.status !== "paused") return false;
     const remainingMs = timer.remainingMs ?? timer.durationMs;
     const version = timer.version + 1;
     const deadline = Date.now() + remainingMs;
+
     const jobId = await ctx.scheduler.runAt(deadline, internal.cookingTimers.expire, {
       timerId: timer._id,
       version,
       deadline,
     });
+
     await ctx.db.patch(timer._id, {
       status: "running",
       remainingMs: undefined,
@@ -153,6 +172,7 @@ export const resume = mutation({
       startedBy: member._id,
       jobId,
     });
+
     return true;
   },
 });
@@ -169,6 +189,7 @@ export const addTime = mutation({
   handler: async (ctx, args) => {
     if (!Number.isInteger(args.seconds) || args.seconds < 1 || args.seconds > MAX_MANUAL_SECONDS)
       return false;
+
     const { timer } = await loadTimer(
       ctx,
       args.roomId,
@@ -177,18 +198,23 @@ export const addTime = mutation({
       args.timerKey,
       ["ready", "running", "paused", "fired"],
     );
+
     if (!timer || ["cancelled", "acknowledged"].includes(timer.status)) return false;
     const addition = args.seconds * 1000;
+
     if (timer.durationMs + addition > MAX_MANUAL_SECONDS * 1000)
       throw new ConvexError("Таймер не може тривати понад 7 днів.");
+
     if (timer.status === "running" && timer.deadline) {
       const deadline = timer.deadline + addition;
       const version = timer.version + 1;
+
       const jobId = await ctx.scheduler.runAt(deadline, internal.cookingTimers.expire, {
         timerId: timer._id,
         version,
         deadline,
       });
+
       await ctx.db.patch(timer._id, {
         durationMs: timer.durationMs + addition,
         deadline,
@@ -203,6 +229,7 @@ export const addTime = mutation({
         version: timer.version + 1,
       });
     }
+
     return true;
   },
 });
@@ -224,11 +251,14 @@ export const cancel = mutation({
       args.timerKey,
       ["ready", "running", "paused", "fired"],
     );
+
     if (!timer || ["cancelled", "acknowledged"].includes(timer.status)) return false;
+
     const remainingMs =
       timer.status === "running" && timer.deadline
         ? Math.max(0, timer.deadline - Date.now())
         : (timer.remainingMs ?? timer.durationMs);
+
     await ctx.db.patch(timer._id, {
       status: "cancelled",
       deadline: undefined,
@@ -236,6 +266,7 @@ export const cancel = mutation({
       version: timer.version + 1,
       jobId: undefined,
     });
+
     return true;
   },
 });
@@ -257,6 +288,7 @@ export const acknowledge = mutation({
       args.timerKey,
       ["fired"],
     );
+
     if (!timer || timer.status !== "fired") return false;
     await ctx.db.patch(timer._id, {
       status: "acknowledged",
@@ -265,6 +297,7 @@ export const acknowledge = mutation({
       version: timer.version + 1,
       jobId: undefined,
     });
+
     return true;
   },
 });
@@ -286,6 +319,7 @@ export const restore = mutation({
       args.timerKey,
       ["cancelled", "acknowledged"],
     );
+
     if (!timer || !["cancelled", "acknowledged"].includes(timer.status)) return false;
     await ctx.db.patch(timer._id, {
       status: timer.status === "cancelled" ? "paused" : "fired",
@@ -294,6 +328,7 @@ export const restore = mutation({
       version: timer.version + 1,
       jobId: undefined,
     });
+
     return true;
   },
 });
@@ -315,15 +350,18 @@ export const restart = mutation({
       args.timerKey,
       ["cancelled", "acknowledged", "fired"],
     );
+
     if (!member || !timer || !["cancelled", "acknowledged", "fired"].includes(timer.status))
       return false;
     const version = timer.version + 1;
     const deadline = Date.now() + timer.durationMs;
+
     const jobId = await ctx.scheduler.runAt(deadline, internal.cookingTimers.expire, {
       timerId: timer._id,
       version,
       deadline,
     });
+
     await ctx.db.patch(timer._id, {
       status: "running",
       deadline,
@@ -332,6 +370,7 @@ export const restart = mutation({
       startedBy: member._id,
       jobId,
     });
+
     return true;
   },
 });
@@ -341,6 +380,7 @@ export const expire = internalMutation({
   returns: v.boolean(),
   handler: async (ctx, args) => {
     const timer = await ctx.db.get(args.timerId);
+
     if (
       !timer ||
       timer.status !== "running" ||
@@ -350,6 +390,7 @@ export const expire = internalMutation({
     )
       return false;
     await ctx.db.patch(timer._id, { status: "fired", remainingMs: 0, jobId: undefined });
+
     return true;
   },
 });
@@ -367,15 +408,19 @@ async function requireTimerAccess(
       .unique(),
     ctx.db.get(roomId),
   ]);
+
   if (!step?.startedAt) {
     const loaded = await ensureStepStarted(ctx, member, roomId, stepKey);
     step = loaded.runtime;
     room = loaded.room;
   }
+
   if (room?.state !== "cooking" || !step?.startedAt || step.status === "done")
     throw new ConvexError("Спершу почни цей крок.");
+
   if (!step || (member.role !== "host" && !member.slots.some((slot) => step.slots.includes(slot))))
     throw new ConvexError("Таймер цього кроку недоступний.");
+
   return { member, step };
 }
 
@@ -388,14 +433,17 @@ async function loadTimer(
   allowedStatuses: readonly Doc<"cookingTimers">["status"][],
 ) {
   const member = await requireActiveMember(ctx, roomId, participantToken);
+
   const timer = await ctx.db
     .query("cookingTimers")
     .withIndex("by_room_step_key", (q) =>
       q.eq("roomId", roomId).eq("stepKey", stepKey).eq("timerKey", timerKey),
     )
     .unique();
+
   if (!timer || !allowedStatuses.includes(timer.status)) return { member, timer: null };
   await requireTimerAccess(ctx, roomId, member, stepKey);
+
   return { member, timer };
 }
 

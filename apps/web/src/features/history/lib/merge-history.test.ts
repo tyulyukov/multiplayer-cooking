@@ -4,7 +4,9 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 import type { CookingHistoryItem, HistoryItem } from "@/features/history/model/types";
 import { mergeHistory } from "./merge-history";
 
+// SAFETY: test fixture id; only its string shape matters here, not real Convex generation.
 const ideaId = "idea-1" as Id<"ideas">;
+
 const item: HistoryItem = {
   threadId: "conversation-1",
   title: "Пряний рамен",
@@ -12,7 +14,9 @@ const item: HistoryItem = {
   active: true,
   photos: ["/dish.jpg"],
 };
+
 function room(id: string, patch: Partial<CookingHistoryItem> = {}): CookingHistoryItem {
+  // SAFETY: test fixture id; only its string shape matters here, not real Convex generation.
   return {
     _id: id as Id<"cookingRooms">,
     sourceIdeaId: ideaId,
@@ -28,6 +32,7 @@ function room(id: string, patch: Partial<CookingHistoryItem> = {}): CookingHisto
 
 test("cooked versions and repeated sessions stay in one unchanged conversation row", () => {
   const older = room("older");
+  // SAFETY: test fixture id; only its string shape matters here, not real Convex generation.
   const newer = room("newer", { sourceIdeaId: "idea-version-2" as Id<"ideas">, createdAt: 300 });
   const entries = mergeHistory([item], [older, newer]);
   expect(entries).toHaveLength(1);
@@ -60,12 +65,14 @@ test("deleted source ideas keep all their sessions together without a broken ide
     room("one", { sourceThreadId: null, sourceImageUrl: null }),
     room("two", { sourceThreadId: null, sourceImageUrl: null }),
   ];
+
   const entries = mergeHistory([], rooms);
   expect(entries).toHaveLength(1);
   expect(entries[0]).toMatchObject({ threadId: null, photos: [], rooms });
 });
 
 test("distinct deleted ideas stay separate and normal history keeps its date order", () => {
+  // SAFETY: test fixture id; only its string shape matters here, not real Convex generation.
   const entries = mergeHistory(
     [item],
     [
@@ -73,6 +80,7 @@ test("distinct deleted ideas stay separate and normal history keeps its date ord
       room("recent", { sourceThreadId: null, sourceIdeaId: "other-idea" as Id<"ideas"> }),
     ],
   );
+
   expect(entries).toHaveLength(3);
   expect(entries.map((entry) => entry.createdAt)).toEqual([200, 100, 50]);
   expect(mergeHistory([], [])).toEqual([]);

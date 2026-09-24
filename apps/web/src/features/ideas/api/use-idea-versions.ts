@@ -26,6 +26,7 @@ export function useIdeaVersions(
     if (previousLatestId.current && latestId && previousLatestId.current !== latestId) {
       setSelectedId(null);
     }
+
     previousLatestId.current = latestId;
   }, [latestId]);
 

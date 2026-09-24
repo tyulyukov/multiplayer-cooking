@@ -1,4 +1,3 @@
-import { cn } from "@/shared/lib/utils";
 import styles from "@/features/chat/ui/chat-thread.module.scss";
 import { generationStatus } from "@/features/chat/lib/generation-status";
 import { collectAnswers, isToolPart } from "@/features/chat/lib/question-messages";
@@ -7,11 +6,11 @@ import { useSmoothText } from "@convex-dev/agent/react";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
-import { readMemoryEvent } from "@/features/personalization/lib/memory-event";
+import { isMemoryEvent } from "@/features/personalization/lib/memory-event";
 import { Markdown } from "@/shared/ui/markdown";
 import { PhotoStrip } from "@/shared/ui/photo-lightbox";
 import { QuestionSummary } from "@/features/chat/ui/question-card";
-import { readQuestionInput, type QuestionAnswer } from "@/features/chat/lib/question";
+import { questionInputSchema, type QuestionAnswer } from "@/features/chat/lib/question";
 
 function imageUrls(message: UIMessage) {
   return message.parts.flatMap((part) =>
@@ -24,7 +23,7 @@ function UserMessage({ message }: { message: UIMessage }) {
   const text = message.text.trim();
 
   return (
-    <div className={cn(styles["msg-user"], "msg")} data-photos={photos.length > 0}>
+    <div className={styles["msg-user"]} data-photos={photos.length > 0}>
       <PhotoStrip urls={photos} alt="Фото від тебе" />
       {text}
     </div>
@@ -34,7 +33,7 @@ function UserMessage({ message }: { message: UIMessage }) {
 function AssistantText({ text, streaming }: { text: string; streaming: boolean }) {
   const [visibleText] = useSmoothText(text, { startStreaming: streaming });
 
-  return <Markdown text={visibleText} className="msg-text" />;
+  return <Markdown text={visibleText} />;
 }
 
 function AssistantMessage({
@@ -48,15 +47,18 @@ function AssistantMessage({
 }) {
   const streaming = message.status === "streaming";
   const toolParts = message.parts.filter(isToolPart);
+
   const memories = toolParts.flatMap((part) => {
     if (
       !["tool-add_memory", "tool-remove_memory"].includes(part.type) ||
-      part.state !== "output-available"
+      part.state !== "output-available" ||
+      !isMemoryEvent(part.output)
     )
       return [];
-    const event = readMemoryEvent(part.output);
-    return event ? [{ ...event, toolCallId: part.toolCallId }] : [];
+
+    return [{ action: part.output.action, text: part.output.text, toolCallId: part.toolCallId }];
   });
+
   const questions = toolParts.filter((part) => part.type === "tool-ask_user");
   const text = message.text.trim();
 
@@ -65,9 +67,9 @@ function AssistantMessage({
   }
 
   return (
-    <div className={cn(styles["msg-agent"], "msg")}>
+    <div className={styles["msg-agent"]}>
       {questions.map((part) => {
-        const input = readQuestionInput(part.input);
+        const input = questionInputSchema.safeParse(part.input).data ?? null;
 
         if (!input) {
           return null;
@@ -76,6 +78,7 @@ function AssistantMessage({
         const answer = answers.get(part.toolCallId) ?? null;
 
         if (!answer) return null;
+
         return <QuestionSummary key={part.toolCallId} input={input} answer={answer} />;
       })}
       {memories.map((part) => (
@@ -158,6 +161,7 @@ export function ChatThread({
 
 export function GenerationStatus({ messages }: { messages: readonly UIMessage[] }) {
   const { activity, label } = generationStatus(messages);
+
   return (
     <div className={styles["generation-status"]} role="status" data-activity={activity}>
       <svg

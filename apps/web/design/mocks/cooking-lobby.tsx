@@ -7,6 +7,7 @@ import { CookingSession } from "../../src/components/cooking/cooking-session";
 import "../../src/index.css";
 
 const mode = new URLSearchParams(location.search).get("mode") ?? "lobby-waiting";
+
 const now = Date.now();
 
 const plan = {
@@ -47,11 +48,13 @@ function createData(name: string): CookingRoomData {
   const started = ["started-generating", "error-afterstart"].includes(name);
   const error = name.startsWith("error-");
   const generating = name === "lobby-full-generating" || name === "started-generating";
+
   const guests = full
     ? Array.from({ length: cookCount }, (_, index) =>
         member(index + 1, index === 0 ? "host" : "cook"),
       )
     : [member(1, "host")];
+
   const me = name === "guest" ? guests[1]! : guests[0]!;
   const members = guests;
   const state = error ? "error" : generating ? "generating" : started ? "error" : "ready";
@@ -92,6 +95,7 @@ function createData(name: string): CookingRoomData {
 
 export function Fixture() {
   const [data, setData] = useState(() => createData(mode));
+
   const actions: CookingActions = {
     online: true,
     busy: false,
@@ -120,6 +124,7 @@ export function Fixture() {
     ask: () => {},
     cookAgain: () => {},
   };
+
   const showReadyPlan = () =>
     setData((current) => ({
       ...current,

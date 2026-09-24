@@ -5,13 +5,16 @@ export function mergeHistory(
   rooms: readonly CookingHistoryItem[],
 ): HistoryEntry[] {
   const entries = new Map<string, HistoryEntry>();
+
   for (const item of items) {
     const key = `thread:${item.threadId}`;
     entries.set(key, { ...item, key, rooms: [] });
   }
+
   for (const room of [...rooms].sort((a, b) => b.createdAt - a.createdAt)) {
     const key = room.sourceThreadId ? `thread:${room.sourceThreadId}` : `idea:${room.sourceIdeaId}`;
     const entry = entries.get(key);
+
     if (entry) {
       entry.rooms.push(room);
     } else {
@@ -26,5 +29,6 @@ export function mergeHistory(
       });
     }
   }
+
   return [...entries.values()].sort((a, b) => b.createdAt - a.createdAt);
 }

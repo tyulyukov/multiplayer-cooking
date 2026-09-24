@@ -28,6 +28,7 @@ export function CookingReference({
   useEffect(() => {
     if (!loaded) return;
     const timer = window.setTimeout(() => setShowPlaceholder(false), 400);
+
     return () => window.clearTimeout(timer);
   }, [loaded]);
 
@@ -105,20 +106,24 @@ function ReferencePlaceholder({ animate }: { animate: boolean }) {
   useEffect(() => {
     const element = canvas.current;
     const context = element?.getContext("2d");
+
     if (!element || !context) return;
 
     let frame = 0;
     let visible = document.visibilityState === "visible";
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
     const draw = (time = 0) => {
       const bounds = element.getBoundingClientRect();
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
       const width = Math.max(1, Math.round(bounds.width));
       const height = Math.max(1, Math.round(bounds.height));
+
       if (element.width !== width * ratio || element.height !== height * ratio) {
         element.width = width * ratio;
         element.height = height * ratio;
       }
+
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       context.clearRect(0, 0, width, height);
       context.fillStyle = colors.background;
@@ -129,6 +134,7 @@ function ReferencePlaceholder({ animate }: { animate: boolean }) {
       const spread = Math.min(width, height) * 0.28;
       const gap = 8;
       context.fillStyle = colors.ink;
+
       for (let y = (height % gap) / 2; y < height; y += gap) {
         for (let x = (width % gap) / 2; x < width; x += gap) {
           const dx = x - focusX;
@@ -140,38 +146,49 @@ function ReferencePlaceholder({ animate }: { animate: boolean }) {
           context.fill();
         }
       }
+
       context.globalAlpha = 1;
     };
+
     const colors = {
       background: "",
       ink: "",
     };
+
     const readColors = () => {
       const styles = getComputedStyle(element);
       colors.background = styles.getPropertyValue("--background").trim();
       colors.ink = styles.getPropertyValue("--foreground").trim();
     };
+
     const loop = (time: number) => {
       draw(time);
+
       if (visible && animate && !reducedMotion.matches) frame = requestAnimationFrame(loop);
     };
+
     const restart = () => {
       cancelAnimationFrame(frame);
       readColors();
       draw();
+
       if (visible && animate && !reducedMotion.matches) frame = requestAnimationFrame(loop);
     };
+
     const onVisibilityChange = () => {
       visible = document.visibilityState === "visible";
       restart();
     };
+
     const observer =
       typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(restart);
+
     observer?.observe(element);
     window.addEventListener("resize", restart);
     document.addEventListener("visibilitychange", onVisibilityChange);
     reducedMotion.addEventListener("change", restart);
     restart();
+
     return () => {
       cancelAnimationFrame(frame);
       observer?.disconnect();

@@ -7,7 +7,7 @@ const fallback = [
   "Працюю. Кулінарна магія потребує хвилинки",
 ] as const;
 
-const phrases: Record<string, readonly [string, ...string[]]> = {
+const phrases = {
   web_search: [
     "Шукаю спосіб приготувати це вдома",
     "Порівнюю рецепти цієї страви",
@@ -101,24 +101,33 @@ const phrases: Record<string, readonly [string, ...string[]]> = {
     "Формулюю ідею. Майже можна подавати",
     "Пишу відповідь. Без словесної локшини",
   ],
-};
+} satisfies Record<string, readonly [string, ...string[]]>;
+
+function isPhraseKey(key: string): key is keyof typeof phrases {
+  return key in phrases;
+}
 
 export function generationStatus(messages: readonly UIMessage[]) {
   const latest = messages.at(-1);
+
   const active =
     latest?.role === "assistant"
       ? latest.parts
           .filter(isToolPart)
           .findLast((part) => part.state === "input-streaming" || part.state === "input-available")
       : undefined;
+
   const activity = active
     ? active.type.replace(/^tool-/, "")
     : latest?.role === "assistant" && latest.text.trim()
       ? "writing"
       : "thinking";
-  const options = phrases[activity] ?? fallback;
+
+  const options = isPhraseKey(activity) ? phrases[activity] : fallback;
   const key = active?.toolCallId ?? latest?.key ?? "initial";
   let hash = 0;
+
   for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+
   return { activity, label: options[hash % options.length] ?? options[0] };
 }

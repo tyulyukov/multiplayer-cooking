@@ -32,6 +32,7 @@ test("status follows every active tool including questions and ignores finished 
       state: "input-available",
       input: {},
     } as const;
+
     const completed = {
       type: "tool-read_page",
       toolCallId: "done",
@@ -39,21 +40,25 @@ test("status follows every active tool including questions and ignores finished 
       input: {},
       output: {},
     } as const;
+
     expect(generationStatus([message([active, completed])]).activity).toBe(name);
   }
 });
 
 test("wording varies between calls but stays stable through streaming updates", () => {
   const labels = new Set<string>();
+
   for (let i = 0; i < 6; i++) {
     const parts = [
       { type: "tool-web_search", toolCallId: `search-${i}`, state: "input-streaming", input: {} },
     ] as const;
+
     const m = message([...parts]);
     const status = generationStatus([m]);
     labels.add(status.label);
     expect(generationStatus([{ ...m, text: "Ще трохи тексту" }])).toEqual(status);
   }
+
   expect(labels.size).toBeGreaterThan(1);
 });
 
@@ -63,6 +68,7 @@ test("finished and failed tools stop claiming that the operation is running", ()
       state === "output-available"
         ? { type: "tool-web_search", toolCallId: "search", state, input: {}, output: {} }
         : { type: "tool-web_search", toolCallId: "search", state, input: {}, errorText: "failed" };
+
     expect(generationStatus([message([part])]).activity).toBe("thinking");
   }
 });

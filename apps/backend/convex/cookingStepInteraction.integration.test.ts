@@ -53,9 +53,11 @@ test("a blocked dependency leaves a pending task unchecked", async () => {
       checklistArgs(roomId, guest.participantToken, "heat"),
     ),
   ).rejects.toThrow("залежні кроки");
+
   const step = (await t.query(api.cookingRooms.read, guest))!.steps.find(
     (item) => item.stepKey === "boil",
   )!;
+
   expect(step).toMatchObject({
     status: "pending",
     checkedIds: [],
@@ -85,6 +87,7 @@ test("checking a pending task keeps attention and equipment locks", async () => 
     task("chop", 1),
     task("boil", 1, { checklist: [{ id: "heat", label: "Нагріти воду" }] }),
   ]);
+
   await attention.t.mutation(api.cookingSteps.start, { ...attention.host, stepKey: "chop" });
   await expect(
     attention.t.mutation(
@@ -102,6 +105,7 @@ test("checking a pending task keeps attention and equipment locks", async () => 
     task("chop", 1, { equipment: ["pan"] }),
     task("boil", 2, { equipment: ["pan"], checklist: [{ id: "heat", label: "Нагріти воду" }] }),
   ]);
+
   await equipment.t.mutation(api.cookingSteps.start, { ...equipment.host, stepKey: "chop" });
   await expect(
     equipment.t.mutation(
@@ -124,6 +128,7 @@ test("together and handoff checks retain their start rules", async () => {
       checklist: [{ id: "heat", label: "Нагріти воду" }],
     }),
   ]);
+
   await expect(
     together.t.mutation(
       api.cookingSteps.toggleChecklist,
@@ -146,6 +151,7 @@ test("together and handoff checks retain their start rules", async () => {
       checklist: [{ id: "pass", label: "Передати каструлю" }],
     }),
   ]);
+
   await expect(
     handoff.t.mutation(
       api.cookingSteps.toggleChecklist,
@@ -160,6 +166,7 @@ test("together and handoff checks retain their start rules", async () => {
       checklist: [{ id: "pass", label: "Передати каструлю" }],
     }),
   ]);
+
   await expect(
     directHandoff.t.mutation(api.cookingSteps.markReady, {
       ...directHandoff.guest,
@@ -224,6 +231,7 @@ test("unchecked items require an explicit skip and stay unchecked after completi
   const { t, host } = await cookingFixture([
     task("prep", 1, { checklist: [{ id: "cut", label: "Нарізати" }] }),
   ]);
+
   await expect(
     t.mutation(api.cookingSteps.complete, {
       ...host,
@@ -253,6 +261,7 @@ test("skipping checklist items preserves assignment, confirmation, and timer gat
       timers: [{ id: "cook", label: "Готування", durationSeconds: 60 }],
     }),
   ]);
+
   await expect(
     t.mutation(api.cookingSteps.complete, {
       ...guest,

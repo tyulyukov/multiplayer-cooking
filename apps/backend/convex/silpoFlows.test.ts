@@ -1,23 +1,30 @@
 import { expect, mock, test } from "bun:test";
-import type { DefaultFunctionArgs, FunctionVisibility, RegisteredAction } from "convex/server";
-import type { SessionId } from "convex-helpers/server/sessions";
+import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
+import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 
 import type { Doc, Id } from "./_generated/dataModel";
 import type { ActionCtx } from "./_generated/server";
+import type { SilpoClient } from "./lib/silpo_client";
+import type { JsonInputRecord, JsonValue } from "./lib/silpo_shapes";
+import { actionHandler, testId, testSessionId } from "../tests/convex-doubles";
 
-const authCalls: Array<Record<string, unknown>> = [];
-const profileCalls: Array<Record<string, unknown>> = [];
-const toolCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
+const authCalls: unknown[] = [];
+
+const profileCalls: unknown[] = [];
+
+const toolCalls: Array<{ name: string; args: JsonInputRecord }> = [];
+
 const { parseVerifiedSilpoProfile } = await import("./lib/silpo_client");
 
 mock.module("@modelcontextprotocol/sdk/client/auth.js", () => ({
-  auth: async (provider: { saveTokens: (tokens: Record<string, unknown>) => Promise<void> }) => {
+  auth: async (provider: { saveTokens: (tokens: OAuthTokens) => Promise<void> }) => {
     authCalls.push({});
     await provider.saveTokens({
       access_token: "access",
       token_type: "Bearer",
       refresh_token: "refresh",
     });
+
     return "AUTHORIZED";
   },
 }));
@@ -26,28 +33,29 @@ mock.module("./lib/silpo_oauth", () => ({
   SILPO_ISSUER: "https://mcp.silpo.ua",
   SILPO_MCP_URL: "https://mcp.silpo.ua/mcp",
   createSilpoAuthProvider: (
-    _ctx: unknown,
-    options: { saveStagedTokens?: (tokens: Record<string, unknown>) => Promise<void> },
+    _ctx: ActionCtx,
+    options: { saveStagedTokens?: (tokens: OAuthTokens) => Promise<void> },
   ) => ({
-    saveTokens: async (tokens: Record<string, unknown>) => options.saveStagedTokens?.(tokens),
+    saveTokens: async (tokens: OAuthTokens) => options.saveStagedTokens?.(tokens),
   }),
 }));
 
 mock.module("./lib/silpo_client", () => ({
   withSilpoClient: async (
-    _ctx: unknown,
-    _userId: unknown,
-    run: (client: {
-      callTool: (name: string, args: Record<string, unknown>) => Promise<unknown>;
-    }) => Promise<unknown>,
+    _ctx: ActionCtx,
+    _userId: Id<"users">,
+    run: (client: Pick<SilpoClient, "callTool">) => Promise<JsonValue>,
   ) =>
     run({
-      callTool: async (name, args) => {
+      callTool: async (name, args): Promise<JsonValue> => {
         if (name === "silpo_get_my_profile") {
           profileCalls.push({});
+
           return { success: true, profile: { id: "customer-42", firstName: "Оля" } };
         }
+
         toolCalls.push({ name, args });
+
         if (name === "silpo_get_shopping_cart_by_id") {
           return {
             cart: {
@@ -62,41 +70,44 @@ mock.module("./lib/silpo_client", () => ({
             },
           };
         }
+
         return {};
       },
     }),
-  describeSilpoError: (error: unknown) => (error instanceof Error ? error.message : "unknown"),
+  describeSilpoError: (cause: unknown) => (cause instanceof Error ? cause.message : "unknown"),
   parseVerifiedSilpoProfile,
 }));
 
 const { finishConnect } = await import("./silpoAuth");
+
 const { addIdeaToCart, setupCart } = await import("./silpoCart");
 
-function handler<V extends FunctionVisibility, A extends DefaultFunctionArgs, R>(
-  fn: RegisteredAction<V, A, R>,
-): (ctx: ActionCtx, args: A) => R {
-  const value: unknown = Reflect.get(fn, "_handler");
-  if (typeof value !== "function") throw new Error("Missing registered Convex handler");
-  return value as (ctx: ActionCtx, args: A) => R;
-}
+type QueryReference = FunctionReference<"query", "public" | "internal">;
 
-const userId = "user" as Id<"users">;
-const ideaId = "idea" as Id<"ideas">;
-const sessionId = "session" as SessionId;
+type MutationReference = FunctionReference<"mutation", "public" | "internal">;
+
+const userId = testId<"users">("user");
+
+const ideaId = testId<"ideas">("idea");
+
+const sessionId = testSessionId("session");
 
 test("rejects an OAuth callback whose state was already consumed without contacting Silpo", async () => {
   authCalls.length = 0;
   profileCalls.length = 0;
   const mutations: unknown[] = [];
+
+  // SAFETY: this harness only implements the ActionCtx methods finishConnect actually calls.
   const ctx = {
-    runMutation: async (reference: unknown, args: unknown) => {
+    runMutation: async (reference: MutationReference, args: DefaultFunctionArgs) => {
       mutations.push({ reference, args });
+
       return null;
     },
   } as ActionCtx;
 
   await expect(
-    handler(finishConnect)(ctx, { sessionId, state: "used", code: "code" }),
+    actionHandler(finishConnect)(ctx, { sessionId, state: "used", code: "code" }),
   ).resolves.toBe(false);
 
   expect(mutations).toHaveLength(1);
@@ -108,9 +119,12 @@ test("links tokens only after Silpo returns a verified account profile", async (
   authCalls.length = 0;
   profileCalls.length = 0;
   const mutations: Array<{ reference: unknown; args: unknown }> = [];
+
+  // SAFETY: this harness only implements the ActionCtx methods finishConnect actually calls.
   const ctx = {
-    runMutation: async (reference: unknown, args: unknown) => {
+    runMutation: async (reference: MutationReference, args: DefaultFunctionArgs) => {
       mutations.push({ reference, args });
+
       return mutations.length === 1
         ? { userId, sessionId: "session", authVersion: 3, codeVerifier: "verifier" }
         : userId;
@@ -118,7 +132,7 @@ test("links tokens only after Silpo returns a verified account profile", async (
   } as ActionCtx;
 
   await expect(
-    handler(finishConnect)(ctx, { sessionId, state: "fresh", code: "code" }),
+    actionHandler(finishConnect)(ctx, { sessionId, state: "fresh", code: "code" }),
   ).resolves.toBe(true);
 
   expect(authCalls).toHaveLength(1);
@@ -155,21 +169,34 @@ function idea(overrides: Partial<Doc<"ideas">> = {}): Doc<"ideas"> {
   };
 }
 
-function cartContext(sourceIdea: Doc<"ideas"> | null, connection: Record<string, unknown> | null) {
+function cartContext(
+  sourceIdea: Doc<"ideas"> | null,
+  connection: Readonly<{
+    userId: Id<"users">;
+    cart: NonNullable<Doc<"silpoConnections">["cart"]>;
+  }> | null,
+) {
   const mutations: Array<{ reference: unknown; args: unknown }> = [];
   let queryCount = 0;
+
+  // SAFETY: this harness only implements the ActionCtx methods addIdeaToCart actually calls.
   const ctx = {
-    runQuery: async () => {
+    runQuery: async (_reference: QueryReference) => {
       queryCount += 1;
+
       if (queryCount === 1) return userId;
+
       if (queryCount === 2) return sourceIdea;
+
       return connection;
     },
-    runMutation: async (reference: unknown, args: unknown) => {
+    runMutation: async (reference: MutationReference, args: DefaultFunctionArgs) => {
       mutations.push({ reference, args });
+
       return null;
     },
-  } as unknown as ActionCtx;
+  } as ActionCtx;
+
   return { ctx, mutations };
 }
 
@@ -187,20 +214,24 @@ test("does not create a cart before an address has been saved", async () => {
   toolCalls.length = 0;
   const mutations: unknown[] = [];
   let queryCount = 0;
+
+  // SAFETY: this harness only implements the ActionCtx methods setupCart actually calls.
   const ctx = {
-    runQuery: async () => {
+    runQuery: async (_reference: QueryReference) => {
       queryCount += 1;
+
       return queryCount === 1
         ? userId
         : { userId, tokens: { access_token: "token", token_type: "Bearer" } };
     },
-    runMutation: async (reference: unknown, args: unknown) => {
+    runMutation: async (reference: MutationReference, args: DefaultFunctionArgs) => {
       mutations.push({ reference, args });
+
       return null;
     },
-  } as unknown as ActionCtx;
+  } as ActionCtx;
 
-  await handler(setupCart)(ctx, { userId, threadId: "thread" });
+  await actionHandler(setupCart)(ctx, { userId, threadId: "thread" });
 
   expect(toolCalls).toHaveLength(0);
   expect(mutations).toHaveLength(0);
@@ -210,7 +241,7 @@ test("adds matched products to the saved cart and persists its returned totals",
   toolCalls.length = 0;
   const { ctx, mutations } = cartContext(idea(), connectedCart);
 
-  await handler(addIdeaToCart)(ctx, { ideaId, userId, refreshOnly: false });
+  await actionHandler(addIdeaToCart)(ctx, { ideaId, userId, refreshOnly: false });
 
   expect(toolCalls).toEqual([
     {
@@ -249,12 +280,13 @@ test("adds matched products to the saved cart and persists its returned totals",
 
 test("does not call Silpo when the idea belongs to another account", async () => {
   toolCalls.length = 0;
+
   const { ctx, mutations } = cartContext(
-    idea({ userId: "another-user" as Id<"users"> }),
+    idea({ userId: testId<"users">("another-user") }),
     connectedCart,
   );
 
-  await handler(addIdeaToCart)(ctx, { ideaId, userId, refreshOnly: false });
+  await actionHandler(addIdeaToCart)(ctx, { ideaId, userId, refreshOnly: false });
 
   expect(toolCalls).toHaveLength(0);
   expect(mutations).toHaveLength(1);

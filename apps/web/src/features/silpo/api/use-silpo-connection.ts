@@ -16,6 +16,7 @@ export function useSilpoConnection(sessionId: SessionId | undefined) {
   const forgetAddress = useMutation(api.silpo.forgetAddress);
   const saveAddressMutation = useMutation(api.silpo.saveAddress);
   const [connecting, setConnecting] = useState(false);
+
   const [error, setError] = useState<string | null>(() =>
     search.silpo === "error" ? "Не вдалося підключити Сільпо. Спробуй ще раз." : null,
   );

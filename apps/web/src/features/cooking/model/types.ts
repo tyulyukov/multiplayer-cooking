@@ -10,9 +10,13 @@ export type CookingSetup = Readonly<{
 }>;
 
 export type CookingRoomData = NonNullable<FunctionReturnType<typeof api.cookingRooms.read>>;
+
 export type RoomTimer = CookingRoomData["timers"][number];
+
 export type PlanStep = NonNullable<CookingRoomData["room"]["plan"]>["steps"][number];
+
 export type RuntimeStep = CookingRoomData["steps"][number];
+
 export type HelperProposal = FunctionReturnType<typeof api.cookingAssistance.listProposals>[number];
 
 export type CookingActions = Readonly<{

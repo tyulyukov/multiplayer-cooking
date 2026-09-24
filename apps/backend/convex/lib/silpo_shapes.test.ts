@@ -8,8 +8,9 @@ import {
   readCartId,
   readCartSummary,
   readCheckoutLink,
-  shapeAddress,
-  shapeProductCandidates,
+  readAddress,
+  readProductCandidates,
+  type JsonValue,
 } from "./silpo_shapes";
 
 describe("findObjectArray", () => {
@@ -21,7 +22,7 @@ describe("findObjectArray", () => {
   });
 });
 
-describe("shapeAddress", () => {
+describe("readAddress", () => {
   test("reads coordinates and address parts from the first result", () => {
     const payload = {
       results: [
@@ -35,7 +36,7 @@ describe("shapeAddress", () => {
       ],
     };
 
-    expect(shapeAddress(payload)).toEqual({
+    expect(readAddress(payload)).toEqual({
       latitude: 46.48,
       longitude: 30.72,
       city: "Одеса",
@@ -46,8 +47,8 @@ describe("shapeAddress", () => {
   });
 
   test("returns null without coordinates", () => {
-    expect(shapeAddress({ results: [{ city: "Одеса" }] })).toBeNull();
-    expect(shapeAddress(null)).toBeNull();
+    expect(readAddress({ results: [{ city: "Одеса" }] })).toBeNull();
+    expect(readAddress(null)).toBeNull();
   });
 });
 
@@ -72,7 +73,8 @@ describe("chooseDelivery", () => {
 describe("chooseTimeslot", () => {
   test("takes the first available future slot", () => {
     const now = Date.parse("2026-09-04T10:00:00Z");
-    const payload = [
+
+    const payload: JsonValue = [
       { start: "2026-09-04T08:00:00Z", end: "2026-09-04T09:00:00Z" },
       { start: "2026-09-04T12:00:00Z", end: "2026-09-04T13:00:00Z", available: false },
       { start: "2026-09-04T14:00:00Z", end: "2026-09-04T15:00:00Z", available: true },
@@ -137,14 +139,14 @@ describe("cart readers", () => {
   });
 });
 
-describe("shapeProductCandidates", () => {
+describe("readProductCandidates", () => {
   const requests = [
     { ingredient: "Кабачки", query: "кабачок", quantity: 2 },
     { ingredient: "Пармезан", query: "пармезан", quantity: 1 },
   ];
 
   test("maps candidates back by query, skips unavailable, keeps unmatched ingredients", () => {
-    const payload = {
+    const payload: JsonValue = {
       success: true,
       queries: [
         {
@@ -170,7 +172,7 @@ describe("shapeProductCandidates", () => {
       ],
     };
 
-    expect(shapeProductCandidates(requests, payload)).toEqual([
+    expect(readProductCandidates(requests, payload)).toEqual([
       { ingredient: "Кабачки", quantity: 2, candidates: [] },
       {
         ingredient: "Пармезан",
@@ -195,7 +197,7 @@ describe("shapeProductCandidates", () => {
   });
 
   test("keeps only HTTP product images", () => {
-    const [result] = shapeProductCandidates(
+    const [result] = readProductCandidates(
       [{ ingredient: "Кабачок", query: "кабачок", quantity: 1 }],
       {
         queries: [
@@ -226,14 +228,15 @@ describe("shapeProductCandidates", () => {
       ],
       [],
     ];
-    const [first] = shapeProductCandidates(requests, payload);
+
+    const [first] = readProductCandidates(requests, payload);
 
     expect(first.candidates).toHaveLength(3);
     expect(first.candidates[0]).toMatchObject({ productId: "p1", title: "Кабачок", price: 45 });
   });
 
   test("keeps the verified oldPrice only when it exceeds the current price", () => {
-    const [result] = shapeProductCandidates([{ ingredient: "Сир", query: "сир", quantity: 1 }], {
+    const [result] = readProductCandidates([{ ingredient: "Сир", query: "сир", quantity: 1 }], {
       queries: [
         {
           query: "сир",

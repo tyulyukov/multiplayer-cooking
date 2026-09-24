@@ -24,6 +24,14 @@
   color: var(--foreground);
   text-decoration: none;
 }
+.member-chip {
+  padding-inline: 8px;
+}
+@media (min-width: 640px) {
+  .member-chip {
+    padding-inline: 12px;
+  }
+}
 .cooking-title {
   display: grid;
   gap: 8px;

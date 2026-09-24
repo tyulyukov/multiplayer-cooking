@@ -10,7 +10,9 @@ import { Brand } from "@/shared/ui/brand";
 import { CheckerBand } from "@/shared/ui/checker-band";
 
 const kitchenMobile = require("@/assets/images/starter-kitchen-mobile.webp");
+
 const kitchenTablet = require("@/assets/images/starter-kitchen-tablet.webp");
+
 const starterSign = require("@/assets/images/starter-sign.webp");
 
 // lean-coding: mock sign-in that only shows the busy state; replace with Сільпо OAuth when the app talks to Convex.
@@ -25,6 +27,7 @@ export default function ConnectScreen() {
   useEffect(() => {
     if (!busy) return;
     const timer = setTimeout(() => setBusy(false), mockConnectMs);
+
     return () => clearTimeout(timer);
   }, [busy]);
 

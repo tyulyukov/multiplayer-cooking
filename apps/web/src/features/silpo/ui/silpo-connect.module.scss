@@ -17,6 +17,15 @@
   font: 600 clamp(2rem, 3.2vw, 2.75rem) / 1.2 var(--font-sign);
 }
 
+.connect-card [data-slot="button"] {
+  --press-rotate: -0.3deg;
+  flex: none;
+}
+
+.connect-card [data-slot="button"][aria-busy="true"] {
+  pointer-events: none;
+}
+
 .starter-screen {
   min-height: max(760px, 100svh);
   background-image: url("/images/starter-kitchen-mobile.webp");
@@ -49,7 +58,7 @@
     height: 164px;
   }
 
-  .connect-card :global(.generate-button) {
+  .connect-card [data-slot="button"] {
     min-width: 320px;
   }
 }

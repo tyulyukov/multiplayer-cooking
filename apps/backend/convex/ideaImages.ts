@@ -14,17 +14,22 @@ export const generate = internalAction({
   returns: v.object({ generated: v.boolean() }),
   handler: async (ctx, { ideaId }): Promise<{ generated: boolean }> => {
     const idea = await ctx.runQuery(internal.ideas.get, { ideaId });
+
     if (!idea) return { generated: false };
+
     if (idea.image?.generated) return { generated: true };
     const startedAt = Date.now();
     const model = process.env.OPENROUTER_IMAGE_MODEL || "unknown";
+
     try {
       const result = await generateDishImage(idea);
       const storageId = await ctx.storage.store(result.blob);
+
       const generated = await ctx.runMutation(internal.ideas.saveImage, {
         ideaId,
         image: { storageId, generated: true },
       });
+
       await recordAiEvent({
         event: "ai.image",
         outcome: "success",
@@ -34,6 +39,7 @@ export const generate = internalAction({
         threadId: idea.threadId,
         userId: idea.userId,
       });
+
       return { generated };
     } catch (error) {
       await ctx.runMutation(internal.ideas.saveImageError, {
@@ -49,6 +55,7 @@ export const generate = internalAction({
         userId: idea.userId,
         ...classifyFailure(error),
       });
+
       return { generated: false };
     }
   },

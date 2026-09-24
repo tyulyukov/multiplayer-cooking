@@ -8,5 +8,6 @@ export const Route = createFileRoute("/cook/$roomId")({
 
 function CookingRoomRoute() {
   const { roomId } = Route.useParams();
+
   return <CookingRoomPage roomId={roomId} />;
 }

@@ -1,8 +1,10 @@
 import { cn } from "@/shared/lib/utils";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+import type { FunctionReturnType } from "convex/server";
 import type { SessionId } from "convex-helpers/server/sessions";
 import { useState } from "react";
 
+import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -24,8 +26,15 @@ export function JoinRoom({
   sessionId: SessionId | undefined;
   inviteToken?: string;
   onJoined: (credential: CookingCredential) => void;
-  onRecoverHost: (sessionId: SessionId, participantToken: string) => Promise<unknown>;
-  onJoin: (inviteToken: string, participantToken: string, name: string) => Promise<unknown>;
+  onRecoverHost: (
+    sessionId: SessionId,
+    participantToken: string,
+  ) => Promise<FunctionReturnType<typeof api.cookingRooms.recoverHost>>;
+  onJoin: (
+    inviteToken: string,
+    participantToken: string,
+    name: string,
+  ) => Promise<FunctionReturnType<typeof api.cookingRooms.join>>;
 }) {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,20 +44,27 @@ export function JoinRoom({
     setBusy(true);
     setError(null);
     const credential = createCookingCredential(inviteToken);
+
     try {
       if (sessionId && (await onRecoverHost(sessionId, credential.participantToken))) {
         saveCookingCredential(roomId, credential);
         onJoined(credential);
+
         return;
       }
+
       if (!inviteToken || !name.trim()) {
         setError("Відкрий запрошення та напиши своє ім’я.");
+
         return;
       }
+
       if (!(await onJoin(inviteToken, credential.participantToken, name.trim()))) {
         setError("Це запрошення вже не працює.");
+
         return;
       }
+
       saveCookingCredential(roomId, credential);
       onJoined(credential);
     } catch {

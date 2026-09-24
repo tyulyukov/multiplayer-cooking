@@ -37,6 +37,7 @@ export const startConnect = action({
     const connecting = await ctx.runMutation(internal.accounts.beginConnect, { sessionId });
     const state = randomBytes(32).toString("base64url");
     let redirectUrl: URL | null = null;
+
     const provider = createSilpoAuthProvider(ctx, {
       userId: connecting.userId,
       start: {
@@ -55,6 +56,9 @@ export const startConnect = action({
       throw new Error("Сільпо не повернуло адресу для входу");
     }
 
+    // SAFETY: onRedirect runs synchronously inside auth(); result === "REDIRECT" together with the
+    // truthiness check above means it already set redirectUrl. TS cannot follow the mutation
+    // through the closure it was assigned in.
     return { url: (redirectUrl as URL).toString() };
   },
 });
@@ -72,13 +76,16 @@ export const finishConnect = action({
 
     if (!pending) {
       console.warn("Silpo callback with unknown or expired state");
+
       return false;
     }
 
     let stagedTokens: OAuthTokens | undefined;
+
     const saveStagedTokens = async (tokens: OAuthTokens) => {
       stagedTokens = tokens;
     };
+
     const provider = createSilpoAuthProvider(ctx, {
       userId: pending.userId,
       codeVerifier: pending.codeVerifier,
@@ -94,11 +101,13 @@ export const finishConnect = action({
       }
     } catch (error) {
       console.error("Silpo token exchange failed", error);
+
       return false;
     }
 
     if (!stagedTokens) {
       console.error("Silpo token exchange completed without tokens");
+
       return false;
     }
 
@@ -109,10 +118,12 @@ export const finishConnect = action({
         (client) => client.callTool("silpo_get_my_profile", {}),
         { provider },
       );
+
       const verified = parseVerifiedSilpoProfile(profileResult);
 
       if (!verified || !stagedTokens) {
         console.error("Silpo returned an unverified profile shape");
+
         return false;
       }
 
@@ -128,6 +139,7 @@ export const finishConnect = action({
       return linked !== null;
     } catch (error) {
       console.error("Silpo profile verification failed", error);
+
       return false;
     }
   },
@@ -140,8 +152,10 @@ export const verifyExistingConnection = internalAction({
   handler: async (ctx, { userId }): Promise<{ verified: boolean }> => {
     try {
       const connection = await ctx.runQuery(internal.silpo.connectionByUser, { userId });
+
       if (!connection) return { verified: false };
       let stagedTokens: OAuthTokens = connection.tokens;
+
       const provider = createSilpoAuthProvider(ctx, {
         userId,
         getStagedTokens: () => stagedTokens,
@@ -149,12 +163,14 @@ export const verifyExistingConnection = internalAction({
           stagedTokens = tokens;
         },
       });
+
       const profileResult = await withSilpoClient(
         ctx,
         userId,
         (client) => client.callTool("silpo_get_my_profile", {}),
         { provider },
       );
+
       const verified = parseVerifiedSilpoProfile(profileResult);
 
       if (!verified || !connection) {
@@ -169,9 +185,11 @@ export const verifyExistingConnection = internalAction({
         profile: verified.profile,
         tokens: storedTokens(stagedTokens),
       });
+
       return { verified: linked !== null };
     } catch (error) {
       console.error("Silpo existing connection verification failed", error);
+
       return { verified: false };
     }
   },
@@ -182,11 +200,7 @@ export const callTool = internalAction({
   args: { userId: v.id("users"), name: v.string(), args: v.any() },
   returns: v.string(),
   handler: async (ctx, { userId, name, args }) =>
-    JSON.stringify(
-      await withSilpoClient(ctx, userId, (client) =>
-        client.callTool(name, args as Record<string, unknown>),
-      ),
-    ),
+    JSON.stringify(await withSilpoClient(ctx, userId, (client) => client.callTool(name, args))),
 });
 
 // Diagnostics for development: dump the live tool list of a connected user.
