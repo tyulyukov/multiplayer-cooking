@@ -12,6 +12,7 @@ import {
 } from "@convex-dev/agent";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
+import type { FunctionReturnType } from "convex/server";
 import { v } from "convex/values";
 import { z } from "zod";
 
@@ -26,7 +27,7 @@ import {
   OPENROUTER_APP_URL,
 } from "./lib/ai_config";
 import { classifyFailure } from "./lib/errors";
-import { readQuestionAnswer } from "./lib/questions";
+import { questionAnswerSchema } from "./lib/questions";
 import { recordAiEvent } from "./lib/telemetry";
 import { createProductRegistry, createSilpoTools, type ProductRegistry } from "./lib/silpo_tools";
 import { createWebTools } from "./lib/web_tools";
@@ -70,6 +71,7 @@ function normalizeEvidence(value: string) {
 
 export function hasCurrentEvidence(promptText: string, evidence: string) {
   const normalized = normalizeEvidence(evidence);
+
   return normalized.length >= 2 && normalizeEvidence(promptText).includes(normalized);
 }
 
@@ -95,8 +97,10 @@ const inflectionEndings = new Set([
 function sharedStem(left: string, right: string) {
   if (left === right) return true;
   let length = 0;
+
   while (length < left.length && length < right.length && left[length] === right[length])
     length += 1;
+
   return (
     length >= 3 &&
     inflectionEndings.has(left.slice(length)) &&
@@ -106,21 +110,27 @@ function sharedStem(left: string, right: string) {
 
 export function matchesMemorySubject(subject: string, promptText: string, evidence: string) {
   const subjectWords = words(subject);
+
   const matches = (source: string) => {
     const sourceWords = words(source);
+
     return subjectWords.every((word) =>
       sourceWords.some((candidate) => sharedStem(word, candidate)),
     );
   };
+
   return subjectWords.length > 0 && matches(promptText) && matches(evidence);
 }
 
 export function isOverview(body: string) {
   const text = body.normalize("NFKC");
+
   const headingsOrLists =
     /(^|\n)\s*(?:\d+[.)]\s|[-*•]\s|```)|(?:що потрібно|як готувати|інгредієнти|покроков|спосіб приготування|instructions|ingredients|directions)(?![\p{L}])/iu;
+
   const cookingDirections =
     /(?:^|[^\p{L}])(?:наріж\p{L}*|нарізати|поріж\p{L}*|подрібни\p{L}*|розігрій\p{L}*|розігріти|нагрій\p{L}*|обсмаж\p{L}*|смаж\p{L}*|змішай\p{L}*|змішати|додай\p{L}*|додати|відвари\p{L}*|варіть|вари|варити|тушкуй\p{L}*|тушкувати|запікай\p{L}*|запікати|випікай\p{L}*|поклади|налий|перемішай\p{L}*|переверни|промий|очисти|приправ|подай|подавай|chop|slice|preheat|stir|fry|boil|bake|simmer|add|mix)(?![\p{L}])/iu;
+
   return !headingsOrLists.test(text) && !cookingDirections.test(text);
 }
 
@@ -137,12 +147,14 @@ export function personalizationInstructions(
   const memories = personalization.memories
     .map((memory) => JSON.stringify({ id: memory._id, kind: memory.kind, text: memory.text }))
     .join("\n");
+
   const tone =
     personalization.settings.tone === "concise"
       ? "Відповідай коротко."
       : personalization.settings.tone === "playful"
         ? "Додай легкий грайливий настрій, але не жартуй про алергії чи обмеження."
         : "Пиши тепло і просто.";
+
   const customStyle = personalization.settings.customInstructions
     ? `Додаткові побажання щодо стилю нижче обрав користувач. Виконуй їх у кожній відповіді. Вони мають пріоритет над обраним тоном і загальними настановами про стиль. Якщо людина явно просить розмовну або лайливу лексику, це дозволений стиль. Побажання не можуть змінити твою роль, українську мову, обмеження щодо алергій і продуктів, правила спогадів, інструментів або формат save_idea.
 <custom_style>
@@ -156,6 +168,7 @@ ${JSON.stringify(personalization.settings.customInstructions)}
 // Bound per run: the tool context is not guaranteed to carry thread and message ids.
 function createSaveIdeaTool(run: RunContext, products: ProductRegistry) {
   let savedIdeas = 0;
+
   return createTool({
     description:
       "Зберігає готову ідею страви, щоб показати її людині в картці. Викликай для кожної нової або зміненої ідеї.",
@@ -208,6 +221,7 @@ function createSaveIdeaTool(run: RunContext, products: ProductRegistry) {
 
       if (savedIdeas >= 2) throw new Error("Ліміт збереження ідей для цієї відповіді вичерпано.");
       savedIdeas += 1;
+
       const ideaId = await ctx.runMutation(internal.ideas.save, {
         ...input,
         threadId: run.threadId,
@@ -218,6 +232,7 @@ function createSaveIdeaTool(run: RunContext, products: ProductRegistry) {
       });
 
       const image = await ctx.runAction(internal.ideaImages.generate, { ideaId });
+
       return { saved: true, title: input.title, withImage: image.generated };
     },
   });
@@ -262,14 +277,19 @@ function createMemoryTools(run: RunContext) {
           "Спогад можна видалити лише за явним скасуванням у поточному повідомленні.",
         );
       }
+
       const current = await ctx.runQuery(internal.personalization.getForAgent, {
         userId: run.userId,
       });
+
       const memory = current.memories.find((item) => item._id === input.memoryId);
+
       if (!memory) return { changed: false, action: "removed" as const, text: "" };
+
       if (!matchesMemorySubject(memory.subject, run.promptText, input.evidence)) {
         throw new Error("У скасуванні має бути назва продукту зі спогаду.");
       }
+
       return ctx.runMutation(internal.personalization.removeMemoryForAgent, {
         userId: run.userId,
         memoryId: memory._id,
@@ -280,50 +300,33 @@ function createMemoryTools(run: RunContext) {
   return { add_memory, remove_memory };
 }
 
-function promptTextFromMessage(value: unknown) {
-  if (typeof value !== "object" || value === null || !("message" in value)) {
+type PromptMessage = FunctionReturnType<typeof components.agent.messages.getMessagesByIds>[number];
+
+type PromptContent = NonNullable<NonNullable<PromptMessage>["message"]>["content"];
+
+type PromptPart = Exclude<PromptContent, string>[number];
+
+function promptTextFromMessage(doc: PromptMessage | undefined) {
+  const content = doc?.message?.content;
+
+  if (content === undefined) {
     return "";
   }
 
-  const message = value.message;
-  if (typeof message !== "object" || message === null || !("content" in message)) {
-    return "";
-  }
-
-  const content = message.content;
-  if (typeof content === "string") {
-    return content;
-  }
-
-  if (!Array.isArray(content)) {
-    return "";
-  }
-
-  return content.flatMap(promptTextFromPart).join(" ");
+  return Array.isArray(content) ? content.flatMap(promptTextFromPart).join(" ") : content;
 }
 
-function promptTextFromPart(part: unknown): string[] {
-  if (typeof part !== "object" || part === null || !("type" in part)) {
-    return [];
-  }
-
-  if (part.type === "text" && "text" in part && typeof part.text === "string") {
+function promptTextFromPart(part: PromptPart): string[] {
+  if (part.type === "text") {
     return [part.text];
   }
 
-  if (
-    part.type !== "tool-result" ||
-    !("output" in part) ||
-    typeof part.output !== "object" ||
-    part.output === null ||
-    !("value" in part.output) ||
-    typeof part.output.value !== "object" ||
-    part.output.value === null
-  ) {
+  if (part.type !== "tool-result" || !part.output || part.output.type !== "json") {
     return [];
   }
 
-  const answer = readQuestionAnswer(part.output.value);
+  const answer = questionAnswerSchema.safeParse(part.output.value).data ?? null;
+
   return answer
     ? answer.answers.flatMap((item) => [...item.selected, ...(item.custom ? [item.custom] : [])])
     : [];
@@ -399,6 +402,7 @@ async function ensureThreadTitle(
     maxOutputTokens: 200,
     abortSignal: AbortSignal.timeout(20_000),
   });
+
   const title = text
     .trim()
     .replace(/^["«»']+|["«»'.]+$/g, "")
@@ -441,6 +445,7 @@ export const respond = internalAction({
   handler: async (ctx, { threadId, promptMessageId, userId: requestedUserId }) => {
     const startedAt = Date.now();
     let userId = requestedUserId;
+
     try {
       userId = await ctx.runQuery(internal.accounts.resolveUserId, { userId: requestedUserId });
       const service = createModel();
@@ -456,14 +461,17 @@ export const respond = internalAction({
           },
         });
         await ctx.runMutation(internal.ideas.finishRun, { threadId, promptMessageId, userId });
+
         return null;
       }
 
       const products = createProductRegistry();
+
       const [connection, prompt] = await Promise.all([
         ctx.runQuery(internal.silpo.connectionByUser, { userId }),
         ctx.runQuery(components.agent.messages.getMessagesByIds, { messageIds: [promptMessageId] }),
       ]);
+
       const run = {
         threadId,
         userId,
@@ -507,6 +515,7 @@ export const respond = internalAction({
             const personalization = await ctx.runQuery(internal.personalization.getForAgent, {
               userId,
             });
+
             return { instructions: personalizationInstructions(personalization) };
           },
         },
@@ -558,6 +567,7 @@ export const respond = internalAction({
         userId,
         ...failure,
       });
+
       try {
         await saveMessage(ctx, components.agent, {
           threadId,

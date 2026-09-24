@@ -5,6 +5,7 @@ import { CookingRoomPage } from "@/pages/cooking-room/cooking-room-page";
 
 const CookingRoomRoute: FC = () => {
   const { roomId } = Route.useParams();
+
   return <CookingRoomPage roomId={roomId} />;
 };
 

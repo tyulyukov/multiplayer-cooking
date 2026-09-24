@@ -16,13 +16,14 @@ const meta = {
   args: { data: fullRoom, actions: cookingActions },
   argTypes: { data: { control: false }, actions: { control: false } },
   render: (args) => (
-    <div className="w-[min(30rem,calc(100vw-2rem))]">
+    <div className="w-full max-w-lg">
       <CookingLobby {...args} />
     </div>
   ),
 } satisfies Meta<typeof CookingLobby>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ReadyToStart: Story = {};

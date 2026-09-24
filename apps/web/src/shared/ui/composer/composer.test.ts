@@ -25,6 +25,7 @@ const render = (overrides: Partial<ComposerProps> = {}) => {
 const sendButton = (html: string) => {
   const button = html.match(/<button[^>]*aria-label="Надіслати"[^>]*>/)?.[0];
   expect(button).toBeDefined();
+
   return button!;
 };
 
@@ -53,6 +54,7 @@ describe("Composer rendering", () => {
       value: "",
       attachments: [{ id: "photo", previewUrl: "/photo.webp", state: "done" }],
     });
+
     expect(sendButton(html)).not.toContain(' disabled=""');
     expect(html).toContain('aria-label="Прибрати фото"');
   });
@@ -69,6 +71,7 @@ describe("Composer rendering", () => {
       questionnaire: createElement("p", null, "Скільки порцій?"),
       questionnaireKey: "question-1",
     });
+
     expect(html).toContain("Скільки порцій?");
     expect(html).toContain("Написати повідомлення");
     expect(html).not.toContain("<form");

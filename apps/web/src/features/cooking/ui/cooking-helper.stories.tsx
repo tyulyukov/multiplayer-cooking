@@ -41,6 +41,8 @@ const message = {
   text: "Як зрозуміти, що овочі готові?",
   createdAt: storyNow - 60_000,
   authorName: "Аня",
+  stepKey: undefined,
+  attachmentUrls: undefined,
 } satisfies CookingHelperProps["messages"][number];
 
 const reply = {
@@ -48,8 +50,12 @@ const reply = {
   role: "assistant",
   text: "Овочі мають стати м’якими, але не втратити форму.",
   createdAt: storyNow - 30_000,
+  authorName: undefined,
+  stepKey: undefined,
+  attachmentUrls: undefined,
 } satisfies CookingHelperProps["messages"][number];
 
+// SAFETY: these IDs identify local Storybook fixtures, not Convex records.
 const note = {
   _id: "story-note" as Id<"cookingNotes">,
   authorMemberId: "story-host" as Id<"cookingMembers">,
@@ -58,6 +64,7 @@ const note = {
   canDelete: true,
 } satisfies CookingHelperProps["notes"][number];
 
+// SAFETY: these IDs identify local Storybook fixtures, not Convex records.
 const proposal = {
   _id: "story-proposal" as Id<"cookingProposals">,
   authorMemberId: "story-host" as Id<"cookingMembers">,
@@ -97,11 +104,11 @@ const meta = {
     onPromptChange: fn(),
     online: true,
     finished: false,
-    onAsk: fn(async () => undefined),
-    onRetry: fn(async () => undefined),
+    onAsk: fn(async () => null),
+    onRetry: fn(async () => null),
     onApprove: fn(async () => true),
     onReject: fn(async () => true),
-    onNote: fn(async () => undefined),
+    onNote: fn(async () => null),
     onDeleteNote: fn(async () => true),
   },
   argTypes: {
@@ -114,6 +121,7 @@ const meta = {
 } satisfies Meta<HelperStoryArgs>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Welcome: Story = {};

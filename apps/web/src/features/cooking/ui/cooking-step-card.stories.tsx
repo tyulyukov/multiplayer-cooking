@@ -37,13 +37,14 @@ const meta = {
     actions: { control: false },
   },
   render: (args) => (
-    <div className="w-[min(38rem,calc(100vw-2rem))]">
+    <div className="w-full max-w-xl">
       <StepCard {...args} />
     </div>
   ),
 } satisfies Meta<typeof StepCard>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Active: Story = {};

@@ -31,6 +31,7 @@ export const useHomePageModel = () => {
   const createCookingRoom = useCreateCookingRoom(sessionId);
   const draft = useComposerDraft();
   const attachments = useAttachments(sessionId ? chat.uploadAttachment : null);
+
   const draftSync = useDraftSync({
     threadId: chat.active === undefined ? undefined : threadId,
     remote: chat.remoteDraft,
@@ -42,6 +43,7 @@ export const useHomePageModel = () => {
     },
     save: chat.saveDraft,
   });
+
   const [personalTab, setPersonalTab] = useState<"memories" | "settings" | null>(null);
   const [sending, setSending] = useState(false);
   const [answering, setAnswering] = useState(false);
@@ -61,9 +63,12 @@ export const useHomePageModel = () => {
 
     try {
       const result = await chat.sendMessage(text, attachments.storageIds);
+
       if (!result) return;
+
       if (result.ok) {
         sentThreadId = result.threadId;
+
         if (draft.revision.current === submittedRevision) draft.change("");
         attachments.clear();
       } else {
@@ -80,8 +85,10 @@ export const useHomePageModel = () => {
   const submitAddress = async (address: string) => {
     if (!sessionId) return;
     setAddressError(null);
+
     try {
       const result = await silpo.saveAddress(address);
+
       if (result && !result.ok) setAddressError(result.message);
     } catch {
       setAddressError("Не вдалося зберегти адресу. Спробуй ще раз.");
@@ -95,8 +102,10 @@ export const useHomePageModel = () => {
   const submitCart = async () => {
     if (!sessionId || !idea) return;
     setError(null);
+
     try {
       const result = await ideaState.addToCart();
+
       if (result && !result.ok) setError(result.message);
     } catch {
       setError("Не вдалося додати в кошик. Спробуй ще раз.");
@@ -106,6 +115,7 @@ export const useHomePageModel = () => {
   const startNew = async () => {
     if (!sessionId) return;
     setError(null);
+
     try {
       await chat.createThread();
       draft.reset();
@@ -119,8 +129,10 @@ export const useHomePageModel = () => {
     if (!sessionId || !threadId) return;
     setAnswering(true);
     setError(null);
+
     try {
       const result = await chat.answerQuestion(toolCallId, value);
+
       if (result && !result.ok) setError(result.message);
     } catch {
       setError("Не вдалося надіслати відповідь. Спробуй ще раз.");
@@ -132,6 +144,7 @@ export const useHomePageModel = () => {
   const openFromHistory = async (target: string) => {
     if (!sessionId) return;
     setError(null);
+
     try {
       await history.openThread(target);
       resetVersion();
@@ -143,6 +156,7 @@ export const useHomePageModel = () => {
   const removeFromHistory = async (target: string) => {
     if (!sessionId) return;
     setError(null);
+
     try {
       await history.deleteThread(target);
     } catch {

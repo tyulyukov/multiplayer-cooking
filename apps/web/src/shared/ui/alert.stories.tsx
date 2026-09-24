@@ -50,6 +50,7 @@ const meta = {
 } satisfies Meta<AlertStoryArgs>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Informational: Story = {};

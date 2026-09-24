@@ -25,6 +25,7 @@ type AttachmentStoryArgs = ComponentProps<typeof Attachment> & {
 };
 
 const onAdd = fn();
+
 const onRemove = fn();
 
 const meta = {
@@ -81,6 +82,7 @@ const meta = {
 } satisfies Meta<AttachmentStoryArgs>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Ready: Story = {};

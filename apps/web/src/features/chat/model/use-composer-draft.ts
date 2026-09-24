@@ -21,9 +21,11 @@ export const useComposerDraft = () => {
 
   const togglePrompt = (prompt: QuickPrompt) => {
     revision.current += 1;
+
     if (selection?.promptId === prompt.id) {
       setRequest(selection.baseRequest);
       setSelection(null);
+
       return;
     }
 

@@ -9,13 +9,14 @@ const meta = {
   tags: ["autodocs"],
   args: { busy: false, onConnect: fn() },
   render: (args) => (
-    <div className="w-[min(28rem,calc(100vw-2rem))]">
+    <div className="w-full max-w-md">
       <ConnectCard {...args} />
     </div>
   ),
 } satisfies Meta<typeof ConnectCard>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Ready: Story = {};

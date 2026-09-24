@@ -10,7 +10,9 @@ import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 import type { ComposerProps } from "./types";
 import styles from "./composer.module.scss";
+
 const counterThreshold = Math.floor(AI_REQUEST_MAX_CHARACTERS * 0.8);
+
 const shakeDurationMs = 300;
 
 const isOverLimit = (text: string) => {
@@ -83,6 +85,7 @@ export const useComposer = ({
     if (overLimit) {
       shake();
       textareaRef.current?.focus();
+
       return;
     }
 
@@ -90,12 +93,14 @@ export const useComposer = ({
 
     if ((!text && readyAttachments.length === 0) || uploading || attachmentError) {
       textareaRef.current?.focus();
+
       return;
     }
 
     if (!submittedWithShortcut) {
       textareaRef.current?.blur();
     }
+
     onSubmit(text);
   };
 

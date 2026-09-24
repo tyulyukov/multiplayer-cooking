@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { readQuestionAnswer, readQuestionInput, validateQuestionSubmission } from "./questions";
+import { questionAnswerSchema, questionInputSchema, validateQuestionSubmission } from "./questions";
 
 const input = {
   questions: [
@@ -30,13 +30,13 @@ const input = {
 describe("question contracts", () => {
   test("normalizes historic single-question calls and answers", () => {
     expect(
-      readQuestionInput({
+      questionInputSchema.safeParse({
         question: "Скільки часу є?",
         options: [
           { id: "quick", label: "До 20 хвилин" },
           { id: "slow", label: "До години" },
         ],
-      }),
+      }).data ?? null,
     ).toEqual({
       questions: [
         {
@@ -51,7 +51,9 @@ describe("question contracts", () => {
         },
       ],
     });
-    expect(readQuestionAnswer({ selected: ["До 20 хвилин"], custom: "" })).toEqual({
+    expect(
+      questionAnswerSchema.safeParse({ selected: ["До 20 хвилин"], custom: "" }).data ?? null,
+    ).toEqual({
       answers: [{ questionId: "question", selected: ["До 20 хвилин"], custom: "" }],
     });
   });
@@ -90,12 +92,13 @@ describe("question contracts", () => {
         },
       ],
     ]) {
-      expect(readQuestionInput({ questions })).toBeNull();
+      expect(questionInputSchema.safeParse({ questions }).data ?? null).toBeNull();
     }
   });
 
   test("rejects incomplete, duplicate, unknown, and invalid question answers", () => {
-    const parsed = readQuestionInput(input);
+    const parsed = questionInputSchema.safeParse(input).data ?? null;
+
     if (!parsed) throw new Error("Fixture must be a valid question input");
 
     for (const answers of [
@@ -122,7 +125,8 @@ describe("question contracts", () => {
   });
 
   test("derives selected labels on the server", () => {
-    const parsed = readQuestionInput(input);
+    const parsed = questionInputSchema.safeParse(input).data ?? null;
+
     if (!parsed) throw new Error("Fixture must be a valid question input");
 
     expect(

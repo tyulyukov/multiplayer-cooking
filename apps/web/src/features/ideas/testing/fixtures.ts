@@ -3,6 +3,7 @@ import { fn } from "storybook/test";
 
 import type { Idea, IdeaVersions } from "../model/types";
 
+// SAFETY: these IDs identify local Storybook fixtures, not Convex records.
 export const storyIdea = {
   _id: "story-idea" as Id<"ideas">,
   _creationTime: Date.UTC(2026, 8, 23, 11, 0, 0),

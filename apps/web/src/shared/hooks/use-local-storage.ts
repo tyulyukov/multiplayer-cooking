@@ -10,6 +10,7 @@ export const useLocalStorage: UseStorage<StoredSession> = (key, initialValue) =>
     const existing = localStorage.getItem(key);
 
     if (existing) {
+      // SAFETY: this key is only ever written below, by setValue, with a SessionId string.
       return existing as SessionId;
     }
 
@@ -19,6 +20,7 @@ export const useLocalStorage: UseStorage<StoredSession> = (key, initialValue) =>
 
     return initialValue;
   });
+
   const setValue = useCallback(
     (next: StoredSession) => {
       if (next === undefined) {

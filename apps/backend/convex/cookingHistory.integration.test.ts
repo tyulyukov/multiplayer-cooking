@@ -1,17 +1,20 @@
 import { expect, test } from "bun:test";
-import type { SessionId } from "convex-helpers/server/sessions";
 
 import { api } from "./_generated/api";
 import { cookingFixture } from "../tests/cooking-fixture";
+import { testSessionId } from "../tests/convex-doubles";
 
-const sessionId = "history-session" as SessionId;
-const outsiderSessionId = "history-outsider" as SessionId;
+const sessionId = testSessionId("history-session");
+
+const outsiderSessionId = testSessionId("history-outsider");
 
 test("owned history returns source metadata for every room without exposing private idea fields", async () => {
   const fixture = await cookingFixture();
   const imageStorageId = await fixture.t.run((ctx) => ctx.storage.store(new Blob(["dish image"])));
+
   const secondRoomId = await fixture.t.run(async (ctx) => {
     const room = await ctx.db.get(fixture.roomId);
+
     if (!room) throw new Error("Missing fixture room");
     await ctx.db.insert("sessions", { sessionId, userId: fixture.userId, authVersion: 0 });
     const outsiderUserId = await ctx.db.insert("users", {});
@@ -22,6 +25,7 @@ test("owned history returns source metadata for every room without exposing priv
     });
     await ctx.db.patch(room.sourceIdeaId, { image: { storageId: imageStorageId } });
     const { _id, _creationTime, ownerMemberId: _ownerMemberId, ...secondRoom } = room;
+
     return ctx.db.insert("cookingRooms", {
       ...secondRoom,
       createdAt: room.createdAt + 1,
@@ -29,7 +33,7 @@ test("owned history returns source metadata for every room without exposing priv
   });
 
   expect(
-    await fixture.t.query(api.cookingRooms.listOwned, { sessionId: "unknown" as SessionId }),
+    await fixture.t.query(api.cookingRooms.listOwned, { sessionId: testSessionId("unknown") }),
   ).toEqual([]);
   expect(
     await fixture.t.query(api.cookingRooms.listOwned, { sessionId: outsiderSessionId }),
@@ -49,8 +53,10 @@ test("owned history returns source metadata for every room without exposing priv
 
 test("owned history retains rooms with missing or foreign source ideas without source metadata", async () => {
   const fixture = await cookingFixture();
+
   const sourceIds = await fixture.t.run(async (ctx) => {
     const foreignUserId = await ctx.db.insert("users", {});
+
     const foreignIdeaId = await ctx.db.insert("ideas", {
       userId: foreignUserId,
       threadId: "foreign-thread",
@@ -62,7 +68,9 @@ test("owned history retains rooms with missing or foreign source ideas without s
       timeMinutes: 10,
       servings: 1,
     });
+
     const room = await ctx.db.get(fixture.roomId);
+
     if (!room) throw new Error("Missing fixture room");
     await ctx.db.insert("sessions", { sessionId, userId: fixture.userId, authVersion: 0 });
     const { _id, _creationTime, ownerMemberId: _ownerMemberId, ...foreignRoom } = room;
@@ -72,6 +80,7 @@ test("owned history retains rooms with missing or foreign source ideas without s
       createdAt: room.createdAt + 1,
     });
     await ctx.db.delete(room.sourceIdeaId);
+
     return { deletedSourceIdeaId: room.sourceIdeaId, foreignSourceId: foreignIdeaId };
   });
 

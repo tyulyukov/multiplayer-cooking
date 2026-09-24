@@ -1,5 +1,7 @@
 import type { SessionId } from "convex-helpers/server/sessions";
+import type { FunctionReturnType } from "convex/server";
 
+import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import type { CookingCredential } from "../lib/cooking-session";
 import type { CookingRoomData, CookingSetup } from "./types";
@@ -18,8 +20,15 @@ export type JoinRoomProps = {
   sessionId: SessionId | undefined;
   inviteToken?: string;
   onJoined: (credential: CookingCredential) => void;
-  onRecoverHost: (sessionId: SessionId, participantToken: string) => Promise<unknown>;
-  onJoin: (inviteToken: string, participantToken: string, name: string) => Promise<unknown>;
+  onRecoverHost: (
+    sessionId: SessionId,
+    participantToken: string,
+  ) => Promise<FunctionReturnType<typeof api.cookingRooms.recoverHost>>;
+  onJoin: (
+    inviteToken: string,
+    participantToken: string,
+    name: string,
+  ) => Promise<FunctionReturnType<typeof api.cookingRooms.join>>;
 };
 
 export type PeopleProps = {

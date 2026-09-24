@@ -9,15 +9,18 @@ import { Button } from "@/shared/ui/button";
 import type { Memory } from "@/features/personalization/model/types";
 
 import type { usePersonalSettings } from "../model/use-personal-settings";
+
 const memoryLabels: Record<Memory["kind"], string> = {
   allergy: "Алергія",
   dislike: "Не подобається",
   preference: "Вподобання",
 };
+
 type Props = Pick<
   ReturnType<typeof usePersonalSettings>,
   "sortedMemories" | "deletingId" | "deleteMemory" | "deleteError"
 > & { loading: boolean };
+
 export const PersonalMemories: FC<Props> = ({
   sortedMemories,
   deletingId,

@@ -1,17 +1,27 @@
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
-import type {
-  OAuthClientInformationMixed,
-  OAuthClientMetadata,
-  OAuthTokens,
+import {
+  OAuthClientInformationFullSchema,
+  OAuthClientInformationSchema,
+  type OAuthClientMetadata,
+  type OAuthTokens,
 } from "@modelcontextprotocol/sdk/shared/auth.js";
+import { z } from "zod";
 
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { ActionCtx } from "../_generated/server";
 
 export const SILPO_MCP_URL = "https://mcp.silpo.ua/mcp";
+
 export const SILPO_ISSUER = "https://mcp.silpo.ua";
+
 export const SILPO_REAUTH_MESSAGE = "Сесія Сільпо закінчилась. Натисни «Перепідключити» в меню.";
+
+// Dynamic client registration can return either the minimal or the full RFC 7591 response.
+const clientInformationSchema = z.union([
+  OAuthClientInformationFullSchema,
+  OAuthClientInformationSchema,
+]);
 
 // Thrown when a stored token can no longer be refreshed and the person must log in again.
 export class SilpoReauthRequiredError extends Error {
@@ -66,7 +76,7 @@ export function createSilpoAuthProvider(
     async clientInformation() {
       const stored = await ctx.runQuery(internal.silpo.oauthClient, clientKey);
 
-      return stored ? (JSON.parse(stored) as OAuthClientInformationMixed) : undefined;
+      return stored ? clientInformationSchema.parse(JSON.parse(stored)) : undefined;
     },
     async saveClientInformation(info) {
       await ctx.runMutation(internal.silpo.saveOAuthClient, {
@@ -92,6 +102,7 @@ export function createSilpoAuthProvider(
     async saveTokens(tokens: OAuthTokens) {
       if (saveStagedTokens) {
         await saveStagedTokens(tokens);
+
         return;
       }
 

@@ -1,11 +1,14 @@
 const relative = new Intl.RelativeTimeFormat("uk", { numeric: "auto" });
+
 const clock = new Intl.DateTimeFormat("uk-UA", { hour: "2-digit", minute: "2-digit" });
+
 const thisYear = new Intl.DateTimeFormat("uk-UA", {
   day: "numeric",
   month: "long",
   hour: "2-digit",
   minute: "2-digit",
 });
+
 const otherYear = new Intl.DateTimeFormat("uk-UA", {
   day: "numeric",
   month: "long",
@@ -15,11 +18,13 @@ const otherYear = new Intl.DateTimeFormat("uk-UA", {
 });
 
 const minute = 60_000;
+
 const hour = 60 * minute;
 
 const startOfDay = (at: number) => {
   const date = new Date(at);
   date.setHours(0, 0, 0, 0);
+
   return date.getTime();
 };
 

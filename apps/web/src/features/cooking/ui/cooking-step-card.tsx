@@ -12,6 +12,7 @@ import type { PlanStep, RuntimeStep } from "../model/types";
 
 import { getCookingStepState } from "../lib/cooking-step-state";
 import { StepControls } from "./cooking-step-controls";
+
 type StepCardProps = {
   step: PlanStep;
   runtime?: RuntimeStep;
@@ -43,15 +44,19 @@ export const StepCard: FC<StepCardProps> = ({
   const { done, active, waiting, people, blockers, title, canInteract } = state;
   const [confirmed, setConfirmed] = useState(false);
   const [confirmationVersion, setConfirmationVersion] = useState(done);
+
   if (confirmationVersion !== done) {
     setConfirmationVersion(done);
     setConfirmed(false);
   }
+
   const [skipChecklistOpen, setSkipChecklistOpen] = useState(false);
+
   const complete = (skipChecklist = false) => {
     actions.complete(step.id, confirmed, skipChecklist);
     onAdvance();
   };
+
   return (
     <article
       id={`step-${step.id}`}

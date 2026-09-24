@@ -10,6 +10,7 @@ import {
 
 const sequence = (values: number[]) => {
   let index = 0;
+
   return () => values[index++ % values.length]!;
 };
 
@@ -19,6 +20,7 @@ describe("sampleQuickPrompts", () => {
 
     expect(picked).toHaveLength(quickPromptCount);
     expect(new Set(picked.map((prompt) => prompt.id)).size).toBe(quickPromptCount);
+
     for (const prompt of picked) {
       expect(quickPromptPool).toContain(prompt);
     }

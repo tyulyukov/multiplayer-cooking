@@ -2,6 +2,11 @@ import {
   IMAGE_UPLOAD_MAX_BYTES,
   IMAGE_UPLOAD_MAX_EDGE,
 } from "@multiplayer-cooking/backend/convex/lib/ai_config";
+import { isPlainObject, isString } from "@/shared/lib/type-guards";
+
+function isUploadResponse(value: unknown): value is { storageId: string } {
+  return isPlainObject(value) && "storageId" in value && isString(value.storageId);
+}
 
 const jpegQuality = 0.85;
 
@@ -51,9 +56,13 @@ export const uploadImage = async (uploadUrl: string, blob: Blob): Promise<string
     throw new Error(`Upload failed with ${response.status}`);
   }
 
-  const { storageId } = (await response.json()) as { storageId: string };
+  const payload: unknown = await response.json();
 
-  return storageId;
+  if (!isUploadResponse(payload)) {
+    throw new Error("Unexpected upload response");
+  }
+
+  return payload.storageId;
 };
 
 // Convex serves stored files with a 30-day private cache, so a warm request now means the step

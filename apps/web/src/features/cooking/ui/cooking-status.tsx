@@ -24,6 +24,7 @@ export const CookingStatus: FC<CookingStatusProps> = ({
   loading = false,
 }) => {
   const [failed, setFailed] = useState(false);
+
   return (
     <section className={cookingStyles["cooking-status"]}>
       {image && !failed && (

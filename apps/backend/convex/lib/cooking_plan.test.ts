@@ -53,6 +53,7 @@ describe("validateCookingPlan", () => {
 
   test("rejects generated plans that omit the product timer", () => {
     const plan = validPlan();
+
     for (const step of plan.steps) step.timers = [];
 
     expect(() => validateGeneratedCookingPlan(plan, 2)).toThrow("at least one timer");

@@ -6,9 +6,11 @@ import { admitAiGeneration, type AiLimitName } from "./ai_admission";
 describe("admitAiGeneration", () => {
   test("stops before the daily limit when the burst limit denies", async () => {
     const calls: AiLimitName[] = [];
+
     const allowed = await admitAiGeneration({
       limit: async (name) => {
         calls.push(name);
+
         return { ok: false };
       },
     });
@@ -19,9 +21,11 @@ describe("admitAiGeneration", () => {
 
   test("refunds the burst limit when the daily limit denies", async () => {
     const calls: Array<readonly [AiLimitName, number | undefined]> = [];
+
     const allowed = await admitAiGeneration({
       limit: async (name, options) => {
         calls.push([name, options?.count]);
+
         return { ok: name !== "chatDaily" };
       },
     });
@@ -36,9 +40,11 @@ describe("admitAiGeneration", () => {
 
   test("allows generation when both limits allow it", async () => {
     const calls: AiLimitName[] = [];
+
     const allowed = await admitAiGeneration({
       limit: async (name) => {
         calls.push(name);
+
         return { ok: true };
       },
     });

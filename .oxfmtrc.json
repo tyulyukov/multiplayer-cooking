@@ -4,6 +4,7 @@
     "apps/backend/convex/_generated/**",
     "apps/web/src/routeTree.gen.ts",
     "apps/web/design/**",
-    ".playwright-mcp/**"
+    ".playwright-mcp/**",
+    "tools/oxlint/anti-slop/**"
   ]
 }

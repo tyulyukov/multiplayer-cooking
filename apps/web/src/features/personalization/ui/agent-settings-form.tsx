@@ -5,6 +5,7 @@ import { Textarea } from "@/shared/ui/textarea";
 import type { AgentSettings } from "@/features/personalization/model/types";
 
 import type { usePersonalSettings } from "../model/use-personal-settings";
+
 const tones: Array<{ value: AgentSettings["tone"]; label: string; description: string }> = [
   { value: "friendly", label: "Теплий", description: "Пояснює спокійно і по-людськи" },
   { value: "concise", label: "Лаконічний", description: "Каже тільки потрібне" },
@@ -15,6 +16,7 @@ type Props = Pick<
   ReturnType<typeof usePersonalSettings>,
   "cookName" | "changeCookName" | "draft" | "changeDraft"
 > & { loading: boolean };
+
 export const AgentSettingsForm: FC<Props> = ({
   cookName,
   changeCookName,

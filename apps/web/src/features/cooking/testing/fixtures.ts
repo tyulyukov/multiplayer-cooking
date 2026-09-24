@@ -5,7 +5,10 @@ import type { CookingActions, CookingRoomData, RoomTimer } from "../model/types"
 
 export const storyNow = Date.UTC(2026, 8, 23, 12, 0, 0);
 
+// SAFETY: fixture IDs are placeholders for story data, not persisted Convex records.
 const hostId = "story-host" as Id<"cookingMembers">;
+
+// SAFETY: fixture IDs are placeholders for story data, not persisted Convex records.
 const guestId = "story-guest" as Id<"cookingMembers">;
 
 export const storyPlan = {
@@ -65,6 +68,7 @@ export const storyPlan = {
   ],
 } satisfies NonNullable<CookingRoomData["room"]["plan"]>;
 
+// SAFETY: this timer ID is a placeholder used only by Storybook fixtures.
 export const storyTimer = {
   _id: "story-fry-timer" as Id<"cookingTimers">,
   stepKey: "fry",
@@ -77,10 +81,12 @@ export const storyTimer = {
   startedBy: hostId,
 } satisfies RoomTimer;
 
+// SAFETY: this room ID is a placeholder used only by Storybook fixtures.
 const baseRoom = {
   serverNow: storyNow,
   room: {
     _id: "story-cooking-room" as Id<"cookingRooms">,
+    dishImage: undefined,
     source: {
       title: "Паста з овочами",
       summary: "Проста вечеря, яку зручно готувати разом.",
@@ -172,6 +178,7 @@ export const cookingRoomFixture = (
   } = {},
 ): CookingRoomData => {
   const { room, ...rest } = overrides;
+
   return { ...baseRoom, ...rest, room: { ...baseRoom.room, ...room } };
 };
 

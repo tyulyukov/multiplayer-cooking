@@ -15,13 +15,14 @@ const meta = {
     onAction: fn(),
   },
   render: (args) => (
-    <div className="w-[min(30rem,calc(100vw-2rem))]">
+    <div className="w-full max-w-lg">
       <CookingStatus {...args} />
     </div>
   ),
 } satisfies Meta<typeof CookingStatus>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Generating: Story = {};

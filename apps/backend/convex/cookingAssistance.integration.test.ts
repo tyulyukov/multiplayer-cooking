@@ -12,6 +12,7 @@ import { cookingFixture } from "../tests/cooking-fixture";
 
 async function saveFutureProposal() {
   const fixture = await cookingFixture();
+
   const nextPlan = {
     ...fixture.plan,
     servings: 3,
@@ -21,12 +22,14 @@ async function saveFutureProposal() {
       { ...fixture.plan.steps[1], body: "Тушкуйте до густого соусу." },
     ],
   };
+
   await fixture.t.run(async (ctx) => {
     await ctx.db.patch(fixture.roomId, {
       helperBusy: true,
       helperPromptMessageId: "prompt",
     });
   });
+
   const proposalId = await fixture.t.mutation(internal.cookingAssistance.saveProposal, {
     roomId: fixture.roomId,
     authorMemberId: fixture.guestId,
@@ -35,7 +38,9 @@ async function saveFutureProposal() {
     preview: "Додати базилік і змінити соус.",
     plan: nextPlan,
   });
+
   if (!proposalId) throw new Error("Expected a proposal");
+
   return { ...fixture, proposalId };
 }
 
@@ -60,6 +65,7 @@ async function saveSelectedActiveProposal() {
       attachmentStorageIds: [],
     });
   });
+
   const proposalId = await fixture.t.mutation(internal.cookingAssistance.saveProposal, {
     roomId: fixture.roomId,
     authorMemberId: fixture.hostId,
@@ -72,7 +78,9 @@ async function saveSelectedActiveProposal() {
       steps: [{ ...fixture.plan.steps[0], body: "Готуй до м'якості." }, fixture.plan.steps[1]],
     },
   });
+
   if (!proposalId) throw new Error("Expected a proposal");
+
   return { ...fixture, proposalId };
 }
 
@@ -87,6 +95,7 @@ test("a proposal that rewrites a finished step keeps that step and saves the fut
   await fixture.t.run(async (ctx) => {
     await ctx.db.patch(fixture.roomId, { helperBusy: true, helperPromptMessageId: "prompt" });
   });
+
   const proposalId = await fixture.t.mutation(internal.cookingAssistance.saveProposal, {
     roomId: fixture.roomId,
     authorMemberId: fixture.guestId,
@@ -102,6 +111,7 @@ test("a proposal that rewrites a finished step keeps that step and saves the fut
       ],
     },
   });
+
   expect(proposalId).not.toBeNull();
   const [proposal] = await fixture.t.query(api.cookingAssistance.listProposals, fixture.guest);
   expect(proposal?.affectedStepKeys).toEqual(["sauce"]);
@@ -162,6 +172,7 @@ test("proposal becomes stale when an affected future step starts before approval
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", roomId).eq("stepKey", "sauce"))
       .unique();
+
     if (!runtime) throw new Error("Missing runtime step");
     await ctx.db.patch(runtime._id, { status: "active", startedAt: Date.now() });
   });
@@ -204,6 +215,7 @@ test("selected-step proposal becomes stale when the step completes during review
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", fixture.roomId).eq("stepKey", "prep"))
       .unique();
+
     if (!runtime) throw new Error("Missing runtime step");
     await ctx.db.patch(runtime._id, { status: "done", completedAt: Date.now() });
   });
@@ -226,6 +238,7 @@ test("selected-step proposal becomes stale when checklist progress changes durin
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", fixture.roomId).eq("stepKey", "prep"))
       .unique();
+
     if (!runtime) throw new Error("Missing runtime step");
     await ctx.db.patch(runtime._id, { checkedIds: ["new-progress"] });
   });
@@ -243,9 +256,11 @@ test("selected-step proposal becomes stale when checklist progress changes durin
 
 test("helper uploads reject other members and files without an allowed image type", async () => {
   const fixture = await cookingFixture();
+
   const storageId = await fixture.t.run((ctx) =>
     ctx.storage.store(new Blob(["image"], { type: "image/png" })),
   );
+
   const ticket = "helper-upload-ticket";
   await fixture.t.run(async (ctx) => {
     await ctx.db.insert("cookingHelperUploadGrants", {
@@ -307,10 +322,12 @@ test("helper timeout cannot overwrite a completed helper response", async () => 
 test("notes stay within their room and only their author or host can delete them", async () => {
   const first = await cookingFixture();
   const second = await cookingFixture();
+
   const noteId = await first.t.mutation(api.cookingAssistance.addNote, {
     ...first.guest,
     text: "Поставити воду.",
   });
+
   if (!noteId) throw new Error("Expected a note");
   await expect(
     first.t.mutation(api.cookingAssistance.deleteNote, { ...first.host, noteId }),
@@ -339,10 +356,12 @@ test("notes reject a fifty-first shared entry", async () => {
 
 test("helper photo messages retain their author, image and selected context for the room", async () => {
   const fixture = await cookingHelperFixture();
+
   const grant = await fixture.t.mutation(
     api.cookingAssistance.generateHelperUploadUrl,
     fixture.host,
   );
+
   if (!grant) throw new Error("Expected an upload grant");
   const storageId = await storeHelperImage(fixture);
   const upload = { ...fixture.host, uploadTicket: grant.uploadTicket, storageId };
@@ -362,6 +381,7 @@ test("helper photo messages retain their author, image and selected context for 
       stepKey: "prep",
       attachmentStorageIds: [storageId],
     });
+
     if (!result) throw new Error("Expected an image-only question");
     const messages = await fixture.t.query(api.cookingAssistance.listMessages, fixture.guest);
     expect(messages[0]).toMatchObject({
@@ -371,20 +391,25 @@ test("helper photo messages retain their author, image and selected context for 
     });
     expect(messages[0]?.attachmentUrls).toHaveLength(1);
     const imageUrl = await fixture.t.run((ctx) => ctx.storage.getUrl(storageId));
+
     if (!imageUrl) throw new Error("Expected an image URL");
     expect(messages[0]?.attachmentUrls?.[0]).toEqual(imageUrl);
+
     const saved = await fixture.t.query(components.agent.messages.getMessagesByIds, {
       messageIds: [result.promptMessageId],
     });
+
     expect(saved[0]?.message?.content).toContainEqual({
       type: "image",
       image: imageUrl,
       mediaType: "image/png",
     });
+
     const data = await fixture.t.query(internal.cookingAssistance.helperData, {
       roomId: fixture.roomId,
       promptMessageId: result.promptMessageId,
     });
+
     expect(data?.currentStep).toEqual({ id: "prep", title: "prep" });
     await fixture.t.mutation(internal.cookingAssistance.finishHelper, {
       roomId: fixture.roomId,
@@ -402,14 +427,17 @@ test("helper photo messages retain their author, image and selected context for 
 
 test("expired helper upload grants reject an otherwise valid image", async () => {
   const fixture = await cookingHelperFixture();
+
   const grant = await fixture.t.mutation(
     api.cookingAssistance.generateHelperUploadUrl,
     fixture.host,
   );
+
   if (!grant) throw new Error("Expected an upload grant");
   const storageId = await storeHelperImage(fixture);
   await fixture.t.run(async (ctx) => {
     const stored = await ctx.db.query("cookingHelperUploadGrants").first();
+
     if (!stored) throw new Error("Expected a stored grant");
     await ctx.db.patch(stored._id, { expiresAt: Date.now() - 1 });
   });
@@ -429,15 +457,18 @@ test("shared helper failures identify the failed question rather than another co
       ...fixture.host,
       prompt: "Без чилі",
     });
+
     if (!first) throw new Error("Expected a question");
     await fixture.t.mutation(internal.cookingAssistance.finishHelper, {
       roomId: fixture.roomId,
       promptMessageId: first.promptMessageId,
     });
+
     const second = await fixture.t.mutation(api.cookingAssistance.askHelper, {
       ...fixture.guest,
       prompt: "Як перевірити соус?",
     });
+
     if (!second) throw new Error("Expected another question");
     await fixture.t.mutation(internal.cookingAssistance.finishHelper, {
       roomId: fixture.roomId,
@@ -447,10 +478,12 @@ test("shared helper failures identify the failed question rather than another co
     const shared = await fixture.t.query(api.cookingRooms.read, fixture.host);
     expect(shared?.room.helperFailedPromptMessageId).toBe(second.promptMessageId);
     expect(shared?.room.helperFailedPromptMessageId).not.toBe(first.promptMessageId);
+
     const retried = await fixture.t.mutation(api.cookingAssistance.askHelper, {
       ...fixture.guest,
       prompt: "Як перевірити соус?",
     });
+
     expect(retried?.promptMessageId).not.toBe(second.promptMessageId);
     expect(
       (await fixture.t.query(api.cookingRooms.read, fixture.host))?.room
@@ -469,7 +502,9 @@ test("a preserved helper draft can be sent after a shared proposal removes its s
       prompt: "Прибрати соус",
       stepKey: selectedStepKey,
     });
+
     if (!question) throw new Error("Expected a question");
+
     const proposalId = await fixture.t.mutation(internal.cookingAssistance.saveProposal, {
       roomId: fixture.roomId,
       authorMemberId: fixture.guestId,
@@ -478,6 +513,7 @@ test("a preserved helper draft can be sent after a shared proposal removes its s
       preview: "Готуємо без соусу.",
       plan: { ...fixture.plan, steps: [fixture.plan.steps[0]] },
     });
+
     if (!proposalId) throw new Error("Expected a proposal");
     expect(
       await fixture.t.mutation(api.cookingAssistance.approveProposal, {
@@ -492,11 +528,13 @@ test("a preserved helper draft can be sent after a shared proposal removes its s
     const view = await fixture.t.query(api.cookingRooms.read, fixture.guest);
     const context = helperContextStep(view?.room.plan?.steps ?? [], selectedStepKey);
     expect(context).toBeUndefined();
+
     const sent = await fixture.t.mutation(api.cookingAssistance.askHelper, {
       ...fixture.guest,
       prompt: draft,
       stepKey: context,
     });
+
     expect(sent).not.toBeNull();
     expect(
       (await fixture.t.query(api.cookingAssistance.listMessages, fixture.guest)).at(-1)?.text,

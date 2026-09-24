@@ -13,6 +13,7 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 
 import { useCookingRoomPage } from "./model/use-cooking-room-page";
 import { CookingInvite } from "./ui/cooking-invite";
+
 type CookingRoomPageProps = { roomId: string };
 
 export const CookingRoomPage: FC<CookingRoomPageProps> = ({ roomId }) => {
@@ -23,10 +24,13 @@ export const CookingRoomPage: FC<CookingRoomPageProps> = ({ roomId }) => {
         body="Не вдалося відкрити спільну сесію. Спробуй пізніше."
       />
     );
+
   if (!/^[a-zA-Z0-9]{16,}$/.test(roomId))
     return (
       <RoomNotice title="Посилання не працює" body="Перевір запрошення та відкрий його ще раз." />
     );
+
+  // SAFETY: the regex above already confirmed roomId matches Convex's cookingRooms id shape.
   return <CookingRoom key={roomId} roomId={roomId as Id<"cookingRooms">} />;
 };
 
@@ -34,9 +38,12 @@ type CookingRoomProps = { roomId: Id<"cookingRooms"> };
 
 const CookingRoom: FC<CookingRoomProps> = ({ roomId }) => {
   const model = useCookingRoomPage(roomId);
+
   if (model.screen === "join") return <JoinRoom {...model.joinProps} />;
+
   if (model.screen === "loading")
     return <RoomNotice title="Відкриваємо кухню" body="Перевіряємо твоє місце." />;
+
   return (
     <div>
       <CookingSession data={model.read} actions={model.actions} />

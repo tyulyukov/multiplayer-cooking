@@ -8,6 +8,7 @@ import { useHomePageModel, useMissingConvexHomeModel } from "@/pages/home/model/
 import { ConnectScreen } from "./ui/connect-screen";
 import { HomeScreen } from "./ui/home-screen";
 import { ChatScreen } from "./ui/chat-screen";
+
 const ConnectedHome: FC = () => {
   const model = useHomePageModel();
 

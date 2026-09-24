@@ -21,20 +21,27 @@ export const isCookingUnit = (value: string): value is CookingUnit => {
 
 export const convertCookingQuantity = (value: number, from: CookingUnit, to: CookingUnit) => {
   if (!Number.isFinite(value) || cookingUnits[from].kind !== cookingUnits[to].kind) return null;
+
   if (cookingUnits[from].kind === "temperature") {
     const celsius = from === "C" ? value : ((value - 32) * 5) / 9;
+
     if (celsius < -273.15) return null;
     const converted = to === "C" ? celsius : (celsius * 9) / 5 + 32;
+
     return Number.isFinite(converted) ? converted : null;
   }
+
   if (value < 0) return null;
   const converted = (value * cookingUnits[from].factor) / cookingUnits[to].factor;
+
   return Number.isFinite(converted) ? converted : null;
 };
 
 export const parseCookingQuantity = (value: string) => {
   const normalized = value.trim().replace(",", ".");
+
   if (!/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized)) return null;
   const parsed = Number(normalized);
+
   return Number.isFinite(parsed) ? parsed : null;
 };

@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const plugins = [remarkGfm];
+
 type CookingMarkdownProps = { text: string; className?: string };
 
 export const CookingMarkdown: FC<CookingMarkdownProps> = ({ text, className = "" }) => {

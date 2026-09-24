@@ -41,6 +41,7 @@ const useNow = () => {
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 60_000);
+
     return () => window.clearInterval(id);
   }, []);
 
@@ -131,7 +132,9 @@ type HistoryCookingProps = {
 
 const HistoryCooking: FC<HistoryCookingProps> = ({ rooms, title, onOpen }) => {
   const firstRoom = rooms[0];
+
   if (!firstRoom) return null;
+
   const button = (
     <Button
       type="button"
@@ -144,9 +147,11 @@ const HistoryCooking: FC<HistoryCookingProps> = ({ rooms, title, onOpen }) => {
       <HugeiconsIcon icon={CookingPotIcon} strokeWidth={1.5} aria-hidden />
     </Button>
   );
+
   if (rooms.length === 1) {
     return button;
   }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{button}</DropdownMenuTrigger>
@@ -202,6 +207,7 @@ export const HistoryPanel: FC<HistoryPanelProps> = ({
       <span>Історія</span>
     </Button>
   );
+
   const list = (
     <HistoryList
       items={items === undefined ? undefined : mergeHistory(items, cookingRooms)}

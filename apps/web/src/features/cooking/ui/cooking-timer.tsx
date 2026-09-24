@@ -23,6 +23,7 @@ type TimerProps = {
 export const Timer: FC<TimerProps> = ({ timer, now, disabled, actions }) => {
   disabled ||= actions.pendingKeys?.includes(`timer:${timer.stepKey}:${timer.timerKey}`) ?? false;
   const ended = timer.status === "cancelled" || timer.status === "acknowledged";
+
   const action =
     timer.status === "running"
       ? "pause"
@@ -31,6 +32,7 @@ export const Timer: FC<TimerProps> = ({ timer, now, disabled, actions }) => {
         : timer.status === "fired"
           ? "acknowledge"
           : "start";
+
   const actionLabel =
     action === "acknowledge"
       ? "Побачив"
@@ -39,6 +41,7 @@ export const Timer: FC<TimerProps> = ({ timer, now, disabled, actions }) => {
         : action === "resume"
           ? "Продовжити"
           : "Старт";
+
   const status =
     timer.status === "fired"
       ? "Перевір страву"
@@ -49,6 +52,7 @@ export const Timer: FC<TimerProps> = ({ timer, now, disabled, actions }) => {
           : timer.status === "paused"
             ? "Пауза"
             : "";
+
   return (
     <div
       className={cookingStyles["cooking-timer"]}

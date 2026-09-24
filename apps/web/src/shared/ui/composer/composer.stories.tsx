@@ -50,6 +50,7 @@ const meta = {
 } satisfies Meta<typeof Composer>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Home: Story = {};

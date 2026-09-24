@@ -14,6 +14,7 @@ test("starting a timer starts its assigned pending step", async () => {
   const { t, host, roomId } = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
   ]);
+
   expect(await t.mutation(api.cookingTimers.start, timerArgs(roomId, host.participantToken))).toBe(
     true,
   );
@@ -42,6 +43,7 @@ test("adding time to a ready timer and cancelling it both start its pending step
   const { t, host, roomId } = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
   ]);
+
   const args = timerArgs(roomId, host.participantToken);
 
   expect(await t.mutation(api.cookingTimers.addTime, { ...args, seconds: 1 })).toBe(true);
@@ -59,6 +61,7 @@ test("unknown, disallowed, invalid, and duplicate timer actions leave pending st
   const unknown = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
   ]);
+
   expect(
     await unknown.t.mutation(api.cookingTimers.start, {
       ...timerArgs(unknown.roomId, unknown.host.participantToken),
@@ -91,6 +94,7 @@ test("unknown, disallowed, invalid, and duplicate timer actions leave pending st
   const duplicate = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
   ]);
+
   expect(
     await duplicate.t.mutation(api.cookingTimers.createManual, {
       ...timerArgs(duplicate.roomId, duplicate.host.participantToken),
@@ -107,6 +111,7 @@ test("timers start, pause, resume, add time, and only the current expired callba
   const { t, host, roomId } = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
   ]);
+
   const args = timerArgs(roomId, host.participantToken);
   await t.mutation(api.cookingSteps.start, { ...host, stepKey: "boil" });
   expect(await t.mutation(api.cookingTimers.start, args)).toBe(true);
@@ -126,6 +131,7 @@ test("timers start, pause, resume, add time, and only the current expired callba
 
   await t.run(async (ctx) => {
     const timer = await ctx.db.get(started._id);
+
     if (!timer) throw new Error("Missing timer");
     await ctx.db.patch(timer._id, { deadline: Date.now() - 1 });
   });
@@ -191,6 +197,7 @@ test("completing a step acknowledges its fired reminder and prevents stale expir
   const { t, host, roomId } = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
   ]);
+
   await t.mutation(api.cookingSteps.start, { ...host, stepKey: "boil" });
   await t.mutation(api.cookingTimers.start, timerArgs(roomId, host.participantToken));
   const timer = (await t.query(api.cookingRooms.read, host))!.timers[0]!;
@@ -212,6 +219,7 @@ test("restoring a cancelled timer keeps its remaining duration paused", async ()
   const { t, host, roomId } = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
   ]);
+
   const args = timerArgs(roomId, host.participantToken);
   await t.mutation(api.cookingSteps.start, { ...host, stepKey: "boil" });
   await t.mutation(api.cookingTimers.start, args);
@@ -243,6 +251,7 @@ test("restore and restart recover a cancelled timer after the step is undone", a
     const fixture = await cookingFixture([
       task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
     ]);
+
     const args = timerArgs(fixture.roomId, fixture.host.participantToken);
     await fixture.t.mutation(api.cookingTimers.start, args);
     await fixture.t.mutation(api.cookingTimers.cancel, args);
@@ -257,6 +266,7 @@ test("restore and restart recover a cancelled timer after the step is undone", a
     expect(
       await fixture.t.mutation(api.cookingSteps.undo, { ...fixture.host, stepKey: "boil" }),
     ).toBe(true);
+
     return { ...fixture, args, cancelled };
   };
 
@@ -284,6 +294,7 @@ test("restore acknowledges undo and restart invalidate stale expiry callbacks", 
   const { t, host, roomId } = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
   ]);
+
   const args = timerArgs(roomId, host.participantToken);
   await t.mutation(api.cookingSteps.start, { ...host, stepKey: "boil" });
   await t.mutation(api.cookingTimers.start, args);
@@ -320,6 +331,7 @@ test("timer recovery retains step and participant access guards", async () => {
   const { t, host, guest, roomId } = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 60 }] }),
   ]);
+
   const hostArgs = timerArgs(roomId, host.participantToken);
   await t.mutation(api.cookingSteps.start, { ...host, stepKey: "boil" });
   await t.mutation(api.cookingTimers.cancel, hostArgs);
@@ -331,6 +343,7 @@ test("timer recovery retains step and participant access guards", async () => {
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", roomId).eq("stepKey", "boil"))
       .unique();
+
     if (!step) throw new Error("Missing step");
     await ctx.db.patch(step._id, { status: "done" });
   });

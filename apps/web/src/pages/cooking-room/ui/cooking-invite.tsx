@@ -6,10 +6,12 @@ import { Input } from "@/shared/ui/input";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/shared/ui/drawer";
 
 import type { useCookingRoomPage } from "../model/use-cooking-room-page";
+
 type InviteProps = Extract<
   ReturnType<typeof useCookingRoomPage>,
   { screen: "room" }
 >["inviteProps"];
+
 export const CookingInvite: FC<InviteProps> = ({
   read,
   online,

@@ -16,6 +16,7 @@ import { Button } from "@/shared/ui/button";
 import { Brand, SendError } from "./home-shell";
 import type { ChatScreenProps } from "../model/chat-screen-types";
 import { useChatScreen } from "../model/use-chat-screen";
+
 export const ChatScreen: FC<ChatScreenProps> = (props) => {
   const {
     backendReady,
@@ -39,6 +40,7 @@ export const ChatScreen: FC<ChatScreenProps> = (props) => {
     onOpenMemories,
     onOpenIdea,
   } = props;
+
   const {
     question,
     hidden,
@@ -51,6 +53,7 @@ export const ChatScreen: FC<ChatScreenProps> = (props) => {
     showAddressPrompt,
     compactIdea,
   } = useChatScreen(props);
+
   const pane = visibleIdea ? (
     <IdeaPane
       idea={visibleIdea}
@@ -93,6 +96,7 @@ export const ChatScreen: FC<ChatScreenProps> = (props) => {
                 idea={compactIdea}
                 onOpen={() => {
                   onOpenIdea(compactIdea._id);
+
                   if (desktop) {
                     setHidden(false);
                   } else {

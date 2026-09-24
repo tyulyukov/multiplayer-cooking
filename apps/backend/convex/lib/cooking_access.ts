@@ -5,11 +5,13 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 type ReadCtx = QueryCtx | MutationCtx;
 
 export const PARTICIPANT_TOKEN_MAX_LENGTH = 512;
+
 export const ROOM_MEMBER_LIMIT = 12;
 
 export async function hashSecret(value: string): Promise<string> {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
+
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
@@ -19,10 +21,12 @@ export async function activeMember(
   participantToken: string,
 ): Promise<Doc<"cookingMembers"> | null> {
   const tokenHash = await hashSecret(participantToken);
+
   const member = await ctx.db
     .query("cookingMembers")
     .withIndex("by_room_tokenHash", (q) => q.eq("roomId", roomId).eq("tokenHash", tokenHash))
     .unique();
+
   return member?.status === "active" ? member : null;
 }
 
@@ -32,7 +36,9 @@ export async function requireActiveMember(
   participantToken: string,
 ): Promise<Doc<"cookingMembers">> {
   const member = await activeMember(ctx, roomId, participantToken);
+
   if (!member) throw new ConvexError("Учасник не має доступу до цієї кухні.");
+
   return member;
 }
 

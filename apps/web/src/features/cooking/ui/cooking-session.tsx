@@ -14,7 +14,9 @@ import { useCookingSession } from "../model/use-cooking-session";
 import { StepCard } from "./cooking-step-card";
 import { CookingStatus } from "./cooking-status";
 import { timerLabel } from "../lib/timer-label";
+
 export { Timer } from "./cooking-timer";
+
 type CookingSessionProps = {
   data: CookingRoomData;
   actions: CookingActions;
@@ -40,6 +42,7 @@ export const CookingSession: FC<CookingSessionProps> = ({ data, actions }) => {
     isMine,
     running,
   } = useCookingSession(data);
+
   return (
     <main
       className={cookingStyles["cooking-shell"]}
@@ -62,7 +65,7 @@ export const CookingSession: FC<CookingSessionProps> = ({ data, actions }) => {
             <Button
               variant="outline"
               size="chip"
-              className="px-2 sm:px-3"
+              className={cookingStyles["member-chip"]}
               onClick={actions.managePeople}
               aria-label="Кухарі"
             >

@@ -17,6 +17,7 @@ export const useCreateCookingRoom = (sessionId: SessionId | undefined) => {
   return async (sourceIdeaId: Idea["_id"], setup: CookingSetup) => {
     if (!sessionId) return;
     const credential = createCookingCredential(createCookingCredential().participantToken);
+
     const result = await createRoomMutation({
       sessionId,
       sourceIdeaId,
@@ -24,6 +25,7 @@ export const useCreateCookingRoom = (sessionId: SessionId | undefined) => {
       inviteToken: credential.inviteToken!,
       ...setup,
     });
+
     if (!result) throw new Error("Не вдалося створити кухню.");
     saveCookingCredential(result.roomId, credential);
     await navigate({ to: "/cook/$roomId", params: { roomId: result.roomId } });

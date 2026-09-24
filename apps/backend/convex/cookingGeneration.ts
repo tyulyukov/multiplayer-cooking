@@ -19,13 +19,16 @@ import { createWebTools } from "./lib/web_tools";
 function cookingModel() {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const modelId = process.env.OPENROUTER_MODEL;
+
   if (!apiKey || !modelId) throw new Error("Cooking model is not configured");
+
   const provider = createOpenRouter({
     apiKey,
     appName: OPENROUTER_APP_NAME,
     appUrl: OPENROUTER_APP_URL,
     compatibility: "strict",
   });
+
   return provider.chat(modelId, { reasoning: { effort: "medium" } });
 }
 
@@ -34,9 +37,11 @@ export const generate = internalAction({
   returns: v.null(),
   handler: async (ctx, { roomId, attempt }): Promise<null> => {
     const data = await ctx.runQuery(internal.cookingRooms.generationData, { roomId });
+
     if (!data || data.attempt !== attempt) return null;
     const startedAt = Date.now();
     let saved = false;
+
     try {
       const agent = new Agent(components.agent, {
         name: "План готування",
@@ -51,6 +56,7 @@ export const generate = internalAction({
             execute: async (toolCtx, input) => {
               if (saved) return { saved: true };
               const plan = validateGeneratedCookingPlan(input, data.cookCount);
+
               if (plan.servings !== data.requestedServings)
                 throw new Error("Використай вибрану кількість порцій.");
               saved = await toolCtx.runMutation(internal.cookingRooms.savePlan, {
@@ -58,6 +64,7 @@ export const generate = internalAction({
                 attempt,
                 plan,
               });
+
               return { saved };
             },
           }),
@@ -76,6 +83,7 @@ export const generate = internalAction({
           });
         },
       });
+
       await agent.generateText(
         ctx,
         { userId: data.hostUserId },
@@ -92,6 +100,7 @@ export const generate = internalAction({
         },
         { storageOptions: { saveMessages: "none" } },
       );
+
       if (!saved) throw new Error("Model did not save a valid cooking plan");
       await recordAiEvent({
         event: "ai.run",
@@ -117,6 +126,7 @@ export const generate = internalAction({
         ...classifyFailure(error),
       });
     }
+
     return null;
   },
 });
@@ -126,9 +136,11 @@ export const generateReference = internalAction({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     const data = await ctx.runQuery(internal.cookingAssistance.referenceData, args);
+
     if (!data) return null;
     const startedAt = Date.now();
     const model = process.env.OPENROUTER_IMAGE_MODEL || "unknown";
+
     try {
       const result = await generateImageFromPrompt(cookingReferencePrompt(data.title, data.step));
       const storageId = await ctx.storage.store(result.blob);
@@ -157,6 +169,7 @@ export const generateReference = internalAction({
         ...classifyFailure(error),
       });
     }
+
     return null;
   },
 });
@@ -170,8 +183,10 @@ export const respond = internalAction({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     const data = await ctx.runQuery(internal.cookingAssistance.helperData, args);
+
     if (!data) return null;
     const startedAt = Date.now();
+
     try {
       const agent = new Agent(components.agent, {
         name: "Допомога на кухні",
@@ -185,6 +200,7 @@ export const respond = internalAction({
             inputSchema: cookingProposalInput,
             execute: async (toolCtx, input) => {
               let proposalId;
+
               try {
                 proposalId = await toolCtx.runMutation(internal.cookingAssistance.saveProposal, {
                   ...args,
@@ -199,10 +215,12 @@ export const respond = internalAction({
                     : "Пропозицію не збережено. Перевір план і спробуй ще раз.",
                 );
               }
+
               if (!proposalId)
                 throw new Error(
                   "Пропозицію не збережено: стан кухні змінився. Перевір поточний план і спробуй ще раз.",
                 );
+
               return { proposed: true, requiresConfirmation: true };
             },
           }),
@@ -221,6 +239,7 @@ export const respond = internalAction({
           });
         },
       });
+
       await agent.generateText(
         ctx,
         { threadId: data.threadId },
@@ -253,6 +272,7 @@ export const respond = internalAction({
         ...classifyFailure(error),
       });
     }
+
     return null;
   },
 });

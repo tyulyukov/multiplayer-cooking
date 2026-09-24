@@ -18,13 +18,14 @@ const meta = {
   },
   argTypes: { idea: { control: false }, versions: { control: false } },
   render: (args) => (
-    <div className="w-[min(44rem,calc(100vw-2rem))]">
+    <div className="w-full max-w-2xl">
       <IdeaPane {...args} />
     </div>
   ),
 } satisfies Meta<typeof IdeaPane>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ProductsUnavailable: Story = {};

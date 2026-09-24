@@ -5,6 +5,7 @@ import { defineApp } from "convex/server";
 const app = defineApp();
 
 app.use(rateLimiter);
+
 app.use(agent);
 
 export default app;

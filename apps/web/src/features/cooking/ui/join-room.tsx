@@ -2,7 +2,6 @@ import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { useState } from "react";
-
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import {
@@ -27,20 +26,27 @@ export const JoinRoom: FC<JoinRoomProps> = ({
     setBusy(true);
     setError(null);
     const credential = createCookingCredential(inviteToken);
+
     try {
       if (sessionId && (await onRecoverHost(sessionId, credential.participantToken))) {
         saveCookingCredential(roomId, credential);
         onJoined(credential);
+
         return;
       }
+
       if (!inviteToken || !name.trim()) {
         setError("Відкрий запрошення та напиши своє ім’я.");
+
         return;
       }
+
       if (!(await onJoin(inviteToken, credential.participantToken, name.trim()))) {
         setError("Це запрошення вже не працює.");
+
         return;
       }
+
       saveCookingCredential(roomId, credential);
       onJoined(credential);
     } catch {

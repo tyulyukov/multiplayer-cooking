@@ -1,5 +1,4 @@
 import type { FC } from "react";
-import { cn } from "@/shared/lib/utils";
 import styles from "@/pages/home/home-page.module.scss";
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -21,17 +20,9 @@ type SendErrorProps = { message: string };
 
 export const SendError: FC<SendErrorProps> = ({ message }) => {
   return (
-    <Alert
-      variant="destructive"
-      className={cn(
-        styles["home-error"],
-        "rounded-[14px] border-2 px-[18px] py-4 has-[>svg]:gap-x-2.5",
-      )}
-    >
+    <Alert variant="destructive" className={styles["home-error"]}>
       <HugeiconsIcon icon={Alert02Icon} strokeWidth={1.5} aria-hidden />
-      <AlertDescription className="text-[0.9375rem] leading-[1.375rem] font-medium">
-        {message}
-      </AlertDescription>
+      <AlertDescription className={styles["home-error-description"]}>{message}</AlertDescription>
     </Alert>
   );
 };

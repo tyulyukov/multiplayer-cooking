@@ -26,14 +26,7 @@ export const ConnectCard: FC<ConnectCardProps> = ({ busy, onConnect }) => {
     <section className={styles["connect-card"]} aria-label="Підключення Сільпо">
       <KitchenIllustration name="starter-sign" className={styles["connect-illustration"]} />
       <h1>Що приготуємо сьогодні?</h1>
-      <Button
-        type="button"
-        size="xl"
-        className="generate-button"
-        aria-busy={busy}
-        disabled={busy}
-        onClick={onConnect}
-      >
+      <Button type="button" size="xl" aria-busy={busy} disabled={busy} onClick={onConnect}>
         <HugeiconsIcon icon={Store01Icon} className="size-5" strokeWidth={1.5} aria-hidden />
         {busy ? "Відкриваємо Сільпо…" : "Підключити Сільпо"}
       </Button>

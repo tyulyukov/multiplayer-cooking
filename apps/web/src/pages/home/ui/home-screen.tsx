@@ -9,6 +9,7 @@ import { useComposerDraft } from "@/features/chat/model/use-composer-draft";
 import { useAttachments } from "@/shared/hooks/use-attachments";
 
 import { Brand, SendError } from "./home-shell";
+
 type AttachmentsState = ReturnType<typeof useAttachments>;
 
 type HomeScreenProps = {

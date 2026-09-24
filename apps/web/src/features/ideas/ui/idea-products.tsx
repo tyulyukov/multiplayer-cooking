@@ -17,6 +17,7 @@ type ProductThumbnailProps = { url: string };
 
 const ProductThumbnail: FC<ProductThumbnailProps> = ({ url }) => {
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
+
   return (
     <div className={styles["product-thumbnail"]} data-state={state}>
       {state !== "failed" && (
@@ -44,6 +45,7 @@ type IdeaProductsProps = {
 
 export const IdeaProducts: FC<IdeaProductsProps> = ({ idea, canAddToCart, onAddToCart }) => {
   const { matched, missing, total, noMatches } = getIdeaProducts(idea);
+
   return (
     <section className={styles["idea-products"]} aria-label="Продукти в Сільпо">
       <h3 className={styles["idea-section"]}>Продукти в Сільпо</h3>
@@ -56,6 +58,7 @@ export const IdeaProducts: FC<IdeaProductsProps> = ({ idea, canAddToCart, onAddT
               (ingredient) =>
                 productRegistryKey(ingredient.name) === productRegistryKey(product.ingredient),
             )?.amount;
+
             return (
               <li
                 key={`${product.ingredient}-${index}`}
@@ -165,6 +168,7 @@ type ProductEmptyStateProps = {
 
 const ProductEmptyState: FC<ProductEmptyStateProps> = ({ ingredients, status }) => {
   const [imageFailed, setImageFailed] = useState(false);
+
   const messages = {
     unavailable: {
       title: "Сільпо зараз не відповідає",
@@ -183,6 +187,7 @@ const ProductEmptyState: FC<ProductEmptyStateProps> = ({ ingredients, status }) 
       description: "Вкажи адресу доставки у формі або купи інгредієнти окремо.",
     },
   };
+
   const { title, description } = status
     ? messages[status]
     : {
@@ -195,7 +200,7 @@ const ProductEmptyState: FC<ProductEmptyStateProps> = ({ ingredients, status }) 
       {!imageFailed && (
         <img src="/images/ingredients-basket.webp" alt="" onError={() => setImageFailed(true)} />
       )}
-      <div className={imageFailed ? "products-empty-text-only" : undefined}>
+      <div className={imageFailed ? styles["products-empty-text-only"] : undefined}>
         <h4>{title}</h4>
         <p>{description}</p>
       </div>

@@ -13,6 +13,7 @@ export const CookingLobby: FC<CookingLobbyProps> = ({ data, actions }) => {
   const host = data.me.role === "host";
   const missing = Math.max(0, data.room.cookCount - data.members.length);
   const failed = data.room.state === "error";
+
   return (
     <section className={cookingStyles["cooking-lobby"]} aria-labelledby="cooking-lobby-title">
       <div className={cookingStyles["cooking-lobby-intro"]}>

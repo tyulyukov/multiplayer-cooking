@@ -27,10 +27,13 @@ export const getCookingStepState = ({
   const active = runtime?.status === "active";
   const waiting = runtime?.status === "waiting";
   const people = data.members.filter((member) => member.slots.some((slot) => slots.includes(slot)));
+
   const blockers = step.dependsOn
     .filter((id) => data.steps.find((item) => item.stepKey === id)?.status !== "done")
     .map((id) => data.room.plan?.steps.find((item) => item.id === id)?.title ?? id);
+
   const canAct = mine && data.room.state === "cooking" && actions.online;
+
   const title =
     step.kind === "together"
       ? "Разом"
@@ -39,8 +42,10 @@ export const getCookingStepState = ({
         : mine
           ? "Твоє завдання"
           : people.map((member) => member.name).join(", ") || "Місце вільне";
+
   const recipient = step.kind === "handoff" && data.me.slots.includes(slots[1]);
   const sender = step.kind === "handoff" && data.me.slots.includes(slots[0]);
+
   const canInteract =
     canAct &&
     !actions.busy &&
@@ -48,12 +53,15 @@ export const getCookingStepState = ({
     !done &&
     (step.kind !== "together" || active) &&
     (!recipient || sender || waiting);
+
   const canComplete =
     (step.kind === "task" && runtime?.status === "pending" && blockers.length === 0) ||
     (active && step.kind !== "handoff") ||
     (waiting && step.kind === "task") ||
     (waiting && recipient);
+
   const checked = step.checklist.every((item) => runtime?.checkedIds.includes(item.id));
+
   const timerPending = timers.some(
     (timer) => timer.status === "running" || timer.status === "paused",
   );

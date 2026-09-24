@@ -32,6 +32,7 @@ export const People: FC<PeopleProps> = ({
 }) => {
   const host = room.me.role === "host";
   const done = room.room.state === "done";
+
   const vacantSlots = Array.from({ length: room.room.cookCount }, (_, index) => index + 1).filter(
     (slot) => !room.members.some((member) => member.slots.includes(slot)),
   );
@@ -55,6 +56,7 @@ export const People: FC<PeopleProps> = ({
             {room.members.map((member) => {
               const mine = member._id === room.me._id;
               const canManage = !done && !mine;
+
               return (
                 <li className={styles["cooking-people-member"]} key={member._id}>
                   <span className={styles["cooking-people-avatar"]} data-mine={mine} aria-hidden>

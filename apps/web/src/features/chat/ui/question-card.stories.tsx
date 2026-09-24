@@ -39,13 +39,14 @@ const meta = {
   args: { input, pending: false, onSubmit: fn() },
   argTypes: { input: { control: false } },
   render: (args) => (
-    <div className="w-[min(30rem,calc(100vw-2rem))]">
+    <div className="w-full max-w-lg">
       <QuestionCard {...args} />
     </div>
   ),
 } satisfies Meta<typeof QuestionCard>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const FirstQuestion: Story = {};
@@ -62,7 +63,7 @@ export const MultipleChoices: Story = {
 
 export const Answered: Story = {
   render: () => (
-    <div className="w-[min(30rem,calc(100vw-2rem))]">
+    <div className="w-full max-w-lg">
       <QuestionSummary
         input={input}
         answer={{

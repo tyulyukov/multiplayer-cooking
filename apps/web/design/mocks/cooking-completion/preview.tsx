@@ -28,7 +28,9 @@ type FixtureMode =
   | "long-title";
 
 const mode = (new URLSearchParams(window.location.search).get("mode") ?? "done") as FixtureMode;
+
 const withCredit = new URLSearchParams(window.location.search).get("credit") === "1";
+
 const validModes = new Set<FixtureMode>([
   "done",
   "cooking-all-done",
@@ -39,7 +41,9 @@ const validModes = new Set<FixtureMode>([
   "solo",
   "long-title",
 ]);
+
 const fixtureMode = validModes.has(mode) ? mode : "done";
+
 const now = Date.now();
 
 const plan = {
@@ -99,20 +103,25 @@ const member = (index: number, role: "host" | "cook", name: string) => {
 const createData = (name: FixtureMode): CookingRoomData => {
   const solo = name === "solo";
   const guest = name === "guest";
+
   const title =
     name === "long-title"
       ? "Рамьон з креветками без грибів, з пряним бульйоном і хрусткою цибулею"
       : "Рамьон з креветками без грибів";
+
   const members = solo
     ? [member(1, "host", "Оля")]
     : [member(1, "host", "Оля"), member(2, "cook", "Аня")];
+
   const cooking = name === "cooking-all-done";
+
   const photoUrl =
     name === "no-image"
       ? undefined
       : name === "broken-image"
         ? "./missing-dish.jpg"
         : "./dish-reference.jpg";
+
   const dishImage = photoUrl
     ? {
         url: photoUrl,
@@ -188,6 +197,7 @@ export const Fixture: FC = () => {
   const [againOpen, setAgainOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const online = fixtureMode !== "offline";
+
   const actions = useMemo<CookingActions>(
     () => ({
       online,

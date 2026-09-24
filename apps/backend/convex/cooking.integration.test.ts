@@ -46,6 +46,7 @@ test("shared work requires both ready and cannot be completed while waiting for 
   const { t, host, guest } = await cookingFixture([
     task("lift", 1, { kind: "together", slots: [1, 2], equipment: ["pan"] }),
   ]);
+
   await t.mutation(api.cookingSteps.markReady, { ...host, stepKey: "lift" });
   expect(
     await t.mutation(api.cookingSteps.complete, { ...host, stepKey: "lift", confirmed: true }),
@@ -61,6 +62,7 @@ test("handoff finishes only when recipient confirms receipt", async () => {
   const { t, host, guest } = await cookingFixture([
     task("pass", 1, { kind: "handoff", slots: [1, 2] }),
   ]);
+
   await expect(t.mutation(api.cookingSteps.start, { ...guest, stepKey: "pass" })).rejects.toThrow(
     "Передачу",
   );
@@ -83,6 +85,7 @@ test("waiting releases attention while retaining equipment occupancy", async () 
     task("cut", 1),
     task("fry", 2, { equipment: ["pan"] }),
   ]);
+
   await t.mutation(api.cookingSteps.start, { ...host, stepKey: "simmer" });
   await expect(t.mutation(api.cookingSteps.start, { ...host, stepKey: "cut" })).rejects.toThrow(
     "уваги",
@@ -122,6 +125,7 @@ test("stale timer callbacks cannot override a paused timer or finish its step", 
   const { t, host } = await cookingFixture([
     task("boil", 1, { timers: [{ id: "pasta", label: "Паста", durationSeconds: 3600 }] }),
   ]);
+
   const args = { ...host, stepKey: "boil", timerKey: "pasta" };
   expect(await t.mutation(api.cookingTimers.start, args)).toBe(true);
   const running = (await t.query(api.cookingRooms.read, host))!.timers[0];

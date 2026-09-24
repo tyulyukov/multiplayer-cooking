@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
 import { useRef, useState } from "react";
 
+import { isString } from "@/shared/lib/type-guards";
 import { useCookingRoom } from "@/features/cooking/api/use-cooking-room";
 import type {
   CooksFormProps,
@@ -19,6 +20,7 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 
 import { useRoomHelper } from "./use-room-helper";
 import { useCookingActions } from "./use-cooking-actions";
+
 export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
   const navigate = useNavigate();
   const [sessionId] = useSessionId();
@@ -33,21 +35,26 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
   const roomApi = useCookingRoom(roomId, credential);
   const read = roomApi.room;
   const online = roomApi.online;
-  const invoke = async (call: () => Promise<unknown>, key = "room") => {
+
+  const invoke = async <T>(call: () => Promise<T>, key = "room") => {
     if (!online || pending || (key !== "checklist" && pendingOperations.current.has(key))) return;
     setError(null);
+
     if (key === "room") setPending(true);
+
     if (key !== "checklist") {
       pendingOperations.current.add(key);
       setPendingKeys([...pendingOperations.current]);
     }
+
     try {
       const result = await call();
+
       if (result === false || result === null)
         setError("Стан кухні змінився. Перевір крок і спробуй ще раз.");
     } catch (failure) {
       setError(
-        failure instanceof ConvexError && typeof failure.data === "string"
+        failure instanceof ConvexError && isString(failure.data)
           ? failure.data
           : "Не вдалося синхронізувати зміну. Спробуй ще раз.",
       );
@@ -57,11 +64,13 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
       setPendingKeys([...pendingOperations.current]);
     }
   };
+
   const rotateInviteLink = async () => {
     if (!credential || !online || pending) return;
     const inviteToken = createCookingCredential().participantToken;
     setError(null);
     setPending(true);
+
     try {
       if (
         !(await roomApi.rotateInvite({
@@ -71,15 +80,17 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
         }))
       ) {
         setError("Не вдалося створити запрошення. Спробуй ще раз.");
+
         return;
       }
+
       const saved = { ...credential, inviteToken };
       saveCookingCredential(roomId, saved);
       setCredential(saved);
       setInviteCopyState(null);
     } catch (failure) {
       setError(
-        failure instanceof ConvexError && typeof failure.data === "string"
+        failure instanceof ConvexError && isString(failure.data)
           ? failure.data
           : "Не вдалося створити запрошення. Спробуй ще раз.",
       );
@@ -87,11 +98,14 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
       setPending(false);
     }
   };
+
   const inviteUrl = credential?.inviteToken
     ? `${window.location.origin}/cook/${roomId}#invite=${credential.inviteToken}`
     : null;
+
   const copyInvite = async () => {
     if (!inviteUrl) return;
+
     try {
       if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
       await navigator.clipboard.writeText(inviteUrl);
@@ -100,8 +114,10 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
       setInviteCopyState("manual");
     }
   };
+
   const [peopleOpen, setPeopleOpen] = useState(false);
   const { assistance, ask, helperProps } = useRoomHelper(roomId, credential, roomApi);
+
   const { actions, steps } = useCookingActions({
     roomId,
     credential,
@@ -127,8 +143,11 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
     onJoin: (inviteToken, participantToken, name) =>
       roomApi.join({ roomId, inviteToken, participantToken, name }),
   };
+
   if (!credential || read === null) return { screen: "join" as const, joinProps };
+
   if (read === undefined) return { screen: "loading" as const };
+
   const setupProps: CooksFormProps = {
     disabled: !online || pending,
     initial: read.room.cookCount,
@@ -137,6 +156,7 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
     onGenerate: async (setup) => {
       if (!online) throw new Error("Немає з’єднання.");
       const next = createCookingCredential(createCookingCredential().participantToken);
+
       const result = await roomApi.cookAgain({
         roomId,
         participantToken: credential.participantToken,
@@ -144,12 +164,14 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
         inviteToken: next.inviteToken!,
         ...setup,
       });
+
       if (!result) throw new Error("Не вдалося почати заново.");
       saveCookingCredential(result.roomId, next);
       setAgainOpen(false);
       await navigate({ to: "/cook/$roomId", params: { roomId: result.roomId } });
     },
   };
+
   const peopleProps: PeopleProps = {
     open: peopleOpen,
     room: read,
@@ -195,6 +217,7 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
         }),
       ),
   };
+
   const inviteProps = {
     read,
     online,
@@ -207,9 +230,11 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
     rotateInviteLink,
     onOpenChange: (open: boolean) => {
       setInviteOpen(open);
+
       if (!open) setInviteCopyState(null);
     },
   };
+
   return {
     screen: "room" as const,
     read,

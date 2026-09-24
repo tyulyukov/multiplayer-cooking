@@ -10,13 +10,14 @@ const meta = {
   args: { timer: storyTimer, now: storyNow, disabled: false, actions: cookingActions },
   argTypes: { timer: { control: false }, actions: { control: false } },
   render: (args) => (
-    <div className="w-[min(28rem,calc(100vw-2rem))]">
+    <div className="w-full max-w-md">
       <Timer {...args} />
     </div>
   ),
 } satisfies Meta<typeof Timer>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Running: Story = {};

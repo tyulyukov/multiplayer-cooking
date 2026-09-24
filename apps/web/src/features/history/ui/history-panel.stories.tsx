@@ -6,6 +6,7 @@ import type { CookingHistoryItem, HistoryItem } from "../model/types";
 import { HistoryPanel } from "./history-panel";
 
 const createdAt = Date.UTC(2026, 8, 23, 11, 0, 0);
+
 const items = [
   { threadId: "story-thread", title: "Паста з овочами", createdAt, active: true, photos: [] },
   {
@@ -16,6 +17,8 @@ const items = [
     photos: [],
   },
 ] satisfies HistoryItem[];
+
+// SAFETY: these IDs identify local Storybook fixtures, not Convex records.
 const cookingRooms = [
   {
     _id: "story-cooking-room" as Id<"cookingRooms">,
@@ -45,6 +48,7 @@ const meta = {
 } satisfies Meta<typeof HistoryPanel>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const openPanel: NonNullable<Story["play"]> = async ({ canvas, userEvent }) => {

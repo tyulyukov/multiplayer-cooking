@@ -39,9 +39,11 @@ test("accepts Ukrainian decimal input and rejects empty or malformed input", () 
   expect(parseCookingQuantity(" 1,5 ")).toBe(1.5);
   expect(parseCookingQuantity("-18")).toBe(-18);
   expect(parseCookingQuantity(".25")).toBe(0.25);
+
   for (const input of ["", " ", "1,2,3", "100г", "Infinity", "1e10", "0x10"]) {
     expect(parseCookingQuantity(input)).toBeNull();
   }
+
   expect(isCookingUnit("g")).toBe(true);
   expect(isCookingUnit("toString")).toBe(false);
 });

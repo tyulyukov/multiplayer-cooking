@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+
 type RoomNoticeProps = { title: string; body: string };
 
 export const RoomNotice: FC<RoomNoticeProps> = ({ title, body }) => {

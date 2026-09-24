@@ -8,8 +8,10 @@ export const CompletionConfetti: FC = () => {
   useEffect(() => {
     const canvas = ref.current;
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
     if (!canvas || motion.matches) return;
     const context = canvas.getContext("2d");
+
     if (!context) return;
 
     const width = window.innerWidth;
@@ -19,11 +21,14 @@ export const CompletionConfetti: FC = () => {
     canvas.height = height * density;
     context.scale(density, density);
     const style = getComputedStyle(canvas);
+
     const colors = ["--teal", "--primary", "--background", "--foreground"].map((token) =>
       style.getPropertyValue(token).trim(),
     );
+
     const particles = Array.from({ length: 72 }, (_, index) => {
       const side = index % 2 === 0 ? 1 : -1;
+
       return {
         x: side === 1 ? width * 0.12 : width * 0.88,
         y: Math.min(height * 0.55, 440),
@@ -35,21 +40,28 @@ export const CompletionConfetti: FC = () => {
         color: colors[index % colors.length],
       };
     });
+
     const start = performance.now();
     let frame = 0;
+
     const stop = () => {
       cancelAnimationFrame(frame);
       context.clearRect(0, 0, width, height);
       canvas.hidden = true;
     };
+
     const draw = (now: number) => {
       const seconds = (now - start) / 1000;
+
       if (seconds >= 2) {
         stop();
+
         return;
       }
+
       context.clearRect(0, 0, width, height);
       context.globalAlpha = Math.min(1, (2 - seconds) / 0.5);
+
       for (const particle of particles) {
         context.save();
         context.translate(
@@ -61,12 +73,15 @@ export const CompletionConfetti: FC = () => {
         context.fillRect(-particle.size / 2, -particle.size / 4, particle.size, particle.size / 2);
         context.restore();
       }
+
       frame = requestAnimationFrame(draw);
     };
+
     canvas.hidden = false;
     frame = requestAnimationFrame(draw);
     motion.addEventListener("change", stop);
     window.addEventListener("resize", stop);
+
     return () => {
       stop();
       motion.removeEventListener("change", stop);

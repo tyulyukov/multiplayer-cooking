@@ -34,6 +34,7 @@ import type { CooksFormProps } from "@/features/cooking/model/component-props";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 const minCooks = 1;
+
 const maxCooks = 12;
 
 const countLabel = (count: number) => {
@@ -57,20 +58,25 @@ export const CooksForm: FC<CooksFormProps> = ({
   onGenerate,
 }) => {
   const [count, setCooks] = useState(initial);
+
   const [name, setName] = useState(() =>
     resolveCookName(initialName, readSavedCookName(), suggestedName),
   );
+
   const [needsName] = useState(() => !name);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const generate = async () => {
     if (disabled || busy) return;
     const cookName = normalizeCookName(name);
 
     if (!cookName) {
       setError("Напиши, як тебе називати на кухні.");
+
       return;
     }
+
     setBusy(true);
     setError(null);
 
@@ -162,13 +168,16 @@ export const CookTogether: FC<CookTogetherProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const desktop = useMediaQuery("(min-width: 1024px)");
+
   const trigger: ReactNode = (
     <Button type="button" variant="outline" size="chip">
       <HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.5} aria-hidden />
       Готуємо разом
     </Button>
   );
+
   const title = "Скільки вас готує?";
+
   const form = (
     <CooksForm
       initial={cookCount}
@@ -182,7 +191,7 @@ export const CookTogether: FC<CookTogetherProps> = ({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
-        <DialogContent className="cook-dialog" aria-describedby={undefined}>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
@@ -195,7 +204,7 @@ export const CookTogether: FC<CookTogetherProps> = ({
   return (
     <Drawer autoFocus open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-      <DrawerContent className="cook-dialog" aria-describedby={undefined}>
+      <DrawerContent aria-describedby={undefined}>
         <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>
         </DrawerHeader>

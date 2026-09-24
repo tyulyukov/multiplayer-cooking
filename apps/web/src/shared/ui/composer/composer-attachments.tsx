@@ -12,6 +12,7 @@ import {
 } from "@/shared/ui/attachment";
 
 import type { ComposerProps } from "./types";
+
 export const ComposerAttachments: FC<
   Pick<ComposerProps, "attachments" | "busy" | "onRemoveAttachment">
 > = ({ attachments, busy, onRemoveAttachment }) => {

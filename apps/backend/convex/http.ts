@@ -25,6 +25,7 @@ function backToApp(outcome: "callback" | "error", callback?: { code: string; sta
     target.searchParams.set("code", callback.code);
     target.searchParams.set("state", callback.state);
   }
+
   return new Response(null, {
     status: 302,
     headers: {
@@ -47,6 +48,7 @@ http.route({
 
     if (!code || !state) {
       console.warn("Silpo callback without code", params.get("error") ?? "");
+
       return backToApp("error");
     }
 

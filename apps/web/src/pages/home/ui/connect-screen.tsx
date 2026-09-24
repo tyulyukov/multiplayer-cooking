@@ -4,6 +4,7 @@ import styles from "@/features/silpo/ui/silpo-connect.module.scss";
 import { ConnectCard } from "@/features/silpo/ui/silpo-connect";
 
 import { Brand, SendError } from "./home-shell";
+
 type ConnectScreenProps = {
   backendReady: boolean;
   busy: boolean;

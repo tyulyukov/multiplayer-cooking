@@ -10,23 +10,28 @@ export const roomStateValidator = v.union(
   v.literal("done"),
   v.literal("error"),
 );
+
 export const memberRoleValidator = v.union(v.literal("host"), v.literal("cook"));
+
 export const memberStatusValidator = v.union(
   v.literal("active"),
   v.literal("removed"),
   v.literal("left"),
 );
+
 export const stepStatusValidator = v.union(
   v.literal("pending"),
   v.literal("active"),
   v.literal("waiting"),
   v.literal("done"),
 );
+
 export const imageStatusValidator = v.union(
   v.literal("pending"),
   v.literal("ready"),
   v.literal("error"),
 );
+
 export const timerStatusValidator = v.union(
   v.literal("ready"),
   v.literal("running"),

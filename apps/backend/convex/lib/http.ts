@@ -3,6 +3,7 @@ export async function readBounded(response: Response, maxBytes: number) {
 
   if (declared > maxBytes || !response.body) {
     await response.body?.cancel();
+
     return null;
   }
 
@@ -21,6 +22,7 @@ export async function readBounded(response: Response, maxBytes: number) {
 
     if (received > maxBytes) {
       await reader.cancel();
+
       return null;
     }
 

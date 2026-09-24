@@ -12,6 +12,7 @@ import { ConnectCard } from "../../src/components/silpo-connect";
 import "../../src/index.css";
 
 const mode = new URLSearchParams(location.search).get("mode") ?? "history";
+
 const now = Date.now();
 
 const baseIdea = {
@@ -85,6 +86,7 @@ export function HistoryFixture() {
 
 export function MemoriesFixture() {
   const [open, setOpen] = useState(true);
+
   return (
     <FixtureShell>
       <PersonalSettings
@@ -103,6 +105,7 @@ export function MemoriesFixture() {
 export function ConnectFixture() {
   const [busy, setBusy] = useState(false);
   const error = new URLSearchParams(location.search).has("error");
+
   return (
     <FixtureShell starter>
       <ConnectCard busy={busy} onConnect={() => setBusy(true)} />
@@ -147,6 +150,7 @@ export function CartFixture() {
     price: 39.99,
     unit: "1 кг",
   }));
+
   return (
     <FixtureShell>
       <Pane
@@ -170,6 +174,7 @@ export function CartFixture() {
 
 export function CooksFixture() {
   const [cookCount, setCookCount] = useState();
+
   return (
     <FixtureShell>
       <div className="illustration-fixture-pane">
@@ -187,6 +192,7 @@ export function CooksFixture() {
           onAddToCart={() => {}}
           onCookCount={(count) => {
             setCookCount(count);
+
             return Promise.resolve();
           }}
         />

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+
 export type ComposerAttachment = Readonly<{
   id: string;
   previewUrl: string;

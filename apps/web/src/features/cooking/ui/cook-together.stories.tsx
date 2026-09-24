@@ -17,6 +17,7 @@ const meta = {
 } satisfies Meta<typeof CookTogether>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Trigger: Story = {};

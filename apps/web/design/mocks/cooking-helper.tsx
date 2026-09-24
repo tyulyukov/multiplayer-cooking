@@ -13,7 +13,9 @@ import { useAttachments } from "../../src/lib/use-attachments";
 import "../../src/index.css";
 
 const mode = new URLSearchParams(location.search).get("mode") ?? "reply";
+
 const now = Date.now();
+
 const plan = {
   servings: 2,
   summary: "Паста з томатами та креветками",
@@ -62,6 +64,7 @@ const plan = {
     },
   ],
 };
+
 const nextPlan = {
   ...plan,
   ingredients: plan.ingredients.filter((item) => item.id !== "chili"),
@@ -74,6 +77,7 @@ const nextPlan = {
       : step,
   ),
 };
+
 const me = {
   _id: "member-host" as Id<"cookingMembers">,
   name: "Оля",
@@ -82,6 +86,7 @@ const me = {
   slots: [1],
   lastSeenAt: now,
 };
+
 const initialData: CookingRoomData = {
   serverNow: now,
   room: {
@@ -120,7 +125,9 @@ const initialData: CookingRoomData = {
   })),
   timers: [],
 };
+
 type Props = ComponentProps<typeof CookingHelper>;
+
 const initialMessages: Props["messages"] = [
   {
     _id: "question",
@@ -136,6 +143,7 @@ const initialMessages: Props["messages"] = [
     createdAt: now - 1000,
   },
 ];
+
 const initialProposal: Props["proposals"][number] = {
   _id: "proposal-fixture" as Id<"cookingProposals">,
   authorMemberId: me._id,
@@ -154,6 +162,7 @@ export const Fixture: FC = () => {
   const [chatRequestKey, setChatRequestKey] = useState(0);
   const [stepKey, setStepKey] = useState("sauce");
   const [busy, setBusy] = useState(mode === "busy");
+
   const [messages, setMessages] = useState<Props["messages"]>(
     mode === "empty" || mode === "closed"
       ? []
@@ -165,20 +174,26 @@ export const Fixture: FC = () => {
           }))
         : initialMessages,
   );
+
   const [proposals, setProposals] = useState<Props["proposals"]>(
     ["empty", "closed", "busy", "error"].includes(mode) ? [] : [initialProposal],
   );
+
   const [notes, setNotes] = useState<Props["notes"]>([]);
+
   const attachments = useAttachments(async () => {
     if (mode === "upload-error") throw new Error("Fixture upload failed");
+
     return "fixture-photo";
   });
+
   const ask: CookingActions["ask"] = (text, key) => {
     if (text) setPrompt(text);
     setStepKey(key ?? "sauce");
     setChatRequestKey((key) => key + 1);
     setOpen(true);
   };
+
   const actions: CookingActions = {
     online: true,
     busy: false,
@@ -220,6 +235,7 @@ export const Fixture: FC = () => {
     ask,
     cookAgain: () => {},
   };
+
   return (
     <>
       <CookingSession data={data} actions={actions} />
@@ -267,6 +283,7 @@ export const Fixture: FC = () => {
             ]);
             setBusy(false);
           }, 2500);
+
           return true;
         }}
         onApprove={async (id) => {
@@ -274,12 +291,14 @@ export const Fixture: FC = () => {
           setProposals((current) =>
             current.map((item) => (item._id === id ? { ...item, status: "approved" } : item)),
           );
+
           return true;
         }}
         onReject={async (id) => {
           setProposals((current) =>
             current.map((item) => (item._id === id ? { ...item, status: "rejected" } : item)),
           );
+
           return true;
         }}
         onNote={async (text) => {
@@ -293,10 +312,12 @@ export const Fixture: FC = () => {
               canDelete: true,
             },
           ]);
+
           return true;
         }}
         onDeleteNote={async (id) => {
           setNotes((current) => current.filter((item) => item._id !== id));
+
           return true;
         }}
       />

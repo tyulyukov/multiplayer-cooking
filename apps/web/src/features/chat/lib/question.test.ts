@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
-import { readQuestionAnswer, readQuestionInput } from "./question";
+import { questionAnswerSchema, questionInputSchema } from "./question";
 
 describe("question readers", () => {
   test("reads batched question contracts", () => {
     expect(
-      readQuestionInput({
+      questionInputSchema.safeParse({
         questions: [
           {
             id: "time",
@@ -18,7 +18,7 @@ describe("question readers", () => {
             allowCustom: false,
           },
         ],
-      }),
+      }).data ?? null,
     ).toEqual({
       questions: [
         {
@@ -37,15 +37,15 @@ describe("question readers", () => {
 
   test("normalizes historic single question inputs and answers", () => {
     expect(
-      readQuestionInput({
+      questionInputSchema.safeParse({
         question: "Скільки часу маєш?",
         options: [
           { id: "quick", label: "До 20 хвилин" },
           { id: "slow", label: "До години" },
         ],
-      }),
+      }).data ?? null,
     ).toMatchObject({ questions: [{ id: "question", allowMultiple: false, allowCustom: true }] });
-    expect(readQuestionAnswer({ selected: ["До 20 хвилин"] })).toEqual({
+    expect(questionAnswerSchema.safeParse({ selected: ["До 20 хвилин"] }).data ?? null).toEqual({
       answers: [{ questionId: "question", selected: ["До 20 хвилин"] }],
     });
   });

@@ -1,4 +1,5 @@
 const storageKey = "multiplayer-cooking.cook-name";
+
 const maxCookNameLength = 80;
 
 export const normalizeCookName = (value: string) => {
