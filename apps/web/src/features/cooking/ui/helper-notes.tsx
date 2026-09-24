@@ -4,11 +4,13 @@ import { Textarea } from "@/shared/ui/textarea";
 
 import type { CookingHelperProps } from "../model/helper-types";
 import type { useCookingHelper } from "../model/use-cooking-helper";
+
 type HelperNotesProps = Pick<CookingHelperProps, "notes"> &
   Pick<
     ReturnType<typeof useCookingHelper>,
     "disabled" | "error" | "note" | "setNote" | "saveNote" | "deleteNote"
   >;
+
 export function HelperNotes({
   notes,
   disabled,

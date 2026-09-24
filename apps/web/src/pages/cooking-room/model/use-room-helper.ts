@@ -8,6 +8,7 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 import type { CookingCredential } from "@/features/cooking/lib/cooking-session";
 import type { CookingActions } from "@/features/cooking/model/types";
 import type { CookingHelperProps } from "@/features/cooking/model/helper-types";
+
 export function useRoomHelper(
   roomId: Id<"cookingRooms">,
   credential: CookingCredential | null,
@@ -17,12 +18,14 @@ export function useRoomHelper(
   const [helperChatRequest, setHelperChatRequest] = useState(0);
   const [helperPrompt, setHelperPrompt] = useState("");
   const [helperStepKey, setHelperStepKey] = useState<string>();
+
   const [lastHelperRequest, setLastHelperRequest] = useState<{
     promptMessageId: string;
     prompt: string;
     stepKey?: string;
     attachmentStorageIds: Id<"_storage">[];
   }>();
+
   const assistance = useCookingAssistance({
     roomId,
     participantToken: credential?.participantToken,
@@ -32,6 +35,7 @@ export function useRoomHelper(
   const read = roomApi.room;
   const online = roomApi.online;
   const helperAttachments = assistance.attachments;
+
   const activeHelperStep =
     read?.steps.find(
       (step) => step.status === "active" && step.slots.some((slot) => read.me.slots.includes(slot)),
@@ -40,6 +44,7 @@ export function useRoomHelper(
       (step) =>
         step.status === "waiting" && step.slots.some((slot) => read.me.slots.includes(slot)),
     );
+
   const helperContext = helperContextStep(
     read?.room.plan?.steps ?? [],
     helperStepKey,
@@ -52,6 +57,7 @@ export function useRoomHelper(
     setHelperChatRequest((key) => key + 1);
     setHelperRequested(true);
   };
+
   const helperProps: CookingHelperProps | null =
     credential && read?.room.plan
       ? {
@@ -81,18 +87,23 @@ export function useRoomHelper(
           onNote: (text) =>
             assistance.addNote({ roomId, participantToken: credential.participantToken, text }),
           onAsk: async (prompt) => {
+            // SAFETY: these ids come from this room's own upload flow, which only stores ids
+            // Convex just issued for the "_storage" table.
             const request = {
               prompt,
               stepKey: helperContext || undefined,
               attachmentStorageIds: helperAttachments.storageIds as Id<"_storage">[],
             };
+
             const result = await assistance.ask({
               roomId,
               participantToken: credential.participantToken,
               ...request,
             });
+
             if (result)
               setLastHelperRequest({ ...request, promptMessageId: result.promptMessageId });
+
             return result;
           },
           onRetry:
@@ -100,14 +111,17 @@ export function useRoomHelper(
             lastHelperRequest.promptMessageId === read.room.helperFailedPromptMessageId
               ? async () => {
                   const { promptMessageId: _failedMessageId, ...request } = lastHelperRequest;
+
                   const result = await assistance.ask({
                     roomId,
                     participantToken: credential.participantToken,
                     ...request,
                     stepKey: helperContextStep(read.room.plan?.steps ?? [], request.stepKey),
                   });
+
                   if (result)
                     setLastHelperRequest({ ...request, promptMessageId: result.promptMessageId });
+
                   return result;
                 }
               : undefined,
@@ -131,5 +145,6 @@ export function useRoomHelper(
             }),
         }
       : null;
+
   return { assistance, ask, helperProps };
 }

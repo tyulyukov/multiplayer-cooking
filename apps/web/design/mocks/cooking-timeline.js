@@ -1,10 +1,15 @@
 import { convertCookingQuantity, parseCookingQuantity } from "/src/lib/cooking-units.ts";
 
 const panel = document.querySelector("#panel");
+
 const title = document.querySelector("#panel-title");
+
 const body = document.querySelector("#panel-body");
+
 let seconds = 402;
+
 const format = () => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+
 function open(kind) {
   const content = {
     people: [
@@ -36,8 +41,10 @@ function open(kind) {
       '<img class="ct-art" src="/images/oven-mitts.webp" alt=""><p>Ти додаєш пасту. Аня перемішує соус.</p><p>Аня готова. Чекаємо на тебе.</p><button class="ct-primary ct-full" id="ready">Я готовий</button>',
     ],
   }[kind];
+
   title.textContent = content[0];
   body.innerHTML = content[1];
+
   if (!panel.open) panel.showModal();
   body.querySelector("#grams")?.addEventListener("input", (event) => {
     const value = parseCookingQuantity(event.target.value);
@@ -78,11 +85,17 @@ function open(kind) {
     event.target.disabled = true;
   });
 }
+
 document.addEventListener("click", (event) => {
   const trigger = event.target.closest("[data-open]");
+
   if (trigger) open(trigger.dataset.open);
 });
+
 document.querySelector("#close").addEventListener("click", () => panel.close());
+
 document.querySelector("#complete").addEventListener("click", () => open("waiting"));
+
 const initial = new URLSearchParams(location.search).get("state");
+
 if (["waiting", "shared", "tools", "help"].includes(initial)) open(initial);

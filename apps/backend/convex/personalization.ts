@@ -55,6 +55,7 @@ function cleanSettings(settings: {
 }) {
   const customInstructions = preserveLines(settings.customInstructions ?? "");
   const about = preserveLines(settings.about ?? "");
+
   if (customInstructions.length > 1000 || about.length > 600) {
     throw new ConvexError("Налаштування агента надто довгі.");
   }
@@ -100,6 +101,7 @@ function memoryView(memory: {
 
 async function memoriesForUser(ctx: QueryCtx | MutationCtx, requestedUserId: Id<"users">) {
   const userId = await resolveUserId(ctx, requestedUserId);
+
   const memories = await ctx.db
     .query("memories")
     .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -111,6 +113,7 @@ async function memoriesForUser(ctx: QueryCtx | MutationCtx, requestedUserId: Id<
 
 async function settingsForUser(ctx: QueryCtx | MutationCtx, requestedUserId: Id<"users">) {
   const userId = await resolveUserId(ctx, requestedUserId);
+
   const saved = await ctx.db
     .query("personalizations")
     .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -142,6 +145,7 @@ export const saveSettings = mutation({
   handler: async (ctx, { sessionId, settings }) => {
     const user = await getOrCreateUser(ctx, sessionId);
     const next = cleanSettings(settings);
+
     const saved = await ctx.db
       .query("personalizations")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -169,6 +173,7 @@ export const removeMemory = mutation({
     }
 
     await ctx.db.delete(memoryId);
+
     return null;
   },
 });
@@ -206,6 +211,7 @@ export const addMemory = internalMutation({
     if (duplicate) {
       if (duplicate.text !== cleanText) {
         await ctx.db.patch(duplicate._id, { text: cleanText, updatedAt: Date.now() });
+
         return { changed: true, action: "added" as const, text: cleanText };
       }
 
@@ -226,6 +232,7 @@ export const addMemory = internalMutation({
       subject: cleanSubject,
       updatedAt: Date.now(),
     });
+
     return { changed: true, action: "added" as const, text: cleanText };
   },
 });
@@ -236,10 +243,13 @@ export const removeMemoryForAgent = internalMutation({
   handler: async (ctx, { userId: requestedUserId, memoryId }) => {
     const userId = await resolveUserId(ctx, requestedUserId);
     const memory = await ctx.db.get(memoryId);
+
     if (!memory || memory.userId !== userId) {
       return { changed: false, action: "removed" as const, text: "" };
     }
+
     await ctx.db.delete(memory._id);
+
     return { changed: true, action: "removed" as const, text: memory.text };
   },
 });

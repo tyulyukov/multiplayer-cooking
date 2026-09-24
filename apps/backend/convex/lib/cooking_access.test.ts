@@ -1,11 +1,15 @@
 import { expect, test } from "bun:test";
-import type { Doc, Id } from "../_generated/dataModel";
+import type { Doc } from "../_generated/dataModel";
 import { hashSecret, publicMember, publicRoom } from "./cooking_access";
+import { testId } from "../../tests/convex-doubles";
 
-const roomId = "room" as Id<"cookingRooms">;
-const userId = "user" as Id<"users">;
-const ideaId = "idea" as Id<"ideas">;
-const memberId = "member" as Id<"cookingMembers">;
+const roomId = testId<"cookingRooms">("room");
+
+const userId = testId<"users">("user");
+
+const ideaId = testId<"ideas">("idea");
+
+const memberId = testId<"cookingMembers">("member");
 
 test("hashes participant credentials without preserving the token", async () => {
   const token = "x".repeat(32);
@@ -40,6 +44,7 @@ test("public room and member projections exclude private authorization fields", 
     createdAt: 1,
     generationAttempt: "attempt",
   };
+
   const member: Doc<"cookingMembers"> = {
     _id: memberId,
     _creationTime: 1,
@@ -51,6 +56,7 @@ test("public room and member projections exclude private authorization fields", 
     slots: [2],
     lastSeenAt: 1,
   };
+
   expect(publicRoom(room)).not.toHaveProperty("hostUserId");
   expect(publicRoom(room)).not.toHaveProperty("sourceIdeaId");
   expect(publicRoom(room)).not.toHaveProperty("inviteHash");

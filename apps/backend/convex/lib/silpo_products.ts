@@ -1,13 +1,13 @@
 import type { Doc } from "../_generated/dataModel";
 import type { SilpoClient } from "./silpo_client";
-import { chooseTimeslot, type ProductRequest } from "./silpo_shapes";
+import { chooseTimeslot, type JsonValue, type ProductRequest } from "./silpo_shapes";
 
 export async function findSilpoProducts(
   client: SilpoClient,
   cart: NonNullable<Doc<"silpoConnections">["cart"]>,
   items: readonly ProductRequest[],
   now = Date.now(),
-): Promise<unknown> {
+): Promise<JsonValue> {
   let timeslot = cart.timeslot;
 
   if (!(Date.parse(timeslot.start) > now)) {

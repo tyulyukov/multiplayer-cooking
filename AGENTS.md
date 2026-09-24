@@ -27,7 +27,7 @@ Constraints that are not visible in the code:
 
 ## Architecture
 
-- This repository is a Bun workspace. `apps/web` contains the React app, `apps/backend` contains Convex, `apps/mobile` contains the Expo React Native client, and `packages/theme` contains cross-platform design tokens. The mobile app has only a mock Сільпо connect screen; `apps/mobile/AGENTS.md` covers its commands and conventions.
+- This repository is a Bun workspace. `apps/web` contains the React app, `apps/backend` contains Convex, `apps/mobile` contains the Expo React Native client, and `packages/theme` contains cross-platform design tokens. The mobile app has only a mock Сільпо connect screen. Read `apps/mobile/AGENTS.md` before any mobile work; it covers commands, conventions, and the required design skill.
 - Convex is the backend for data, realtime state, and server-side integrations.
 - React and Vite are the frontend. TanStack Router handles routes.
 - Import browser-safe Convex contracts through the explicit `@multiplayer-cooking/backend` exports. Do not expose the whole backend library tree.
@@ -38,6 +38,7 @@ Constraints that are not visible in the code:
 - Read `apps/web/DESIGN.md` before any UI change. It owns the palette, type, component kit, and colour budget.
 - Keep reusable colors, radii, typography, and motion values in `packages/theme/src/index.ts`. Keep web CSS variables in `packages/theme/src/web.css`, and keep both representations in sync.
 - Axiom provides telemetry. Oxlint and Oxfmt own linting and formatting.
+- Oxlint runs the vendored anti-slop rules in `tools/oxlint/anti-slop/` (ours to edit; provenance in `UPSTREAM.md`) and `@shadcn/lint` on the web app. Fix findings in the code rather than disabling rules.
 - Use semantic design tokens. The visual reference is the [Сільпо diner in Odesa](https://silpo.ua/stores/prov-semafornii-4); mocks live in `apps/web/design/mocks/`.
 
 Optional component references:

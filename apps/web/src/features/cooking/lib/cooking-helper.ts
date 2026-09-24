@@ -4,5 +4,6 @@ export function helperContextStep(
   activeStepKey?: string,
 ): string | undefined {
   const candidate = selectedStepKey ?? activeStepKey;
+
   return steps.some((step) => step.id === candidate) ? candidate : undefined;
 }

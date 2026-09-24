@@ -29,14 +29,17 @@ export function useChat(sessionId: SessionId | undefined, enabled: boolean) {
   const active = useQuery(api.chat.activeThread, sessionId && enabled ? { sessionId } : "skip");
   const threadId = active?.threadId ?? null;
   const threadArgs = sessionId && threadId ? { sessionId, threadId } : ("skip" as const);
+
   const { results } = useUIMessages(api.chat.listMessages, threadArgs, {
     initialNumItems: 50,
     stream: true,
   });
+
   const remoteDraft = useQuery(
     api.chat.draft,
     sessionId && enabled ? { sessionId, threadId: threadId ?? undefined } : "skip",
   );
+
   const sendMessageMutation = useMutation(api.chat.sendMessage);
   const createThreadMutation = useMutation(api.chat.newThread);
   const answerQuestionMutation = useMutation(api.chat.answerQuestion);
@@ -53,6 +56,9 @@ export function useChat(sessionId: SessionId | undefined, enabled: boolean) {
     remoteDraft,
     sendMessage(text: string, imageIds: readonly string[]) {
       if (!sessionId) return Promise.resolve(null);
+
+      // SAFETY: imageIds are storage ids returned by this hook's own uploadAttachment flow,
+      // which only stores ids Convex just issued for the "_storage" table.
       return sendMessageMutation({
         sessionId,
         threadId: threadId ?? undefined,
@@ -65,9 +71,12 @@ export function useChat(sessionId: SessionId | undefined, enabled: boolean) {
     },
     answerQuestion(toolCallId: string, answer: QuestionResponse) {
       if (!sessionId || !threadId) return Promise.resolve(null);
+
       return answerQuestionMutation({ sessionId, threadId, toolCallId, answer });
     },
     saveDraft(target: string | null, text: string, imageIds: readonly string[]) {
+      // SAFETY: imageIds are storage ids returned by this hook's own uploadAttachment flow,
+      // which only stores ids Convex just issued for the "_storage" table.
       return sessionId
         ? saveDraftMutation({
             sessionId,
@@ -80,13 +89,18 @@ export function useChat(sessionId: SessionId | undefined, enabled: boolean) {
     async uploadAttachment(blob: Blob) {
       if (!sessionId) throw new Error("Missing session");
       const url = await uploadUrlMutation({ sessionId });
+
       if (!url) throw new Error("Upload limit reached");
       const storageId = await uploadImage(url, blob);
+
+      // SAFETY: storageId was just minted by uploadImage() against this app's own "_storage" table.
       const registered = await registerUploadMutation({
         sessionId,
         storageId: storageId as Id<"_storage">,
       });
+
       if (!registered) throw new Error("Upload rejected");
+
       return storageId;
     },
   };

@@ -12,9 +12,11 @@ import { usePersonalSettings } from "../model/use-personal-settings";
 import { PersonalMemories } from "./personal-memories";
 import { AgentSettingsForm } from "./agent-settings-form";
 import { InterfaceSettings } from "./interface-settings";
+
 export function PersonalSettings(props: PersonalSettingsProps) {
   const { open, loading = false } = props;
   const model = usePersonalSettings(props);
+
   const {
     handleOpenChange,
     activeTab,
@@ -24,6 +26,7 @@ export function PersonalSettings(props: PersonalSettingsProps) {
     saveError,
     saveSettings,
   } = model;
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={styles["personal-settings"]} aria-describedby={undefined}>

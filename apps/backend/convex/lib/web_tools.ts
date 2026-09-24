@@ -7,10 +7,12 @@ import {
   isPublicHttpUrl,
   PAGE_MAX_BYTES,
   parseWebResults,
+  searxResponseSchema,
   WEB_TIMEOUT_MS,
 } from "./web";
 
 const userAgent = "MultiplayerCooking/1.0 (+https://cooking.tyulyukov.com)";
+
 const maxRedirects = 3;
 
 // Follows redirects by hand so every hop is checked against private hosts before it is fetched.
@@ -27,6 +29,7 @@ async function fetchPublic(url: string, accept: string): Promise<Response | null
       redirect: "manual",
       signal: AbortSignal.timeout(WEB_TIMEOUT_MS),
     });
+
     const location = response.headers.get("location");
 
     if (response.status < 300 || response.status >= 400 || !location) {
@@ -64,12 +67,14 @@ async function searx(base: string, query: string, categories?: string) {
   }
 
   const bytes = await readBounded(response, PAGE_MAX_BYTES);
+
   if (!bytes) throw new Error("Search response exceeded size limit");
-  return JSON.parse(bytes.toString("utf8")) as unknown;
+
+  return searxResponseSchema.parse(JSON.parse(bytes.toString("utf8")));
 }
 
-function describeError(error: unknown) {
-  return error instanceof Error && error.name === "TimeoutError"
+function describeError(cause: unknown) {
+  return cause instanceof Error && cause.name === "TimeoutError"
     ? "Джерело не відповіло вчасно"
     : "Джерело недоступне";
 }
@@ -78,6 +83,7 @@ export function createWebTools() {
   const readableUrls = new Set<string>();
   let searches = 0;
   let pages = 0;
+
   const web_search = createTool({
     description:
       "Шукає в інтернеті: рецепти, техніки, заміни продуктів, сезонність. Повертає до 6 результатів із посиланнями.",
@@ -95,7 +101,9 @@ export function createWebTools() {
 
       try {
         const results = parseWebResults(await searx(base, query, "general"));
+
         for (const result of results) readableUrls.add(result.url);
+
         return { source: "untrusted_web" as const, results };
       } catch (error) {
         return { results: [], note: describeError(error) };
@@ -110,8 +118,10 @@ export function createWebTools() {
     execute: async (_ctx, { url }) => {
       if (!readableUrls.has(url))
         return { url, text: "", note: "Спочатку знайди цю сторінку через web_search" };
+
       if (pages >= 3) return { url, text: "", note: "Ліміт читання для цієї відповіді вичерпано" };
       pages += 1;
+
       try {
         const response = await fetchPublic(url, "text/html,text/plain;q=0.9");
 
@@ -123,11 +133,13 @@ export function createWebTools() {
 
         if (!response.ok) {
           await response.body?.cancel();
+
           return { url, text: "", note: "Сторінка не відкрилась" };
         }
 
         if (!type.includes("text/html") && !type.includes("text/plain")) {
           await response.body?.cancel();
+
           return { url, text: "", note: "Це не текстова сторінка" };
         }
 

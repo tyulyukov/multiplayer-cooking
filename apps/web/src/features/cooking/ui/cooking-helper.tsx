@@ -11,9 +11,11 @@ import type { CookingHelperProps } from "../model/helper-types";
 import { useCookingHelper } from "../model/use-cooking-helper";
 import { HelperChat } from "./helper-chat";
 import { HelperNotes } from "./helper-notes";
+
 export function CookingHelper(props: CookingHelperProps) {
   const { open, onOpenChange, helperBusy, notes } = props;
   const model = useCookingHelper(props);
+
   const {
     mobile,
     setNearBottom,
@@ -26,6 +28,7 @@ export function CookingHelper(props: CookingHelperProps) {
     contentRef,
     closeRef,
   } = model;
+
   return (
     <Dialog
       modal={mobile}
@@ -67,6 +70,7 @@ export function CookingHelper(props: CookingHelperProps) {
             event.preventDefault();
             setTab("chat");
             setNearBottom(true);
+
             if (mobile) closeRef.current?.focus({ preventScroll: true });
             else contentRef.current?.querySelector("textarea")?.focus({ preventScroll: true });
           }}

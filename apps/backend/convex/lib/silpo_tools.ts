@@ -1,5 +1,7 @@
 import { productRegistryKey } from "./ingredient";
+
 export { productRegistryKey } from "./ingredient";
+
 import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
 
@@ -7,7 +9,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { isReauthRequired, withSilpoClient } from "./silpo_client";
 import { findSilpoProducts } from "./silpo_products";
 import {
-  shapeProductCandidates,
+  readProductCandidates,
   type IngredientCandidates,
   type ProductCandidate,
 } from "./silpo_shapes";
@@ -29,6 +31,7 @@ export function recordProductCandidates(
   ingredients: readonly IngredientCandidates[],
 ) {
   registry.status = undefined;
+
   for (const item of ingredients) {
     registry.candidates.set(productRegistryKey(item.ingredient), item.candidates);
   }
@@ -70,6 +73,7 @@ export function createSilpoTools(
 
       if (!connected) {
         registry.status = "not_connected";
+
         return {
           needsAddress: false,
           ingredients: [],
@@ -79,6 +83,7 @@ export function createSilpoTools(
 
       if (!cart) {
         registry.status = "needs_address";
+
         return { needsAddress: true, note: needsAddressNote, ingredients: [] };
       }
 
@@ -87,7 +92,7 @@ export function createSilpoTools(
           findSilpoProducts(client, cart, items),
         );
 
-        const ingredients = shapeProductCandidates(items, raw);
+        const ingredients = readProductCandidates(items, raw);
 
         recordProductCandidates(registry, ingredients);
 
@@ -98,7 +103,9 @@ export function createSilpoTools(
         const note = isReauthRequired(error)
           ? "Сесія Сільпо закінчилась. Попроси людину натиснути «Перепідключити» в меню."
           : "Сільпо не відповіло. Скажи, що ціни зараз недоступні, і запропонуй спробувати пізніше.";
+
         recordProductFailure(registry);
+
         return {
           needsAddress: false,
           ingredients: [],

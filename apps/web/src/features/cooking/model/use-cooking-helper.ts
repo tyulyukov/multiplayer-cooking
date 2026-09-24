@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 import type { CookingHelperProps } from "../model/helper-types";
+
 export function useCookingHelper({
   plan,
   contextStepKey,
@@ -20,10 +21,12 @@ export function useCookingHelper({
   onDeleteNote,
 }: CookingHelperProps) {
   const mobile = useMediaQuery("(max-width: 639px)");
+
   const [tabSelection, setTabSelection] = useState<{ requestKey: number; tab: "chat" | "notes" }>({
     requestKey: chatRequestKey,
     tab: "chat",
   });
+
   const tab = tabSelection.requestKey === chatRequestKey ? tabSelection.tab : "chat";
   const setTab = (tab: "chat" | "notes") => setTabSelection({ requestKey: chatRequestKey, tab });
   const previousChatRequest = useRef(chatRequestKey);
@@ -38,17 +41,20 @@ export function useCookingHelper({
   const closeRef = useRef<HTMLButtonElement>(null);
   const currentPrompt = useRef(prompt);
   const currentNote = useRef(note);
+
   const latestReplyAt = Math.max(
     0,
     ...messages.filter((item) => item.role === "assistant").map((item) => item.createdAt),
     ...proposals.map((item) => item.createdAt),
   );
+
   const unread = latestReplyAt > seenAt;
   const busy = helperBusy || pending;
   const disabled = !online || pending;
   const context = plan.steps.find((step) => step.id === contextStepKey);
   const attachmentError = attachments.items.some((item) => item.state === "error");
   const uploading = attachments.items.some((item) => item.state === "uploading");
+
   const entries = [
     ...messages.map((message) => ({
       kind: "message" as const,
@@ -72,37 +78,49 @@ export function useCookingHelper({
     if (!open || tab !== "chat") return;
     const requested = previousChatRequest.current !== chatRequestKey;
     previousChatRequest.current = chatRequestKey;
+
     const frame = requestAnimationFrame(() => {
       const scroll = scrollRef.current;
+
       if (scroll && (nearBottom || requested)) scroll.scrollTop = scroll.scrollHeight;
+
       if (requested) {
         setNearBottom(true);
+
         if (!mobile) contentRef.current?.querySelector("textarea")?.focus({ preventScroll: true });
       }
     });
+
     return () => cancelAnimationFrame(frame);
   }, [open, tab, messages, proposals, busy, nearBottom, chatRequestKey, mobile]);
   useEffect(() => {
     const scroll = scrollRef.current;
+
     if (!open || tab !== "chat" || !scroll) return;
+
     const observer = new ResizeObserver(() => {
       if (nearBottom) scroll.scrollTop = scroll.scrollHeight;
     });
+
     observer.observe(scroll);
+
     return () => observer.disconnect();
   }, [open, tab, nearBottom]);
   useEffect(() => {
     if (!open || !mobile || !window.visualViewport) return;
     const viewport = window.visualViewport;
     const content = contentRef.current;
+
     const update = () => {
       const content = contentRef.current;
       content?.style.setProperty("--helper-viewport-height", `${viewport.height}px`);
       content?.style.setProperty("--helper-viewport-top", `${viewport.offsetTop}px`);
     };
+
     update();
     viewport.addEventListener("resize", update);
     viewport.addEventListener("scroll", update);
+
     return () => {
       viewport.removeEventListener("resize", update);
       viewport.removeEventListener("scroll", update);
@@ -113,21 +131,26 @@ export function useCookingHelper({
 
   function scrollToLatest() {
     const scroll = scrollRef.current;
+
     if (scroll) scroll.scrollTop = scroll.scrollHeight;
     setNearBottom(true);
   }
 
-  async function run(call: () => Promise<unknown>, failure: string): Promise<boolean> {
+  async function run<T>(call: () => Promise<T>, failure: string): Promise<boolean> {
     if (pendingRef.current || !online) return false;
     pendingRef.current = true;
     setPending(true);
     setError(undefined);
+
     try {
       const result = await call();
+
       if (result === false || result === null) throw new Error(failure);
+
       return true;
     } catch {
       setError(failure);
+
       return false;
     } finally {
       pendingRef.current = false;
@@ -138,6 +161,7 @@ export function useCookingHelper({
   async function send(text: string) {
     if (helperBusy || finished || uploading || attachmentError) return;
     scrollToLatest();
+
     if (await run(() => onAsk(text), "Не вдалося надіслати повідомлення. Спробуй ще раз.")) {
       if (currentPrompt.current.trim() === text) onPromptChange("");
       attachments.clear();
@@ -146,8 +170,10 @@ export function useCookingHelper({
 
   async function saveNote() {
     const text = note.trim();
+
     if (!text) return;
     const ok = await run(() => onNote(text), "Не вдалося зберегти нотатку. Спробуй ще раз.");
+
     if (ok && currentNote.current.trim() === text) setNote("");
   }
 

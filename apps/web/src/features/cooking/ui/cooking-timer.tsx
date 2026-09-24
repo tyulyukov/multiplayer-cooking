@@ -25,6 +25,7 @@ export function Timer({
 }) {
   disabled ||= actions.pendingKeys?.includes(`timer:${timer.stepKey}:${timer.timerKey}`) ?? false;
   const ended = timer.status === "cancelled" || timer.status === "acknowledged";
+
   const action =
     timer.status === "running"
       ? "pause"
@@ -33,6 +34,7 @@ export function Timer({
         : timer.status === "fired"
           ? "acknowledge"
           : "start";
+
   const actionLabel =
     action === "acknowledge"
       ? "Побачив"
@@ -41,6 +43,7 @@ export function Timer({
         : action === "resume"
           ? "Продовжити"
           : "Старт";
+
   const status =
     timer.status === "fired"
       ? "Перевір страву"
@@ -51,6 +54,7 @@ export function Timer({
           : timer.status === "paused"
             ? "Пауза"
             : "";
+
   return (
     <div
       className={cookingStyles["cooking-timer"]}

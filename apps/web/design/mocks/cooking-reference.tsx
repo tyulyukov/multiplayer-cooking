@@ -10,7 +10,9 @@ import { Button } from "../../src/shared/ui/button";
 import "../../src/index.css";
 
 const mode = new URLSearchParams(location.search).get("mode") ?? "pending";
+
 const now = Date.now();
+
 const me = {
   _id: "member-host" as Id<"cookingMembers">,
   name: "Оля",
@@ -19,6 +21,7 @@ const me = {
   slots: [1],
   lastSeenAt: now,
 };
+
 const plan = {
   servings: 2,
   summary: "Курка з овочами на вечерю.",
@@ -56,6 +59,7 @@ const plan = {
     },
   ],
 };
+
 const initialData: CookingRoomData = {
   serverNow: now,
   room: {
@@ -112,8 +116,10 @@ export function Fixture() {
   useEffect(() => {
     if (state !== "replay") return;
     const timer = window.setTimeout(() => setState("ready"), 6000);
+
     return () => window.clearTimeout(timer);
   }, [state]);
+
   const actions: CookingActions = {
     online: state !== "offline",
     busy: false,
@@ -149,6 +155,7 @@ export function Fixture() {
     ask: () => {},
     cookAgain: () => {},
   };
+
   const steps: CookingRoomData["steps"] = data.steps.map((step) =>
     step.stepKey === "prep"
       ? {
@@ -169,6 +176,7 @@ export function Fixture() {
         }
       : step,
   );
+
   return (
     <>
       <CookingSession data={{ ...data, steps }} actions={actions} />

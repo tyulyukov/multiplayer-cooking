@@ -44,10 +44,12 @@ export function usePersonalSettings({
   const [shortcut, setShortcut] = useComposerShortcut();
   const desktopKeyboard = useMediaQuery("(min-width: 1024px) and (pointer: fine)");
   const activeTab = !desktopKeyboard && tab === "interface" ? "settings" : tab;
+
   const sortedMemories = useMemo(
     () => [...memories].sort((first, second) => second.updatedAt - first.updatedAt),
     [memories],
   );
+
   const draftRef = useRef(draft);
   const savedDraftRef = useRef(settings);
   const onSaveRef = useRef(onSave);
@@ -108,13 +110,16 @@ export function usePersonalSettings({
     }
 
     if (loading) return;
+
     if (savingRef.current) {
       saveAgainRef.current = true;
+
       return;
     }
 
     if (!isDirty()) {
       setSaveState("saved");
+
       return;
     }
 
@@ -178,6 +183,7 @@ export function usePersonalSettings({
   async function deleteMemory(id: Memory["_id"]) {
     setDeletingId(id);
     setDeleteError(null);
+
     try {
       await onDelete(id);
     } catch {
@@ -186,6 +192,7 @@ export function usePersonalSettings({
       setDeletingId(null);
     }
   }
+
   return {
     setTab,
     draft,

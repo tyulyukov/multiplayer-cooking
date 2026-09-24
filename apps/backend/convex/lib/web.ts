@@ -1,29 +1,29 @@
+import { z } from "zod";
+
 export const WEB_TIMEOUT_MS = 8_000;
+
 export const WEB_SEARCH_MAX_RESULTS = 6;
+
 export const READ_PAGE_MAX_CHARACTERS = 6_000;
+
 export const PAGE_MAX_BYTES = 1024 * 1024;
 
 export type WebResult = Readonly<{ title: string; url: string; snippet: string }>;
 
-type SearxResult = Readonly<{
-  url?: unknown;
-  title?: unknown;
-  content?: unknown;
-}>;
+const optionalTrimmedString = z.string().trim().optional().catch(undefined);
 
-function readString(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
+const searxResultSchema = z.object({
+  url: optionalTrimmedString,
+  title: optionalTrimmedString,
+  content: optionalTrimmedString,
+});
 
-function readResults(payload: unknown): SearxResult[] {
-  if (typeof payload !== "object" || payload === null || !("results" in payload)) {
-    return [];
-  }
+// SearXNG can respond with a search payload, an unrelated body, or items missing fields.
+export const searxResponseSchema = z
+  .object({ results: z.array(searxResultSchema.nullable().catch(null)).catch([]) })
+  .catch({ results: [] });
 
-  const results: unknown = Reflect.get(payload, "results");
-
-  return Array.isArray(results) ? (results as SearxResult[]) : [];
-}
+type SearxResponse = z.output<typeof searxResponseSchema>;
 
 const privateHostPattern =
   /^(localhost|.*\.(local|internal|localdomain)|\d+\.\d+\.\d+\.\d+|\[.*\])$/i;
@@ -71,20 +71,27 @@ export function isPublicHttpUrl(value: string) {
   return !privateHostPattern.test(host);
 }
 
-export function parseWebResults(payload: unknown, limit = WEB_SEARCH_MAX_RESULTS): WebResult[] {
+export function parseWebResults(
+  response: SearxResponse,
+  limit = WEB_SEARCH_MAX_RESULTS,
+): WebResult[] {
   const seen = new Set<string>();
   const results: WebResult[] = [];
 
-  for (const item of readResults(payload)) {
-    const url = readString(item.url);
-    const title = readString(item.title);
+  for (const item of response.results) {
+    if (!item) {
+      continue;
+    }
+
+    const url = item.url ?? "";
+    const title = item.title ?? "";
 
     if (!title || !isPublicHttpUrl(url) || seen.has(url)) {
       continue;
     }
 
     seen.add(url);
-    results.push({ title, url, snippet: readString(item.content).slice(0, 300) });
+    results.push({ title, url, snippet: (item.content ?? "").slice(0, 300) });
 
     if (results.length >= limit) {
       break;
@@ -94,14 +101,14 @@ export function parseWebResults(payload: unknown, limit = WEB_SEARCH_MAX_RESULTS
   return results;
 }
 
-const entities: Record<string, string> = {
-  amp: "&",
-  lt: "<",
-  gt: ">",
-  quot: '"',
-  apos: "'",
-  nbsp: " ",
-};
+const entities = new Map([
+  ["amp", "&"],
+  ["lt", "<"],
+  ["gt", ">"],
+  ["quot", '"'],
+  ["apos", "'"],
+  ["nbsp", " "],
+]);
 
 function decodeEntities(text: string) {
   return text.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, code: string) => {
@@ -113,7 +120,7 @@ function decodeEntities(text: string) {
       return String.fromCodePoint(Number.parseInt(code.slice(1), 10));
     }
 
-    return entities[code.toLowerCase()] ?? match;
+    return entities.get(code.toLowerCase()) ?? match;
   });
 }
 
@@ -121,10 +128,12 @@ export function htmlToText(html: string, limit = READ_PAGE_MAX_CHARACTERS) {
   const withoutBlocks = html
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<(script|style|noscript|svg|template|head)\b[\s\S]*?<\/\1>/gi, " ");
+
   const withBreaks = withoutBlocks.replace(
     /<\/?(p|div|br|li|h[1-6]|tr|section|article|blockquote|ul|ol)\b[^>]*>/gi,
     "\n",
   );
+
   const text = decodeEntities(withBreaks.replace(/<[^>]+>/g, " "))
     .replace(/[ \t\r\f\v]+/g, " ")
     .replace(/\s*\n\s*/g, "\n")

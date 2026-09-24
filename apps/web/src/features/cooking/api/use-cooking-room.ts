@@ -10,6 +10,7 @@ export function useCookingRoom(roomId: Id<"cookingRooms">, credential: CookingCr
   const [browserOnline, setBrowserOnline] = useState(navigator.onLine);
   const online = browserOnline && connection.isWebSocketConnected;
   const participantToken = credential?.participantToken;
+
   const room = useQuery(
     api.cookingRooms.read,
     participantToken ? { roomId, participantToken } : "skip",
@@ -33,6 +34,7 @@ export function useCookingRoom(roomId: Id<"cookingRooms">, credential: CookingCr
     const update = () => setBrowserOnline(navigator.onLine);
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
+
     return () => {
       window.removeEventListener("online", update);
       window.removeEventListener("offline", update);
@@ -42,10 +44,12 @@ export function useCookingRoom(roomId: Id<"cookingRooms">, credential: CookingCr
   useEffect(() => {
     if (!participantToken || !online) return;
     void heartbeat({ roomId, participantToken }).catch(() => undefined);
+
     const id = window.setInterval(
       () => void heartbeat({ roomId, participantToken }).catch(() => undefined),
       20_000,
     );
+
     return () => window.clearInterval(id);
   }, [heartbeat, online, participantToken, roomId]);
 

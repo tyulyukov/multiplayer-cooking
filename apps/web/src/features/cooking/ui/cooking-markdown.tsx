@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const plugins = [remarkGfm];
+
 export function CookingMarkdown({ text, className = "" }: { text: string; className?: string }) {
   return (
     <div className={`markdown ${className}`}>

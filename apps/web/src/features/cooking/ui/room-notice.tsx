@@ -1,4 +1,5 @@
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+
 export function RoomNotice({ title, body }: { title: string; body: string }) {
   return (
     <main className={cookingStyles["cooking-shell"]}>

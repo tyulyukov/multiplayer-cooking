@@ -1,6 +1,11 @@
-import { createThread, listMessages as listThreadMessages, saveMessage } from "@convex-dev/agent";
+import {
+  createThread,
+  listMessages as listThreadMessages,
+  saveMessage,
+  type MessageDoc,
+} from "@convex-dev/agent";
 import { RateLimiter } from "@convex-dev/rate-limiter";
-import { ConvexError, v } from "convex/values";
+import { ConvexError, v, type Value } from "convex/values";
 
 import { components, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -20,10 +25,15 @@ import { type CookingPlan, validateCookingPlan } from "./lib/cooking_plan";
 import { cookingPlanValidator, cookingStepValidator } from "./lib/cooking_validators";
 
 const rateLimiter = new RateLimiter(components.rateLimiter, AI_RATE_LIMITS);
+
 const tokenValidator = v.string();
+
 const MAX_NOTES = 50;
+
 const MAX_PROPOSALS = 20;
+
 const HELPER_TIMEOUT_MS = 8 * 60_000;
+
 const proposalStatusValidator = v.union(
   v.literal("open"),
   v.literal("approved"),
@@ -40,12 +50,14 @@ const messageValidator = v.object({
   stepKey: v.optional(v.string()),
   attachmentUrls: v.optional(v.array(v.string())),
 });
+
 const noteValidator = v.object({
   _id: v.id("cookingNotes"),
   authorMemberId: v.id("cookingMembers"),
   text: v.string(),
   createdAt: v.number(),
 });
+
 const proposalValidator = v.object({
   _id: v.id("cookingProposals"),
   authorMemberId: v.id("cookingMembers"),
@@ -67,6 +79,7 @@ export const requestReference = mutation({
   returns: v.boolean(),
   handler: async (ctx, args) => {
     await requireActiveMember(ctx, args.roomId, args.participantToken);
+
     const [room, step] = await Promise.all([
       ctx.db.get(args.roomId),
       ctx.db
@@ -74,12 +87,17 @@ export const requestReference = mutation({
         .withIndex("by_room_step", (q) => q.eq("roomId", args.roomId).eq("stepKey", args.stepKey))
         .unique(),
     ]);
+
     const planStep = room?.plan?.steps.find((candidate) => candidate.id === args.stepKey);
+
     if (!room || !step || !planStep?.reference || room.state === "done") return false;
+
     if (step.imageStatus === "pending" || step.imageStatus === "ready") return false;
+
     const admitted = await admitAiGeneration({
       limit: (name, options) => rateLimiter.limit(ctx, name, { ...options, key: room.hostUserId }),
     });
+
     if (!admitted) throw new ConvexError("Ліміт зображень для цієї сесії вичерпано.");
     const attempt = crypto.randomUUID();
     await ctx.db.patch(step._id, {
@@ -98,6 +116,7 @@ export const requestReference = mutation({
       attempt,
       message: "Не вдалося вчасно створити зображення.",
     });
+
     return true;
   },
 });
@@ -107,11 +126,13 @@ export const listNotes = query({
   returns: v.array(noteValidator),
   handler: async (ctx, args) => {
     await requireActiveMember(ctx, args.roomId, args.participantToken);
+
     const notes = await ctx.db
       .query("cookingNotes")
       .withIndex("by_room_created", (q) => q.eq("roomId", args.roomId))
       .order("desc")
       .take(MAX_NOTES);
+
     return notes.reverse().map(({ _id, authorMemberId, text, createdAt }) => ({
       _id,
       authorMemberId,
@@ -126,13 +147,17 @@ export const addNote = mutation({
   returns: v.union(v.null(), v.id("cookingNotes")),
   handler: async (ctx, args) => {
     const member = await requireActiveMember(ctx, args.roomId, args.participantToken);
+
     const existingNotes = await ctx.db
       .query("cookingNotes")
       .withIndex("by_room_created", (q) => q.eq("roomId", args.roomId))
       .take(MAX_NOTES);
+
     if (existingNotes.length >= MAX_NOTES) throw new ConvexError("У цій сесії вже є 50 нотаток.");
     const text = args.text.trim();
+
     if (!text || text.length > 1_000) return null;
+
     return ctx.db.insert("cookingNotes", {
       roomId: args.roomId,
       authorMemberId: member._id,
@@ -152,10 +177,13 @@ export const deleteNote = mutation({
   handler: async (ctx, args) => {
     const member = await requireActiveMember(ctx, args.roomId, args.participantToken);
     const note = await ctx.db.get(args.noteId);
+
     if (!note || note.roomId !== args.roomId) return false;
+
     if (note.authorMemberId !== member._id && member.role !== "host")
       throw new ConvexError("Видалити може автор нотатки або господар.");
     await ctx.db.delete(note._id);
+
     return true;
   },
 });
@@ -166,16 +194,22 @@ export const generateHelperUploadUrl = mutation({
   handler: async (ctx, args) => {
     const member = await requireActiveMember(ctx, args.roomId, args.participantToken);
     const room = await ctx.db.get(args.roomId);
+
     if (!room || !["ready", "cooking"].includes(room.state)) return null;
     const { ok } = await rateLimiter.limit(ctx, "uploadBurst", { key: room.hostUserId });
+
     if (!ok) return null;
+
     const grants = await ctx.db
       .query("cookingHelperUploadGrants")
       .withIndex("by_room_member", (q) => q.eq("roomId", args.roomId).eq("memberId", member._id))
       .take(AI_MAX_IMAGES + 1);
+
     const now = Date.now();
     const activeGrants = grants.filter((grant) => grant.expiresAt >= now);
+
     for (const grant of grants) if (grant.expiresAt < now) await ctx.db.delete(grant._id);
+
     if (activeGrants.length >= AI_MAX_IMAGES) return null;
     const uploadTicket = crypto.randomUUID();
     await ctx.db.insert("cookingHelperUploadGrants", {
@@ -185,6 +219,7 @@ export const generateHelperUploadUrl = mutation({
       createdAt: now,
       expiresAt: now + HELPER_UPLOAD_LIFETIME_MS,
     });
+
     return { uploadUrl: await ctx.storage.generateUploadUrl(), uploadTicket };
   },
 });
@@ -200,17 +235,24 @@ export const registerHelperUpload = mutation({
   handler: async (ctx, args) => {
     const member = await requireActiveMember(ctx, args.roomId, args.participantToken);
     const ticketHash = await hashSecret(args.uploadTicket);
+
     const grant = await ctx.db
       .query("cookingHelperUploadGrants")
       .withIndex("by_ticketHash", (q) => q.eq("ticketHash", ticketHash))
       .unique();
+
     if (!grant || grant.roomId !== args.roomId || grant.memberId !== member._id) return false;
+
     if (grant.expiresAt < Date.now()) {
       await ctx.db.delete(grant._id);
+
       return false;
     }
+
     const file = await ctx.db.system.get("_storage", args.storageId);
+
     if (!isValidHelperImage(file) || file._creationTime < grant.createdAt) return false;
+
     const [mainUpload, helperUpload] = await Promise.all([
       ctx.db
         .query("uploads")
@@ -221,6 +263,7 @@ export const registerHelperUpload = mutation({
         .withIndex("by_storage", (q) => q.eq("storageId", args.storageId))
         .unique(),
     ]);
+
     if (mainUpload || helperUpload) return false;
     await ctx.db.delete(grant._id);
     await ctx.db.insert("cookingHelperUploads", {
@@ -230,6 +273,7 @@ export const registerHelperUpload = mutation({
       contentType: file.contentType,
       size: file.size,
     });
+
     return true;
   },
 });
@@ -248,6 +292,7 @@ export const askHelper = mutation({
     const room = await ctx.db.get(args.roomId);
     const prompt = args.prompt.trim();
     const attachmentStorageIds = args.attachmentStorageIds ?? [];
+
     if (
       !room?.plan ||
       !["ready", "cooking"].includes(room.state) ||
@@ -257,13 +302,18 @@ export const askHelper = mutation({
       (args.stepKey && !room.plan.steps.some((step) => step.id === args.stepKey))
     )
       return null;
+
     if (room.helperBusy) throw new ConvexError("Помічник уже відповідає.");
+
     const admitted = await admitAiGeneration({
       limit: (name, options) => rateLimiter.limit(ctx, name, { ...options, key: room.hostUserId }),
     });
+
     if (!admitted) throw new ConvexError("Забагато запитів. Спробуйте трохи пізніше.");
+
     const attachments: { url: string; contentType: "image/jpeg" | "image/png" | "image/webp" }[] =
       [];
+
     for (const storageId of attachmentStorageIds) {
       const upload = await ctx.db
         .query("cookingHelperUploads")
@@ -271,8 +321,10 @@ export const askHelper = mutation({
           q.eq("roomId", args.roomId).eq("memberId", member._id).eq("storageId", storageId),
         )
         .unique();
+
       if (!upload) return null;
       const file = await ctx.db.system.get("_storage", storageId);
+
       if (
         !isValidHelperImage(file) ||
         file.contentType !== upload.contentType ||
@@ -280,13 +332,16 @@ export const askHelper = mutation({
       )
         return null;
       const url = await ctx.storage.getUrl(storageId);
+
       if (!url) return null;
       attachments.push({
         url,
         contentType: upload.contentType,
       });
     }
+
     const threadId = room.helperThreadId ?? (await createThread(ctx, components.agent));
+
     const { messageId } = await saveMessage(ctx, components.agent, {
       threadId,
       userId: member._id,
@@ -305,6 +360,7 @@ export const askHelper = mutation({
         ],
       },
     });
+
     await ctx.db.insert("cookingHelperMessages", {
       roomId: args.roomId,
       messageId,
@@ -330,6 +386,7 @@ export const askHelper = mutation({
       promptMessageId: messageId,
       error: "Помічник не відповів вчасно. Спробуйте ще раз.",
     });
+
     return { threadId, promptMessageId: messageId };
   },
 });
@@ -340,24 +397,31 @@ export const listMessages = query({
   handler: async (ctx, args) => {
     await requireActiveMember(ctx, args.roomId, args.participantToken);
     const room = await ctx.db.get(args.roomId);
+
     if (!room?.helperThreadId) return [];
+
     const page = await listThreadMessages(ctx, components.agent, {
       threadId: room.helperThreadId,
       paginationOpts: { cursor: null, numItems: 40 },
       excludeToolMessages: true,
     });
+
     const messages = await Promise.all(
       page.page.map(async (message) => {
         const role = message.message?.role;
+
         if (role !== "user" && role !== "assistant") return null;
         const text = messageText(message);
+
         if (!text) return null;
+
         const metadata = await ctx.db
           .query("cookingHelperMessages")
           .withIndex("by_room_message", (q) =>
             q.eq("roomId", args.roomId).eq("messageId", message._id),
           )
           .unique();
+
         const attachmentUrls = metadata
           ? (
               await Promise.all(
@@ -365,17 +429,19 @@ export const listMessages = query({
               )
             ).filter((url): url is string => Boolean(url))
           : [];
+
         return {
           _id: message._id,
           role,
           text,
           createdAt: message._creationTime,
-          ...(metadata ? { authorName: metadata.authorName } : {}),
-          ...(metadata?.stepKey ? { stepKey: metadata.stepKey } : {}),
-          ...(attachmentUrls.length ? { attachmentUrls } : {}),
+          authorName: metadata?.authorName,
+          stepKey: metadata?.stepKey || undefined,
+          attachmentUrls: attachmentUrls.length ? attachmentUrls : undefined,
         };
       }),
     );
+
     return messages.flatMap((message) => (message ? [message] : [])).reverse();
   },
 });
@@ -385,11 +451,13 @@ export const listProposals = query({
   returns: v.array(proposalValidator),
   handler: async (ctx, args) => {
     await requireActiveMember(ctx, args.roomId, args.participantToken);
+
     const proposals = await ctx.db
       .query("cookingProposals")
       .withIndex("by_room_created", (q) => q.eq("roomId", args.roomId))
       .order("desc")
       .take(MAX_PROPOSALS);
+
     return proposals
       .reverse()
       .map(
@@ -436,8 +504,10 @@ export const rejectProposal = mutation({
   handler: async (ctx, args) => {
     await requireActiveMember(ctx, args.roomId, args.participantToken);
     const proposal = await ctx.db.get(args.proposalId);
+
     if (!proposal || proposal.roomId !== args.roomId || proposal.status !== "open") return false;
     await ctx.db.patch(proposal._id, { status: "rejected", resolvedAt: Date.now() });
+
     return true;
   },
 });
@@ -451,10 +521,12 @@ export const approveProposal = mutation({
   returns: v.boolean(),
   handler: async (ctx, args) => {
     const member = await requireActiveMember(ctx, args.roomId, args.participantToken);
+
     const [room, proposal] = await Promise.all([
       ctx.db.get(args.roomId),
       ctx.db.get(args.proposalId),
     ]);
+
     if (
       !room ||
       !proposal ||
@@ -464,15 +536,19 @@ export const approveProposal = mutation({
       room.state === "error"
     )
       return false;
+
     if (!room.plan || room.planVersion !== proposal.planVersion) return stale(ctx, proposal);
     const nextPlan = validateCookingPlan(proposal.plan, room.cookCount);
+
     const runtimes = await ctx.db
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", args.roomId))
       .take(80);
+
     const selectedRuntime = proposal.selectedStepKey
       ? runtimes.find((runtime) => runtime.stepKey === proposal.selectedStepKey)
       : undefined;
+
     if (
       proposal.selectedStepKey &&
       (!selectedRuntime ||
@@ -481,6 +557,7 @@ export const approveProposal = mutation({
           stableJson(proposal.selectedStepCheckedIds ?? []))
     )
       return stale(ctx, proposal);
+
     const state = assessProposal(
       room.plan,
       nextPlan,
@@ -488,14 +565,18 @@ export const approveProposal = mutation({
       proposal.affectedStepKeys,
       proposal.selectedStepKey,
     );
+
     if (!state.ok) return stale(ctx, proposal);
     await replaceFuturePlan(ctx, args.roomId, room, nextPlan, runtimes);
+
     const openProposals = await ctx.db
       .query("cookingProposals")
       .withIndex("by_room_created", (q) => q.eq("roomId", args.roomId))
       .order("desc")
       .take(MAX_PROPOSALS);
+
     const resolvedAt = Date.now();
+
     for (const sibling of openProposals)
       if (sibling._id !== proposal._id && sibling.status === "open")
         await ctx.db.patch(sibling._id, { status: "stale", resolvedAt });
@@ -504,6 +585,7 @@ export const approveProposal = mutation({
       approvedBy: member._id,
       resolvedAt,
     });
+
     return true;
   },
 });
@@ -549,6 +631,7 @@ export const helperData = internalQuery({
   ),
   handler: async (ctx, args) => {
     const room = await ctx.db.get(args.roomId);
+
     if (
       !room?.plan ||
       !room.helperBusy ||
@@ -558,12 +641,16 @@ export const helperData = internalQuery({
       !room.helperThreadId
     )
       return null;
+
     const messages = await ctx.runQuery(components.agent.messages.getMessagesByIds, {
       messageIds: [args.promptMessageId],
     });
+
     const promptMessage = messages[0];
     const promptText = promptMessage ? messageText(promptMessage) : "";
+
     if (!promptText) return null;
+
     const [members, steps, timers, messageMetadata] = await Promise.all([
       ctx.db
         .query("cookingMembers")
@@ -584,9 +671,13 @@ export const helperData = internalQuery({
         )
         .unique(),
     ]);
+
     const member = members.find((candidate) => candidate._id === promptMessage?.userId);
+
     if (!member) return null;
+
     if (messageMetadata?.authorMemberId !== member._id) return null;
+
     const attachments = await Promise.all(
       (messageMetadata?.attachmentStorageIds ?? []).map(async (storageId) => {
         const [upload, file] = await Promise.all([
@@ -598,6 +689,7 @@ export const helperData = internalQuery({
             .unique(),
           ctx.db.system.get("_storage", storageId),
         ]);
+
         return Boolean(
           upload &&
           isValidHelperImage(file) &&
@@ -606,7 +698,9 @@ export const helperData = internalQuery({
         );
       }),
     );
+
     if (attachments.some((valid) => !valid)) return null;
+
     return {
       roomId: args.roomId,
       hostUserId: room.hostUserId,
@@ -614,16 +708,14 @@ export const helperData = internalQuery({
       threadId: room.helperThreadId,
       promptMessageId: args.promptMessageId,
       promptText,
-      ...(messageMetadata?.stepKey
+      currentStep: messageMetadata?.stepKey
         ? {
-            currentStep: {
-              id: messageMetadata.stepKey,
-              title:
-                room.plan.steps.find((step) => step.id === messageMetadata.stepKey)?.title ??
-                messageMetadata.stepKey,
-            },
+            id: messageMetadata.stepKey,
+            title:
+              room.plan.steps.find((step) => step.id === messageMetadata.stepKey)?.title ??
+              messageMetadata.stepKey,
           }
-        : {}),
+        : undefined,
       plan: room.plan,
       planVersion: room.planVersion,
       cookCount: room.cookCount,
@@ -670,6 +762,7 @@ export const saveProposal = internalMutation({
         )
         .unique(),
     ]);
+
     if (
       !room?.plan ||
       !room.helperBusy ||
@@ -682,20 +775,25 @@ export const saveProposal = internalMutation({
     )
       return null;
     const proposed = validateCookingPlan(args.plan, room.cookCount);
+
     const runtimes = await ctx.db
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", args.roomId))
       .take(80);
+
     const selectedRuntime = messageMetadata?.stepKey
       ? runtimes.find((runtime) => runtime.stepKey === messageMetadata.stepKey)
       : undefined;
+
     if (messageMetadata?.stepKey && !selectedRuntime) return null;
     const plan = keepStartedSteps(room.plan, proposed, runtimes, messageMetadata?.stepKey);
     const affectedStepKeys = changedStepKeys(room.plan, plan);
+
     if (!affectedStepKeys.length && stableJson(room.plan) === stableJson(plan))
       throw new ConvexError(
         "План не змінився: завершені й початі кроки лишаються як є, тож зміни потрібні в майбутніх кроках або інгредієнтах.",
       );
+
     const assessment = assessProposal(
       room.plan,
       plan,
@@ -703,10 +801,13 @@ export const saveProposal = internalMutation({
       affectedStepKeys,
       messageMetadata?.stepKey,
     );
+
     if (!assessment.ok) throw new ConvexError(assessment.reason);
     const preview = args.preview.trim();
+
     if (!preview || preview.length > 2_000)
       throw new ConvexError("preview має бути від 1 до 2000 символів.");
+
     return ctx.db.insert("cookingProposals", {
       roomId: args.roomId,
       authorMemberId: args.authorMemberId,
@@ -732,6 +833,7 @@ export const finishHelper = internalMutation({
   returns: v.boolean(),
   handler: async (ctx, args) => {
     const room = await ctx.db.get(args.roomId);
+
     if (!room || !room.helperBusy || room.helperPromptMessageId !== args.promptMessageId)
       return false;
     await ctx.db.patch(args.roomId, {
@@ -741,6 +843,7 @@ export const finishHelper = internalMutation({
       helperPromptMessageId: undefined,
       helperStartedAt: undefined,
     });
+
     return true;
   },
 });
@@ -763,7 +866,9 @@ export const referenceData = internalQuery({
         .withIndex("by_room_step", (q) => q.eq("roomId", args.roomId).eq("stepKey", args.stepKey))
         .unique(),
     ]);
+
     const step = room?.plan?.steps.find((candidate) => candidate.id === args.stepKey);
+
     if (
       !room ||
       !step?.reference ||
@@ -772,26 +877,21 @@ export const referenceData = internalQuery({
       runtime.imageAttempt !== args.attempt
     )
       return null;
+
     return { title: room.source.title, step, hostUserId: room.hostUserId };
   },
 });
 
-function messageText(message: { text?: string; message?: { content?: unknown } }): string {
+function messageText(message: MessageDoc): string {
   if (message.text?.trim()) return message.text.trim();
   const content = message.message?.content;
-  if (typeof content === "string") return content.trim();
-  if (!Array.isArray(content)) return "";
+
+  if (content === undefined) return "";
+
+  if (!Array.isArray(content)) return content.trim();
+
   return content
-    .flatMap((part) =>
-      typeof part === "object" &&
-      part !== null &&
-      "type" in part &&
-      part.type === "text" &&
-      "text" in part &&
-      typeof part.text === "string"
-        ? [part.text]
-        : [],
-    )
+    .flatMap((part) => (part.type === "text" ? [part.text] : []))
     .join("\n")
     .trim();
 }
@@ -803,30 +903,40 @@ function sameStep(
   return stableJson(left) === stableJson(right);
 }
 
-function stableJson(value: unknown): string {
+function isValueRecord(value: Value | undefined): value is { [key: string]: Value | undefined } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !(value instanceof ArrayBuffer)
+  );
+}
+
+function stableJson(value: Value | undefined): string {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
-  if (value && typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    return `{${Object.keys(record)
-      .filter((key) => record[key] !== undefined)
+
+  if (isValueRecord(value)) {
+    return `{${Object.keys(value)
+      .filter((key) => value[key] !== undefined)
       .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`)
+      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
       .join(",")}}`;
   }
+
   return JSON.stringify(value);
 }
 
 export function changedStepKeys(current: CookingPlan, next: CookingPlan): string[] {
   const currentById = new Map(current.steps.map((step) => [step.id, step]));
   const nextById = new Map(next.steps.map((step) => [step.id, step]));
+
   return [
     ...new Set(
-      [...current.steps, ...next.steps]
-        .filter(
-          (step) =>
-            !sameStep(step, nextById.get(step.id)) || !sameStep(step, currentById.get(step.id)),
-        )
-        .map((step) => step.id),
+      [...current.steps, ...next.steps].flatMap((step) =>
+        !sameStep(step, nextById.get(step.id)) || !sameStep(step, currentById.get(step.id))
+          ? [step.id]
+          : [],
+      ),
     ),
   ];
 }
@@ -834,14 +944,17 @@ export function changedStepKeys(current: CookingPlan, next: CookingPlan): string
 function dependentClosure(plan: CookingPlan, keys: readonly string[]): Set<string> {
   const affected = new Set(keys);
   let changed = true;
+
   while (changed) {
     changed = false;
+
     for (const step of plan.steps)
       if (step.dependsOn.some((dependency) => affected.has(dependency)) && !affected.has(step.id)) {
         affected.add(step.id);
         changed = true;
       }
   }
+
   return affected;
 }
 
@@ -860,13 +973,15 @@ export function keepStartedSteps(
   mutableStartedStepKey?: string,
 ): CookingPlan {
   const currentById = new Map(current.steps.map((step) => [step.id, step]));
+
   const locked = new Set(
-    runtimes
-      .filter(
-        (runtime) => runtime.status !== "pending" && runtime.stepKey !== mutableStartedStepKey,
-      )
-      .map((runtime) => runtime.stepKey),
+    runtimes.flatMap((runtime) =>
+      runtime.status !== "pending" && runtime.stepKey !== mutableStartedStepKey
+        ? [runtime.stepKey]
+        : [],
+    ),
   );
+
   return {
     ...next,
     steps: next.steps.map((step) =>
@@ -886,36 +1001,45 @@ export function assessProposal(
   const nextById = new Map(next.steps.map((step) => [step.id, step]));
   const runtimeByKey = new Map(runtimes.map((runtime) => [runtime.stepKey, runtime]));
   const title = (stepKey: string) => currentById.get(stepKey)?.title ?? stepKey;
+
   for (const [stepKey, runtime] of runtimeByKey) {
     if (runtime.status === "pending") continue;
     const currentStep = currentById.get(stepKey);
     const nextStep = nextById.get(stepKey);
+
     if (!currentStep || !nextStep)
       return {
         ok: false,
         reason: `Крок «${title(stepKey)}» уже розпочато або завершено, його не можна прибрати з плану.`,
       };
+
     if (sameStep(currentStep, nextStep)) continue;
+
     if (runtime.status === "done")
       return {
         ok: false,
         reason: `Крок «${title(stepKey)}» уже завершений, його не можна змінювати.`,
       };
+
     if (stepKey !== mutableStartedStepKey)
       return {
         ok: false,
         reason: `Крок «${title(stepKey)}» уже розпочато, змінювати можна лише вибраний поточний крок.`,
       };
+
     if (!preservesStartedStep(currentStep, nextStep, runtime.checkedIds ?? []))
       return {
         ok: false,
         reason: `У початому кроці «${title(stepKey)}» можна змінити лише текст: збережи виконавців, залежності, таймери, обладнання, confirmation, choices, reference та вже відмічені пункти.`,
       };
   }
+
   const currentEquipment = new Map(current.equipment.map((item) => [item.id, item]));
   const nextEquipment = new Map(next.equipment.map((item) => [item.id, item]));
+
   for (const runtime of runtimes) {
     if (runtime.status === "pending") continue;
+
     for (const equipmentId of currentById.get(runtime.stepKey)?.equipment ?? []) {
       if (
         stableJson(currentEquipment.get(equipmentId)) !== stableJson(nextEquipment.get(equipmentId))
@@ -926,15 +1050,19 @@ export function assessProposal(
         };
     }
   }
+
   const blocked = dependentClosure(current, affectedKeys);
+
   for (const stepKey of blocked) {
     if (stepKey === mutableStartedStepKey) continue;
+
     if ((runtimeByKey.get(stepKey)?.status ?? "pending") !== "pending")
       return {
         ok: false,
         reason: `Крок «${title(stepKey)}» уже розпочато, а він залежить від зміненого кроку; змінюй лише майбутні кроки.`,
       };
   }
+
   return { ok: true };
 }
 
@@ -955,6 +1083,7 @@ function preservesStartedStep(
     stableJson(current.reference) === stableJson(next.reference) &&
     checkedIds.every((id) => {
       const item = current.checklist.find((item) => item.id === id);
+
       return item && stableJson(item) === stableJson(next.checklist.find((item) => item.id === id));
     })
   );
@@ -970,42 +1099,56 @@ async function replaceFuturePlan(
   const current = room.plan!;
   const currentById = new Map(current.steps.map((step) => [step.id, step]));
   const nextById = new Map(nextPlan.steps.map((step) => [step.id, step]));
+
   const retainedRuntimeKeys = new Set(
-    runtimes
-      .filter((runtime) => {
-        const oldStep = currentById.get(runtime.stepKey);
-        const newStep = nextById.get(runtime.stepKey);
-        return runtime.status !== "pending" || (oldStep && newStep && sameStep(oldStep, newStep));
-      })
-      .map((runtime) => runtime.stepKey),
+    runtimes.flatMap((runtime) => {
+      const oldStep = currentById.get(runtime.stepKey);
+      const newStep = nextById.get(runtime.stepKey);
+
+      return runtime.status !== "pending" || (oldStep && newStep && sameStep(oldStep, newStep))
+        ? [runtime.stepKey]
+        : [];
+    }),
   );
+
   const timers = await ctx.db
     .query("cookingTimers")
     .withIndex("by_room_status", (q) => q.eq("roomId", roomId))
     .take(25);
+
   const retainedTimers = timers.filter((timer) => retainedRuntimeKeys.has(timer.stepKey)).length;
+
   const futureTimers = nextPlan.steps
     .filter((step) => !retainedRuntimeKeys.has(step.id))
     .reduce((count, step) => count + step.timers.length, 0);
+
   if (retainedTimers + futureTimers > 24) throw new ConvexError("У цій сесії вже є 24 таймери.");
+
   for (const runtime of runtimes) {
     const oldStep = currentById.get(runtime.stepKey);
     const newStep = nextById.get(runtime.stepKey);
+
     if (runtime.status !== "pending" || (oldStep && newStep && sameStep(oldStep, newStep)))
       continue;
+
     const timers = await ctx.db
       .query("cookingTimers")
       .withIndex("by_room_step_key", (q) => q.eq("roomId", roomId).eq("stepKey", runtime.stepKey))
       .take(24);
+
     for (const timer of timers) await ctx.db.delete(timer._id);
+
     if (runtime.imageStorageId) await ctx.storage.delete(runtime.imageStorageId);
     await ctx.db.delete(runtime._id);
   }
+
   const remaining = await ctx.db
     .query("cookingSteps")
     .withIndex("by_room_step", (q) => q.eq("roomId", roomId))
     .take(80);
+
   const existing = new Set(remaining.map((runtime) => runtime.stepKey));
+
   for (const step of nextPlan.steps) {
     if (existing.has(step.id)) continue;
     await ctx.db.insert("cookingSteps", {
@@ -1016,6 +1159,7 @@ async function replaceFuturePlan(
       readyMemberIds: [],
       checkedIds: [],
     });
+
     for (const timer of step.timers)
       await ctx.db.insert("cookingTimers", {
         roomId,
@@ -1027,6 +1171,7 @@ async function replaceFuturePlan(
         version: 1,
       });
   }
+
   await ctx.db.patch(roomId, {
     plan: nextPlan,
     planVersion: room.planVersion + 1,
@@ -1039,5 +1184,6 @@ async function replaceFuturePlan(
 
 async function stale(ctx: MutationCtx, proposal: Doc<"cookingProposals">): Promise<boolean> {
   await ctx.db.patch(proposal._id, { status: "stale", resolvedAt: Date.now() });
+
   return false;
 }

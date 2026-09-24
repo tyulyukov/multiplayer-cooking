@@ -5,10 +5,12 @@ import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 
 export function useHistory(sessionId: SessionId | undefined, enabled: boolean) {
   const items = useQuery(api.chat.history, sessionId && enabled ? { sessionId } : "skip");
+
   const cookingRooms = useQuery(
     api.cookingRooms.listOwned,
     sessionId && enabled ? { sessionId } : "skip",
   );
+
   const openThreadMutation = useMutation(api.chat.openThread);
   const deleteThreadMutation = useMutation(api.chat.deleteThread);
 

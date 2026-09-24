@@ -34,7 +34,9 @@ export function QuestionSummary({
     <section className={styles["question-card"]} data-answered aria-label="Твої відповіді">
       {input.questions.map((question) => {
         const value = answer.answers.find((item) => item.questionId === question.id);
+
         if (!value) return null;
+
         return (
           <div key={question.id}>
             <p className={styles["question-title"]}>{question.question}</p>
@@ -80,38 +82,50 @@ export function QuestionCard({
     advanceTimer.current = setTimeout(() => {
       advanceTimer.current = null;
       const form = formRef.current;
+
       if (!form) return;
+
       const next = form.querySelector<HTMLButtonElement>(
         '[data-slot="questionnaire-next"]:not([hidden])',
       );
+
       if (next) next.click();
       else form.requestSubmit();
     }, 200);
   }
+
   const currentIndex = input.questions.findIndex((question) => question.id === current);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     cancelAdvance();
+
     if (pending) return;
+
     const checked = Array.from(
       event.currentTarget.querySelectorAll<HTMLInputElement>(
         'input[type="radio"]:checked, input[type="checkbox"]:checked',
       ),
     );
+
     const customInputs = Array.from(
       event.currentTarget.querySelectorAll<HTMLInputElement>('[data-slot="questionnaire-input"]'),
     );
+
     const answers = input.questions.map((question) => ({
       questionId: question.id,
       optionIds: checked.filter((field) => field.name === question.id).map((field) => field.value),
       custom: customInputs.find((field) => field.name === question.id)?.value.trim() || undefined,
     }));
+
     const missing = answers.find((answer) => !answer.optionIds.length && !answer.custom);
+
     if (missing) {
       setCurrent(missing.questionId);
+
       return;
     }
+
     onSubmit({ answers });
   }
 

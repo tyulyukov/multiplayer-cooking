@@ -11,6 +11,7 @@ import {
 } from "@/shared/ui/attachment";
 
 import type { ComposerProps } from "./types";
+
 export function ComposerAttachments({
   attachments,
   busy,

@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
+import { replaceGlobal } from "../../tests/convex-doubles";
 import { recordAiEvent } from "./telemetry";
 
-const originalFetch = globalThis.fetch;
+let restoreFetch = () => {};
+
 const originalEnvironment = {
   dataset: process.env.AXIOM_DATASET,
   edge: process.env.AXIOM_EDGE,
@@ -10,7 +12,7 @@ const originalEnvironment = {
 };
 
 afterEach(() => {
-  globalThis.fetch = originalFetch;
+  restoreFetch();
 
   for (const [name, value] of Object.entries({
     AXIOM_DATASET: originalEnvironment.dataset,
@@ -32,21 +34,25 @@ describe("recordAiEvent", () => {
     process.env.AXIOM_EDGE = "eu-central-1.aws.edge.axiom.co";
 
     let requestUrl: string | undefined;
-    globalThis.fetch = Object.assign(
-      async (input: RequestInfo | URL) => {
-        requestUrl = String(input);
-        return new Response(
-          JSON.stringify({
-            blocksCreated: 0,
-            failed: 0,
-            ingested: 1,
-            processedBytes: 1,
-            walLength: 1,
-          }),
-          { headers: { "Content-Type": "application/json" }, status: 200 },
-        );
-      },
-      { preconnect: () => undefined },
+    restoreFetch = replaceGlobal(
+      "fetch",
+      Object.assign(
+        async (input: RequestInfo | URL) => {
+          requestUrl = String(input);
+
+          return new Response(
+            JSON.stringify({
+              blocksCreated: 0,
+              failed: 0,
+              ingested: 1,
+              processedBytes: 1,
+              walLength: 1,
+            }),
+            { headers: { "Content-Type": "application/json" }, status: 200 },
+          );
+        },
+        { preconnect: () => undefined },
+      ),
     );
 
     await recordAiEvent({
@@ -65,9 +71,12 @@ describe("recordAiEvent", () => {
     process.env.AXIOM_TOKEN = "xaat-test";
     process.env.AXIOM_DATASET = "multiplayer-cooking-test";
     process.env.AXIOM_EDGE = "eu-central-1.aws.edge.axiom.co";
-    globalThis.fetch = Object.assign(async () => new Response("unavailable", { status: 503 }), {
-      preconnect: () => undefined,
-    });
+    restoreFetch = replaceGlobal(
+      "fetch",
+      Object.assign(async () => new Response("unavailable", { status: 503 }), {
+        preconnect: () => undefined,
+      }),
+    );
 
     await expect(
       recordAiEvent({

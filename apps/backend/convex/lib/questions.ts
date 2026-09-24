@@ -1,3 +1,5 @@
+import * as z from "zod/mini";
+
 export type QuestionOption = Readonly<{ id: string; label: string }>;
 
 export type Question = Readonly<{
@@ -26,80 +28,45 @@ export type QuestionSubmission = Readonly<{
   }>[];
 }>;
 
-function record(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
-}
+type AnsweredQuestion = { questionId: string; selected: string[]; custom?: string };
 
-function readOption(value: unknown): QuestionOption | null {
-  const option = record(value);
-  if (
-    !option ||
-    typeof option.id !== "string" ||
-    option.id.length < 1 ||
-    option.id.length > 30 ||
-    typeof option.label !== "string" ||
-    option.label.length < 1 ||
-    option.label.length > 60
-  ) {
-    return null;
-  }
-  return { id: option.id, label: option.label };
-}
+const questionOptionSchema = z.object({
+  id: z.string().check(z.minLength(1), z.maxLength(30)),
+  label: z.string().check(z.minLength(1), z.maxLength(60)),
+});
 
-function readQuestion(value: unknown, legacy = false): Question | null {
-  const item = record(value);
-  const id = legacy ? "question" : item?.id;
-  if (
-    !item ||
-    typeof id !== "string" ||
-    id.length < 1 ||
-    id.length > 30 ||
-    typeof item.question !== "string" ||
-    item.question.length < 5 ||
-    item.question.length > 160 ||
-    !Array.isArray(item.options) ||
-    item.options.length < 2 ||
-    item.options.length > 5
-  ) {
-    return null;
-  }
+const questionSchema = z.object({
+  id: z.optional(z.string().check(z.minLength(1), z.maxLength(30))),
+  question: z.string().check(z.minLength(5), z.maxLength(160)),
+  options: z.array(questionOptionSchema).check(z.minLength(2), z.maxLength(5)),
+  allowMultiple: z.optional(z.unknown()),
+  allowCustom: z.optional(z.unknown()),
+});
 
-  const optionIds = new Set<string>();
-  const options: QuestionOption[] = [];
-  for (const value of item.options) {
-    const option = readOption(value);
-    if (!option || optionIds.has(option.id)) return null;
-    optionIds.add(option.id);
-    options.push(option);
-  }
+type RawQuestion = z.output<typeof questionSchema>;
+
+function toQuestion(raw: RawQuestion, id: string): Question | null {
+  const optionIds = new Set(raw.options.map((option) => option.id));
+
+  if (optionIds.size !== raw.options.length) return null;
 
   return {
     id,
-    question: item.question,
-    options,
-    allowMultiple: item.allowMultiple === true,
-    allowCustom: item.allowCustom !== false,
+    question: raw.question,
+    options: raw.options,
+    allowMultiple: raw.allowMultiple === true,
+    allowCustom: raw.allowCustom !== false,
   };
 }
 
-// Historic ask_user calls used one question directly at the input root.
-export function readQuestionInput(value: unknown): QuestionInput | null {
-  const input = record(value);
-  if (!input) return null;
-
-  const batched = "questions" in input;
-  let source: readonly unknown[];
-  if (batched) {
-    if (!Array.isArray(input.questions)) return null;
-    source = input.questions;
-  } else {
-    source = [input];
-  }
+function buildQuestionInput(rawQuestions: readonly RawQuestion[], legacy: boolean) {
   const ids = new Set<string>();
   const questions: Question[] = [];
 
-  for (const value of source) {
-    const question = readQuestion(value, !batched);
+  for (const raw of rawQuestions) {
+    const id = legacy ? "question" : raw.id;
+    const question = id ? toQuestion(raw, id) : null;
+
     if (!question || ids.has(question.id)) return null;
     ids.add(question.id);
     questions.push(question);
@@ -108,42 +75,51 @@ export function readQuestionInput(value: unknown): QuestionInput | null {
   return questions.length >= 1 && questions.length <= 4 ? { questions } : null;
 }
 
-// Historic tool results had { selected, custom } for the implicit "question" id.
-export function readQuestionAnswer(value: unknown): QuestionAnswer | null {
-  const output = record(value);
-  if (!output) return null;
+// Parses a raw ask_user tool-call payload. Historic calls put one question at the input root.
+export const questionInputSchema = z.pipe(
+  z.union([z.object({ questions: z.array(questionSchema) }), questionSchema]),
+  z.transform((payload): QuestionInput | null =>
+    "questions" in payload
+      ? buildQuestionInput(payload.questions, false)
+      : buildQuestionInput([payload], true),
+  ),
+);
 
-  const batched = "answers" in output;
-  let source: readonly unknown[];
-  if (batched) {
-    if (!Array.isArray(output.answers)) return null;
-    source = output.answers;
-  } else {
-    source = [output];
-  }
-  const answers: { questionId: string; selected: string[]; custom?: string }[] = [];
+const answerEntrySchema = z.object({
+  questionId: z.optional(z.string()),
+  selected: z.array(z.string()),
+  custom: z.optional(z.string()),
+});
 
-  for (const value of source) {
-    const answer = record(value);
-    const questionId = batched ? answer?.questionId : "question";
-    if (
-      !answer ||
-      typeof questionId !== "string" ||
-      !Array.isArray(answer.selected) ||
-      answer.selected.some((selection) => typeof selection !== "string") ||
-      ("custom" in answer && typeof answer.custom !== "string")
-    ) {
-      return null;
-    }
-    answers.push({
-      questionId,
-      selected: answer.selected,
-      ...(typeof answer.custom === "string" ? { custom: answer.custom } : {}),
-    });
+type RawAnswer = z.output<typeof answerEntrySchema>;
+
+function buildQuestionAnswer(rawAnswers: readonly RawAnswer[], batched: boolean) {
+  const answers: AnsweredQuestion[] = [];
+
+  for (const raw of rawAnswers) {
+    const questionId = batched ? raw.questionId : "question";
+
+    if (!questionId) return null;
+
+    const entry: AnsweredQuestion = { questionId, selected: raw.selected };
+
+    if (raw.custom !== undefined) entry.custom = raw.custom;
+    answers.push(entry);
   }
 
   return { answers };
 }
+
+// Parses a raw ask_user tool result. Historic results had { selected, custom } for the
+// implicit "question" id.
+export const questionAnswerSchema = z.pipe(
+  z.union([z.object({ answers: z.array(answerEntrySchema) }), answerEntrySchema]),
+  z.transform((payload): QuestionAnswer | null =>
+    "answers" in payload
+      ? buildQuestionAnswer(payload.answers, true)
+      : buildQuestionAnswer([payload], false),
+  ),
+);
 
 export function validateQuestionSubmission(
   input: QuestionInput,
@@ -158,13 +134,15 @@ export function validateQuestionSubmission(
     submitted.set(answer.questionId, answer);
   }
 
-  const answers: { questionId: string; selected: string[]; custom?: string }[] = [];
+  const answers: AnsweredQuestion[] = [];
 
   for (const question of input.questions) {
     const answer = submitted.get(question.id);
+
     if (!answer || new Set(answer.optionIds).size !== answer.optionIds.length) return null;
 
     const custom = answer.custom?.trim();
+
     if (
       (answer.custom !== undefined && (!question.allowCustom || answer.custom.length > 200)) ||
       (!custom && answer.optionIds.length === 0)
@@ -179,13 +157,15 @@ export function validateQuestionSubmission(
       return null;
     }
 
-    answers.push({
+    const entry: AnsweredQuestion = {
       questionId: question.id,
       selected: answer.optionIds.map(
         (id) => question.options.find((option) => option.id === id)?.label ?? "",
       ),
-      ...(custom ? { custom } : {}),
-    });
+    };
+
+    if (custom) entry.custom = custom;
+    answers.push(entry);
   }
 
   return { answers };

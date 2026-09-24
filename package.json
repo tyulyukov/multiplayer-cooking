@@ -24,11 +24,13 @@
     "deploy:backend": "bun --cwd apps/backend deploy"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.11",
-    "@types/node": "^24.13.3",
-    "oxfmt": "^0.66.0",
-    "oxlint": "^1.79.0",
-    "typescript": "~6.0.2"
+    "@oxlint/plugins": "1.85.0",
+    "@shadcn/lint": "0.2.0",
+    "@types/bun": "^1.4.2",
+    "@types/node": "^24.13.6",
+    "oxfmt": "^0.70.0",
+    "oxlint": "1.85.0",
+    "typescript": "~7.0.2"
   },
   "packageManager": "bun@1.3.11"
 }

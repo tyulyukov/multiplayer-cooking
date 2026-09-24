@@ -1,37 +1,29 @@
+import { z } from "zod";
+
 export type FailureClassification = Readonly<{
   errorName: string;
   httpStatus?: number;
   retryable?: boolean;
 }>;
 
-function readNumber(error: unknown, key: string) {
-  if (typeof error !== "object" || error === null || !(key in error)) {
-    return undefined;
-  }
+const errorMetadataSchema = z.object({
+  isRetryable: z.boolean().optional().catch(undefined),
+  retryable: z.boolean().optional().catch(undefined),
+  status: z.number().optional().catch(undefined),
+  statusCode: z.number().optional().catch(undefined),
+});
 
-  const value: unknown = Reflect.get(error, key);
-
-  return typeof value === "number" ? value : undefined;
-}
-
-function readBoolean(error: unknown, key: string) {
-  if (typeof error !== "object" || error === null || !(key in error)) {
-    return undefined;
-  }
-
-  const value: unknown = Reflect.get(error, key);
-
-  return typeof value === "boolean" ? value : undefined;
-}
-
-export function classifyFailure(error: unknown): FailureClassification {
-  if (!(error instanceof Error)) {
+export function classifyFailure(cause: unknown): FailureClassification {
+  if (!(cause instanceof Error)) {
     return { errorName: "UnknownError" };
   }
 
+  const parsed = errorMetadataSchema.safeParse(cause);
+  const metadata = parsed.success ? parsed.data : {};
+
   return {
-    errorName: error.name || "Error",
-    httpStatus: readNumber(error, "statusCode") ?? readNumber(error, "status"),
-    retryable: readBoolean(error, "isRetryable") ?? readBoolean(error, "retryable"),
+    errorName: cause.name || "Error",
+    httpStatus: metadata.statusCode ?? metadata.status,
+    retryable: metadata.isRetryable ?? metadata.retryable,
   };
 }

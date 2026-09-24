@@ -4,7 +4,9 @@ import { hashSecret } from "../convex/lib/cooking_access";
 import { validateCookingPlan, type CookingStep } from "../convex/lib/cooking_plan";
 
 export const hostToken = "host-".padEnd(40, "a");
+
 export const guestToken = "guest-".padEnd(40, "b");
+
 export const inviteToken = "invite-".padEnd(40, "c");
 
 export function task(id: string, slot: number, patch: Partial<CookingStep> = {}): CookingStep {
@@ -34,6 +36,7 @@ export async function cookingFixture(
     "../convex/cookingTimers.ts": () => import("../convex/cookingTimers"),
     "../convex/cookingAssistance.ts": () => import("../convex/cookingAssistance"),
   });
+
   const plan = validateCookingPlan(
     {
       servings: 2,
@@ -44,8 +47,10 @@ export async function cookingFixture(
     },
     2,
   );
+
   const ids = await t.run(async (ctx) => {
     const userId = await ctx.db.insert("users", {});
+
     const source = {
       title: "Томатна вечеря",
       summary: "Спільна вечеря",
@@ -53,6 +58,7 @@ export async function cookingFixture(
       ingredients: [{ name: "Помідор", amount: "2 шт." }],
       servings: 2,
     };
+
     const sourceIdeaId = await ctx.db.insert("ideas", {
       ...source,
       userId,
@@ -60,6 +66,7 @@ export async function cookingFixture(
       promptMessageId: "private-prompt",
       timeMinutes: 20,
     });
+
     const roomId = await ctx.db.insert("cookingRooms", {
       hostUserId: userId,
       sourceIdeaId,
@@ -77,6 +84,7 @@ export async function cookingFixture(
       createdAt: Date.now(),
       generationAttempt: "fixture",
     });
+
     const hostId = await ctx.db.insert("cookingMembers", {
       roomId,
       tokenHash: await hashSecret(hostToken),
@@ -86,6 +94,7 @@ export async function cookingFixture(
       slots: [1],
       lastSeenAt: Date.now(),
     });
+
     const guestId = await ctx.db.insert("cookingMembers", {
       roomId,
       tokenHash: await hashSecret(guestToken),
@@ -95,7 +104,9 @@ export async function cookingFixture(
       slots: [2],
       lastSeenAt: Date.now(),
     });
+
     await ctx.db.patch(roomId, { ownerMemberId: hostId });
+
     for (const step of plan.steps) {
       await ctx.db.insert("cookingSteps", {
         roomId,
@@ -105,6 +116,7 @@ export async function cookingFixture(
         readyMemberIds: [],
         checkedIds: [],
       });
+
       for (const timer of step.timers)
         await ctx.db.insert("cookingTimers", {
           roomId,
@@ -116,8 +128,10 @@ export async function cookingFixture(
           version: 1,
         });
     }
+
     return { roomId, hostId, guestId, userId };
   });
+
   return {
     t,
     plan,

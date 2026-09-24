@@ -21,13 +21,17 @@ export function HelperProposalCard({
   const removedSteps = currentPlan.steps.filter(
     (step) => !proposal.plan.steps.some((next) => next.id === step.id),
   );
+
   const changedIngredients = proposal.plan.ingredients.filter((item) => {
     const current = currentPlan.ingredients.find((candidate) => candidate.id === item.id);
+
     return !current || current.name !== item.name || current.amount !== item.amount;
   });
+
   const removedIngredients = currentPlan.ingredients.filter(
     (item) => !proposal.plan.ingredients.some((next) => next.id === item.id),
   );
+
   return (
     <article className={styles["helper-proposal"]} aria-label="Зміни до рецепта">
       <strong>

@@ -16,6 +16,7 @@ function fixture() {
     checklist: [{ id: "wash", label: "Помити" }],
     timers: [],
   };
+
   const runtime: RuntimeStep = {
     imageUrl: undefined,
     stepKey: step.id,
@@ -24,6 +25,8 @@ function fixture() {
     readyMemberIds: [],
     checkedIds: [],
   };
+
+  // SAFETY: test fixture id; only its string shape matters here, not real Convex generation.
   const me = {
     _id: "host" as Id<"cookingMembers">,
     name: "Оля",
@@ -32,6 +35,7 @@ function fixture() {
     slots: [1],
     lastSeenAt: 0,
   };
+
   const input: Parameters<typeof getCookingStepState>[0] = {
     step,
     runtime,
@@ -39,6 +43,7 @@ function fixture() {
     timers: [],
     actions: { online: true, busy: false },
   };
+
   return input;
 }
 

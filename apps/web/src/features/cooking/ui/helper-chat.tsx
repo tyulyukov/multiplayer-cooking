@@ -11,6 +11,7 @@ import { HelperProposalCard } from "./helper-proposal";
 
 import type { CookingHelperProps } from "../model/helper-types";
 import type { useCookingHelper } from "../model/use-cooking-helper";
+
 type HelperChatProps = Pick<
   CookingHelperProps,
   | "plan"
@@ -45,6 +46,7 @@ type HelperChatProps = Pick<
     | "attachmentError"
     | "send"
   >;
+
 export function HelperChat({
   plan,
   onContextChange,

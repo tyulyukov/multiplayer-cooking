@@ -13,8 +13,10 @@ export function useAttachments(upload: ((blob: Blob) => Promise<string>) | null)
 
   useEffect(() => {
     mounted.current = true;
+
     return () => {
       mounted.current = false;
+
       for (const item of itemsRef.current) URL.revokeObjectURL(item.previewUrl);
     };
   }, []);
@@ -40,6 +42,7 @@ export function useAttachments(upload: ((blob: Blob) => Promise<string>) | null)
       .filter((file) => file.type.startsWith("image/"))
       .slice(0, Math.max(0, AI_MAX_IMAGES - itemsRef.current.length))
       .map((file) => ({ file, id: crypto.randomUUID(), previewUrl: URL.createObjectURL(file) }));
+
     changeItems((current) => [
       ...current,
       ...selected.map(({ id, previewUrl }) => ({ id, previewUrl, state: "uploading" as const })),
@@ -47,6 +50,7 @@ export function useAttachments(upload: ((blob: Blob) => Promise<string>) | null)
 
     for (const { file, id } of selected) {
       if (!mounted.current || !itemsRef.current.some((item) => item.id === id)) continue;
+
       try {
         const blob = await resizeImage(file);
         const storageId = await upload(blob);

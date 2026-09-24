@@ -1,6 +1,7 @@
 import { IMAGE_UPLOAD_MAX_BYTES } from "./ai_config";
 
 export const HELPER_UPLOAD_LIFETIME_MS = 10 * 60_000;
+
 export const HELPER_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
 export function isHelperImageType(

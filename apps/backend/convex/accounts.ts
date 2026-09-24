@@ -62,6 +62,7 @@ async function migrateInto(
     }
 
     await ctx.db.patch(targetUserId, { silpoAccountId: fresh.accountId });
+
     return targetUserId;
   }
 
@@ -130,6 +131,7 @@ async function migrateInto(
     findConnection(ctx, sourceUserId),
     findConnection(ctx, targetUserId),
   ]);
+
   const threads = await ctx.runQuery(components.agent.threads.listThreadsByUserId, {
     userId: sourceUserId,
     order: "desc",
@@ -147,6 +149,7 @@ async function migrateInto(
       .take(1001),
     "target memories",
   );
+
   const memoryKeys = new Set(
     targetMemories.map(
       (memory) =>
@@ -157,9 +160,11 @@ async function migrateInto(
   for (const idea of ideas) {
     await ctx.db.patch(idea._id, { userId: targetUserId });
   }
+
   for (const upload of uploads) {
     await ctx.db.patch(upload._id, { userId: targetUserId });
   }
+
   for (const memory of memories) {
     const key = `${memory.kind}:${normalizeMemorySubject(memory.subject)}:${normalizeMemoryText(memory.text)}`;
 
@@ -170,11 +175,14 @@ async function migrateInto(
       await ctx.db.patch(memory._id, { userId: targetUserId });
     }
   }
+
   for (const session of sessions) {
     await ctx.db.patch(session._id, { userId: targetUserId });
   }
+
   // The target account keeps its own draft for a composer both accounts had one for.
   const targetDraftThreads = new Set(targetDrafts.map((draft) => draft.threadId));
+
   for (const draft of drafts) {
     if (targetDraftThreads.has(draft.threadId)) {
       await ctx.db.delete(draft._id);
@@ -182,6 +190,7 @@ async function migrateInto(
       await ctx.db.patch(draft._id, { userId: targetUserId });
     }
   }
+
   for (const thread of threads.page) {
     await ctx.runMutation(components.agent.threads.updateThread, {
       threadId: thread._id,
@@ -193,6 +202,7 @@ async function migrateInto(
     sourceSettings?.settings.tone === "friendly" &&
     !sourceSettings.settings.customInstructions &&
     !sourceSettings.settings.about;
+
   const targetIsDefault =
     targetSettings?.settings.tone === "friendly" &&
     !targetSettings.settings.customInstructions &&
@@ -239,6 +249,7 @@ async function migrateInto(
   if (sourceConnection) {
     await ctx.db.delete(sourceConnection._id);
   }
+
   await ctx.db.patch(sourceUserId, { mergedIntoUserId: targetUserId });
   await ctx.db.patch(targetUserId, { silpoAccountId: fresh.accountId });
 
@@ -276,16 +287,19 @@ async function canonicalizeConnection(
   if (source.silpoAccountId && source.silpoAccountId !== fresh.accountId) {
     const target =
       existingTarget?._id ?? (await ctx.db.insert("users", { silpoAccountId: fresh.accountId }));
+
     return { userId: await migrateInto(ctx, target, target, fresh), historyMigrated: false };
   }
 
   const sourceConnection = await findConnection(ctx, sourceId);
+
   const mayMigrate =
     verifiedLegacy || !sourceConnection || source.silpoAccountId === fresh.accountId;
 
   if (!mayMigrate) {
     const target =
       existingTarget?._id ?? (await ctx.db.insert("users", { silpoAccountId: fresh.accountId }));
+
     return { userId: await migrateInto(ctx, target, target, fresh), historyMigrated: false };
   }
 
@@ -314,6 +328,7 @@ export const beginConnect = internalMutation({
 
     const authVersion = session.authVersion + 1;
     await ctx.db.patch(session._id, { authVersion });
+
     return { userId: user._id, authVersion };
   },
 });
@@ -344,6 +359,7 @@ export const linkConnection = internalMutation({
       userId: linked.userId,
       activeThreadId: linked.historyMigrated ? session.activeThreadId : undefined,
     });
+
     return linked.userId;
   },
 });
@@ -361,6 +377,7 @@ export const linkExistingConnection = internalMutation({
   handler: async (ctx, args) => {
     const source = await ctx.db.get(args.sourceUserId);
     const connection = await findConnection(ctx, args.sourceUserId);
+
     if (
       !source ||
       source.mergedIntoUserId ||
@@ -369,6 +386,7 @@ export const linkExistingConnection = internalMutation({
       connection.tokensSavedAt !== args.expectedTokensSavedAt
     )
       return null;
+
     if (source.silpoAccountId && source.silpoAccountId !== args.accountId) return null;
 
     if (source?.sessionId && !(await findSession(ctx, source.sessionId))) {

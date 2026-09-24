@@ -1,14 +1,10 @@
 import { expect, test } from "bun:test";
-import { readMemoryEvent } from "./memory-event";
+import { isMemoryEvent } from "./memory-event";
 
 test("only persisted memory changes become chat events", () => {
-  expect(readMemoryEvent({ changed: true, action: "added", text: "Без арахісу" })).toEqual({
-    action: "added",
-    text: "Без арахісу",
-  });
-  expect(readMemoryEvent({ changed: true, action: "removed", text: "Гриби" })?.action).toBe(
-    "removed",
-  );
+  expect(isMemoryEvent({ changed: true, action: "added", text: "Без арахісу" })).toBe(true);
+  expect(isMemoryEvent({ changed: true, action: "removed", text: "Гриби" })).toBe(true);
+
   for (const output of [
     null,
     {},
@@ -16,6 +12,6 @@ test("only persisted memory changes become chat events", () => {
     { changed: true, action: "failed", text: "Гриби" },
     { changed: true, action: "added", text: 42 },
   ]) {
-    expect(readMemoryEvent(output)).toBeNull();
+    expect(isMemoryEvent(output)).toBe(false);
   }
 });

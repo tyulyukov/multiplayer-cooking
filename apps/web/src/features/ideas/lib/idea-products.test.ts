@@ -20,6 +20,7 @@ describe("getIdeaProducts", () => {
       ],
       products: [{ ingredient: "томати", productId: "tomato", quantity: 2, price: 25 }],
     });
+
     expect(result.matched).toHaveLength(1);
     expect(result.missing).toEqual([{ name: "Сіль", amount: "1 г" }]);
     expect(result.total).toBe(50);
@@ -37,6 +38,7 @@ describe("getIdeaProducts", () => {
         { ingredient: "Олія", productId: "oil", quantity: 2 },
       ],
     });
+
     expect(result.total).toBe(0);
     expect(result.missing).toEqual([{ name: "Сіль", amount: "1 г" }]);
     expect(result.matched).toHaveLength(1);

@@ -1,6 +1,40 @@
 // Pure helpers that turn loosely typed Сільпо tool results into the few fields the app stores.
 // The tool schemas are owned by Сільпо, so every reader tolerates missing or renamed fields.
 
+import { z } from "zod";
+
+// A parsed JSON value: what a Сільпо MCP tool call can ever hand back once it leaves the wire.
+export type JsonValue = string | number | boolean | null | JsonValue[] | JsonRecord;
+
+export type JsonRecord = { [key: string]: JsonValue };
+
+// The permissive counterpart used to build outgoing tool call arguments: `undefined` fields are
+// allowed at any depth so callers can omit optional values, the same way JSON.stringify always
+// drops them on the wire.
+export type JsonInput =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | JsonInput[]
+  | JsonInputRecord;
+
+export type JsonInputRecord = { [key: string]: JsonInput };
+
+const jsonPrimitiveSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+
+// Recursive boundary schema: parses genuinely unknown transport data into JsonValue once.
+export const jsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
+  z.union([jsonPrimitiveSchema, z.array(jsonValueSchema), z.record(z.string(), jsonValueSchema)]),
+);
+
+const jsonRecordSchema = z.record(z.string(), z.unknown());
+
+const stringSchema = z.string();
+
+const finiteNumberSchema = z.number().finite();
+
 export type SilpoAddress = Readonly<{
   latitude: number;
   longitude: number;
@@ -37,36 +71,42 @@ export const DELIVERY_TYPE_PREFERENCE = [
   "SelfPickup",
 ] as const;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+export function isRecord(value: JsonValue): value is JsonRecord {
+  return jsonRecordSchema.safeParse(value).success;
 }
 
-function pickString(record: Record<string, unknown>, keys: readonly string[]) {
+function pickString(record: JsonRecord, keys: readonly string[]) {
   for (const key of keys) {
     const value = record[key];
+    const asString = stringSchema.safeParse(value);
 
-    if (typeof value === "string" && value.trim()) {
-      return value.trim();
+    if (asString.success && asString.data.trim()) {
+      return asString.data.trim();
     }
 
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return String(value);
+    const asNumber = finiteNumberSchema.safeParse(value);
+
+    if (asNumber.success) {
+      return String(asNumber.data);
     }
   }
 
   return undefined;
 }
 
-function pickNumber(record: Record<string, unknown>, keys: readonly string[]) {
+function pickNumber(record: JsonRecord, keys: readonly string[]) {
   for (const key of keys) {
     const value = record[key];
+    const asNumber = finiteNumberSchema.safeParse(value);
 
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
+    if (asNumber.success) {
+      return asNumber.data;
     }
 
-    if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
-      return Number(value);
+    const asString = stringSchema.safeParse(value);
+
+    if (asString.success && asString.data.trim() && Number.isFinite(Number(asString.data))) {
+      return Number(asString.data);
     }
   }
 
@@ -74,7 +114,7 @@ function pickNumber(record: Record<string, unknown>, keys: readonly string[]) {
 }
 
 // Finds the first array of objects anywhere near the top of a tool result.
-export function findObjectArray(payload: unknown, depth = 3): Record<string, unknown>[] {
+export function findObjectArray(payload: JsonValue, depth = 3): JsonRecord[] {
   if (Array.isArray(payload)) {
     // Nested arrays (one per request) become groups with an `items` list.
     return payload.flatMap((value) =>
@@ -103,7 +143,7 @@ export function findObjectArray(payload: unknown, depth = 3): Record<string, unk
   return [];
 }
 
-export function shapeAddress(payload: unknown): SilpoAddress | null {
+export function readAddress(payload: JsonValue): SilpoAddress | null {
   const candidates = findObjectArray(payload);
   const source = candidates[0] ?? (isRecord(payload) ? payload : undefined);
 
@@ -128,7 +168,7 @@ export function shapeAddress(payload: unknown): SilpoAddress | null {
   };
 }
 
-export function chooseDelivery(payload: unknown): DeliveryOption | null {
+export function chooseDelivery(payload: JsonValue): DeliveryOption | null {
   const options = findObjectArray(payload)
     .map((record) => ({
       deliveryType: pickString(record, ["deliveryType", "type", "name"]),
@@ -147,14 +187,14 @@ export function chooseDelivery(payload: unknown): DeliveryOption | null {
   return options[0] ?? null;
 }
 
-export function chooseTimeslot(payload: unknown, now = Date.now()): Timeslot | null {
+export function chooseTimeslot(payload: JsonValue, now = Date.now()): Timeslot | null {
   const slots = findObjectArray(payload)
     .map((record) => ({
       start: pickString(record, ["start", "from", "startTime"]),
       end: pickString(record, ["end", "to", "endTime"]),
       available: record.available ?? record.isAvailable,
     }))
-    .filter((slot): slot is { start: string; end: string; available: unknown } =>
+    .filter((slot): slot is { start: string; end: string; available: JsonValue } =>
       Boolean(slot.start && slot.end && slot.available !== false),
     )
     .filter((slot) => {
@@ -168,18 +208,19 @@ export function chooseTimeslot(payload: unknown, now = Date.now()): Timeslot | n
   return slot ? { start: slot.start, end: slot.end } : null;
 }
 
-export function readCartId(payload: unknown) {
+export function readCartId(payload: JsonValue) {
   return isRecord(payload) ? pickString(payload, ["shoppingCartId", "cartId", "id"]) : undefined;
 }
 
-const validationMessages: Record<string, string> = {
-  "product.offer.stock.max": "Деяких товарів на складі менше, ніж додано; кількість зменшено.",
-  "order.min_total": "Сума замовлення менша за мінімальну для доставки.",
-};
+const validationMessages = new Map<string, string>([
+  ["product.offer.stock.max", "Деяких товарів на складі менше, ніж додано; кількість зменшено."],
+  ["order.min_total", "Сума замовлення менша за мінімальну для доставки."],
+]);
 
 function describeValidation(code: string) {
   return (
-    validationMessages[code] ?? "Сільпо додало зауваження до кошика. Перевір його перед оплатою."
+    validationMessages.get(code) ??
+    "Сільпо додало зауваження до кошика. Перевір його перед оплатою."
   );
 }
 
@@ -193,12 +234,13 @@ export type CartSummary = Readonly<{
 }>;
 
 // Totals and error-level validations from silpo_get_shopping_cart_by_id.
-export function readCartSummary(payload: unknown) {
+export function readCartSummary(payload: JsonValue) {
   const cart = isRecord(payload) && isRecord(payload.cart) ? payload.cart : undefined;
   const calculation = cart && isRecord(cart.calculation) ? cart.calculation : undefined;
   const total = calculation ? pickNumber(calculation, ["totalAfterDiscounts", "total"]) : undefined;
   const delivery = calculation && isRecord(calculation.delivery) ? calculation.delivery : undefined;
   const validations = calculation ? findObjectArray(calculation.validations ?? []) : [];
+
   const warnings = validations
     .filter((entry) => {
       const level = pickString(entry, ["level", "severity", "type"]);
@@ -221,7 +263,7 @@ export function readCartSummary(payload: unknown) {
   } satisfies CartSummary;
 }
 
-export function readCheckoutLink(payload: unknown) {
+export function readCheckoutLink(payload: JsonValue) {
   if (!isRecord(payload)) {
     return undefined;
   }
@@ -271,7 +313,7 @@ export type IngredientCandidates = Readonly<{
 
 export const CANDIDATES_PER_INGREDIENT = 3;
 
-function shapeCandidate(record: Record<string, unknown>): ProductCandidate | null {
+function readProductCandidate(record: JsonRecord): ProductCandidate | null {
   const productId = pickString(record, ["productId", "id"]);
   const title = pickString(record, ["name", "title", "productName"]);
   const price = pickNumber(record, ["price", "currentPrice", "priceValue"]);
@@ -301,7 +343,7 @@ function shapeCandidate(record: Record<string, unknown>): ProductCandidate | nul
   };
 }
 
-function pickHttpUrl(record: Record<string, unknown>, keys: readonly string[]) {
+function pickHttpUrl(record: JsonRecord, keys: readonly string[]) {
   const value = pickString(record, keys);
 
   if (!value) {
@@ -319,9 +361,9 @@ function pickHttpUrl(record: Record<string, unknown>, keys: readonly string[]) {
 
 // Maps a batch result back onto the requested ingredients, by query first and by index second,
 // keeping a few available candidates so the model can pick the sensible one.
-export function shapeProductCandidates(
+export function readProductCandidates(
   requests: readonly ProductRequest[],
-  payload: unknown,
+  payload: JsonValue,
 ): IngredientCandidates[] {
   const groups = findObjectArray(payload);
 
@@ -332,8 +374,9 @@ export function shapeProductCandidates(
 
         return query !== undefined && query.toLowerCase() === request.query.toLowerCase();
       }) ?? groups[index];
+
     const candidates = (group ? findObjectArray(group) : [])
-      .map(shapeCandidate)
+      .map(readProductCandidate)
       .filter((candidate): candidate is ProductCandidate => candidate !== null)
       .slice(0, CANDIDATES_PER_INGREDIENT);
 

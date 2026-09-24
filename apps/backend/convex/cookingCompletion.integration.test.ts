@@ -11,6 +11,7 @@ test("active cooks receive only their room's saved dish image", async () => {
   const storageId = await fixture.t.run((ctx) => ctx.storage.store(new Blob(["dish image"])));
   await fixture.t.run(async (ctx) => {
     const room = await ctx.db.get(fixture.roomId);
+
     if (!room) throw new Error("Missing fixture room");
     await ctx.db.patch(room.sourceIdeaId, {
       image: {
@@ -51,6 +52,7 @@ test("active cooks receive only their room's saved dish image", async () => {
   ).toBeUndefined();
   await fixture.t.run(async (ctx) => {
     const room = await ctx.db.get(fixture.roomId);
+
     if (!room) throw new Error("Missing fixture room");
     await ctx.db.delete(room.sourceIdeaId);
   });

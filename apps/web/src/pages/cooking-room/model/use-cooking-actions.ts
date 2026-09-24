@@ -6,6 +6,7 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 
 import type { CookingCredential } from "@/features/cooking/lib/cooking-session";
 import type { CookingActions } from "@/features/cooking/model/types";
+
 type ActionContext = {
   roomId: Id<"cookingRooms">;
   credential: CookingCredential | null;
@@ -14,12 +15,13 @@ type ActionContext = {
   pendingKeys: string[];
   roomApi: ReturnType<typeof useCookingRoom>;
   assistance: ReturnType<typeof useCookingAssistance>;
-  invoke: (call: () => Promise<unknown>, key?: string) => Promise<void>;
+  invoke: <T>(call: () => Promise<T>, key?: string) => Promise<void>;
   ask: CookingActions["ask"];
   setAgainOpen: (open: boolean) => void;
   setInviteOpen: (open: boolean) => void;
   setPeopleOpen: (open: boolean) => void;
 };
+
 export function useCookingActions({
   roomId,
   credential,
@@ -37,6 +39,7 @@ export function useCookingActions({
   const steps = useCookingSteps();
   const timers = useCookingTimers();
   const participantToken = credential?.participantToken;
+
   const actions: CookingActions = {
     online,
     busy: pending,

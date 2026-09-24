@@ -7,6 +7,7 @@ export function useCookingSteps() {
     (store, args) => {
       const queryArgs = { roomId: args.roomId, participantToken: args.participantToken };
       const current = store.getQuery(api.cookingRooms.read, queryArgs);
+
       if (!current) return;
       store.setQuery(api.cookingRooms.read, queryArgs, {
         ...current,

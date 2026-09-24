@@ -10,6 +10,7 @@ import { Spinner } from "@/shared/ui/spinner";
 
 import type { ComposerProps } from "./types";
 import type { useComposer } from "./use-composer";
+
 type SubmitProps = Pick<ComposerProps, "mode" | "busy" | "value"> &
   Pick<
     ReturnType<typeof useComposer>,
@@ -20,6 +21,7 @@ type SubmitProps = Pick<ComposerProps, "mode" | "busy" | "value"> &
     | "readyAttachments"
     | "shortcutDescription"
   >;
+
 export function ComposerSubmit({
   mode,
   busy,

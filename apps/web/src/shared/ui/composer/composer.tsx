@@ -12,6 +12,7 @@ import type { ComposerProps } from "./types";
 import { useComposer } from "./use-composer";
 import { ComposerAttachments } from "./composer-attachments";
 import { ComposerSubmit } from "./composer-submit";
+
 export function Composer(props: ComposerProps) {
   const {
     mode,
@@ -23,7 +24,9 @@ export function Composer(props: ComposerProps) {
     questionnaire,
     questionnaireKey,
   } = props;
+
   const model = useComposer(props);
+
   const {
     inputId,
     composerRef,
@@ -40,6 +43,7 @@ export function Composer(props: ComposerProps) {
     submitWithShortcut,
     pickFiles,
   } = model;
+
   if (questionnaire && questionnaireKey !== dismissedQuestionnaireKey) {
     return (
       <div className={cn(styles["composer"], "chrome")} data-mode={mode}>

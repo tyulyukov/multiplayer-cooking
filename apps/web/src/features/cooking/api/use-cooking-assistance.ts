@@ -26,13 +26,18 @@ export function useCookingAssistance({
   const requestReference = useMutation(api.cookingAssistance.requestReference);
   const generateUploadUrl = useMutation(api.cookingAssistance.generateHelperUploadUrl);
   const registerUpload = useMutation(api.cookingAssistance.registerHelperUpload);
+
   const attachments = useAttachments(
     participantToken && enabled
       ? async (blob) => {
           const args = { roomId, participantToken };
           const grant = await generateUploadUrl(args);
+
           if (!grant) throw new Error("Upload unavailable");
           const storageId = await uploadImage(grant.uploadUrl, blob);
+
+          // SAFETY: storageId was just minted by uploadImage() against this app's own "_storage"
+          // table.
           if (
             !(await registerUpload({
               ...args,
@@ -42,6 +47,7 @@ export function useCookingAssistance({
           ) {
             throw new Error("Upload rejected");
           }
+
           return storageId;
         }
       : null,

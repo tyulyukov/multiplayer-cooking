@@ -1,6 +1,8 @@
 import styles from "@/features/personalization/ui/personal-settings.module.scss";
 import type { usePersonalSettings } from "../model/use-personal-settings";
+
 type Props = Pick<ReturnType<typeof usePersonalSettings>, "shortcut" | "setShortcut">;
+
 export function InterfaceSettings({ shortcut, setShortcut }: Props) {
   return (
     <section className={styles["personal-settings__interface"]}>

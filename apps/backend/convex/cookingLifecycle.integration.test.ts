@@ -1,12 +1,13 @@
-import { expect, spyOn, test } from "bun:test";
+import { expect, test } from "bun:test";
 import rateLimiterSchema from "../node_modules/@convex-dev/rate-limiter/dist/component/schema.js";
-import type { SessionId } from "convex-helpers/server/sessions";
 
 import { api, internal } from "./_generated/api";
 import { cookingFixture, task } from "../tests/cooking-fixture";
 import { validateCookingPlan } from "./lib/cooking_plan";
+import { replaceGlobal, testSessionId } from "../tests/convex-doubles";
 
 const newHostToken = "next-host-".padEnd(40, "d");
+
 const newInviteToken = "next-invite-".padEnd(40, "e");
 
 function registerRateLimiter(t: Awaited<ReturnType<typeof cookingFixture>>["t"]) {
@@ -20,16 +21,20 @@ function registerRateLimiter(t: Awaited<ReturnType<typeof cookingFixture>>["t"])
 
 async function withoutScheduledCallbacks<T>(run: () => Promise<T>): Promise<T> {
   const setTimeoutBefore = globalThis.setTimeout;
+
   const suppressedTimeout = Object.assign((...args: Parameters<typeof setTimeout>) => {
     const timer = setTimeoutBefore(...args);
     clearTimeout(timer);
+
     return timer;
   }, setTimeoutBefore);
-  const timerSpy = spyOn(globalThis, "setTimeout").mockImplementation(suppressedTimeout);
+
+  const restoreTimeout = replaceGlobal("setTimeout", suppressedTimeout);
+
   try {
     return await run();
   } finally {
-    timerSpy.mockRestore();
+    restoreTimeout();
   }
 }
 
@@ -42,11 +47,14 @@ async function prepareGeneration(
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", fixture.roomId))
       .collect();
+
     const timers = await ctx.db
       .query("cookingTimers")
       .withIndex("by_room_status", (q) => q.eq("roomId", fixture.roomId))
       .collect();
+
     for (const step of steps) await ctx.db.delete(step._id);
+
     for (const timer of timers) await ctx.db.delete(timer._id);
     await ctx.db.patch(fixture.roomId, {
       state: "generating",
@@ -60,6 +68,7 @@ async function prepareGeneration(
 test("savePlan persists one generated plan, normalizes solo work, and limits references to six", async () => {
   const fixture = await cookingFixture();
   await prepareGeneration(fixture);
+
   const referencePlan = validateCookingPlan(
     {
       ...fixture.plan,
@@ -99,10 +108,12 @@ test("savePlan persists one generated plan, normalizes solo work, and limits ref
   await solo.t.run(async (ctx) => {
     await ctx.db.patch(solo.roomId, { cookCount: 1 });
   });
+
   const soloPlan = validateCookingPlan(
     { ...solo.plan, steps: [task("first", 1), task("second", 1)] },
     1,
   );
+
   expect(
     await solo.t.mutation(internal.cookingRooms.savePlan, {
       roomId: solo.roomId,
@@ -125,6 +136,7 @@ test("generation failures and image results only affect their current attempt", 
       reference: { prompt: "Покажи консистенцію.", alt: "Консистенція" },
     }),
   ]);
+
   await prepareGeneration(fixture, "current");
   expect(
     await fixture.t.mutation(internal.cookingRooms.failGeneration, {
@@ -142,9 +154,11 @@ test("generation failures and image results only affect their current attempt", 
       }),
     ),
   ).toBe(true);
+
   const staleStorageId = await fixture.t.run((ctx) =>
     ctx.storage.store(new Blob(["stale cooking reference"])),
   );
+
   expect(
     await fixture.t.mutation(internal.cookingRooms.imageResult, {
       roomId: fixture.roomId,
@@ -185,15 +199,19 @@ test("only an idea owner can create a room, and cook again starts fresh progress
       authVersion: 0,
     });
   });
+
   const sourceIdeaId = await fixture.t.run(async (ctx) => {
     const room = await ctx.db.get(fixture.roomId);
+
     if (!room) throw new Error("Missing fixture room");
+
     return room.sourceIdeaId;
   });
+
   expect(
     await withoutScheduledCallbacks(() =>
       fixture.t.mutation(api.cookingRooms.create, {
-        sessionId: "other-session" as SessionId,
+        sessionId: testSessionId("other-session"),
         sourceIdeaId,
         participantToken: newHostToken,
         inviteToken: newInviteToken,
@@ -204,9 +222,10 @@ test("only an idea owner can create a room, and cook again starts fresh progress
       }),
     ),
   ).toBeNull();
+
   const created = await withoutScheduledCallbacks(() =>
     fixture.t.mutation(api.cookingRooms.create, {
-      sessionId: "owner-session" as SessionId,
+      sessionId: testSessionId("owner-session"),
       sourceIdeaId,
       participantToken: newHostToken,
       inviteToken: newInviteToken,
@@ -216,11 +235,14 @@ test("only an idea owner can create a room, and cook again starts fresh progress
       constraints: "  без перцю  ",
     }),
   );
+
   expect(created).not.toBeNull();
+
   const createdView = await fixture.t.query(api.cookingRooms.read, {
     roomId: created!.roomId,
     participantToken: newHostToken,
   });
+
   expect(createdView?.room).toMatchObject({
     state: "generating",
     planVersion: 0,
@@ -253,6 +275,7 @@ test("only an idea owner can create a room, and cook again starts fresh progress
       }),
     ),
   ).resolves.not.toBeNull();
+
   const again = await withoutScheduledCallbacks(() =>
     fixture.t.mutation(api.cookingRooms.cookAgain, {
       ...fixture.host,
@@ -264,6 +287,7 @@ test("only an idea owner can create a room, and cook again starts fresh progress
       constraints: "",
     }),
   );
+
   expect(again).not.toBeNull();
   expect(
     (
@@ -288,6 +312,7 @@ test("session lifecycle guards starting, finishing, and retrying generation", as
       .query("cookingSteps")
       .withIndex("by_room_step", (q) => q.eq("roomId", roomId))
       .collect();
+
     for (const step of steps) await ctx.db.patch(step._id, { status: "done" });
   });
   expect(await t.mutation(api.cookingRooms.finish, guest)).toBe(true);

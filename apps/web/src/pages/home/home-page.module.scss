@@ -26,6 +26,19 @@
 
 .home-error {
   margin-top: 16px;
+  padding: 16px 18px;
+  border-width: 2px;
+  border-radius: 14px;
+}
+
+.home-error:has(> svg) {
+  column-gap: 10px;
+}
+
+.home-error-description {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  font-weight: 500;
 }
 
 /* Chat mode: the thread scrolls inside the viewport and the composer stays at the bottom. */

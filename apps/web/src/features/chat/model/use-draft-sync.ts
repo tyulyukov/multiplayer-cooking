@@ -9,7 +9,9 @@ function draftKey(text: string, imageIds: readonly string[]) {
 }
 
 const draftSaveDelayMs = 500;
+
 const draftRetryDelayMs = 3000;
+
 const emptyDraftKey = draftKey("", []);
 
 // Keeps the composer and the drafts table in step. The server copy wins only while the local
@@ -68,6 +70,7 @@ export function useDraftSync({
       cancel();
 
       const key = draftKey(draftText, draftImageIds);
+
       const retry = () => {
         if (latestRef.current.threadId === target && !pendingRef.current) {
           schedule(target, draftRetryDelayMs);
@@ -100,6 +103,7 @@ export function useDraftSync({
     } else {
       pendingRef.current?.run();
     }
+
     syncedRef.current = null;
 
     if (createdBySend) {
@@ -127,6 +131,7 @@ export function useDraftSync({
     if (syncedRef.current === null && localKey !== emptyDraftKey && remoteKey === emptyDraftKey) {
       syncedRef.current = remoteKey;
       schedule(threadId);
+
       return;
     }
 
@@ -151,6 +156,7 @@ export function useDraftSync({
 
     if (syncedRef.current === localKey) {
       cancel();
+
       return;
     }
 

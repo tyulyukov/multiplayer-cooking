@@ -3,7 +3,9 @@ import { useCallback, useSyncExternalStore } from "react";
 import type { ComposerSendShortcut } from "@/shared/lib/composer-shortcut";
 
 const storageKey = "multiplayer-cooking.composer-send-shortcut";
+
 const changeEvent = "multiplayer-cooking:composer-send-shortcut";
+
 const defaultShortcut: ComposerSendShortcut = "enter";
 
 function readShortcut(): ComposerSendShortcut {
@@ -36,6 +38,7 @@ function subscribe(onChange: () => void) {
 
 export function useComposerShortcut() {
   const shortcut = useSyncExternalStore(subscribe, readShortcut, () => defaultShortcut);
+
   const setShortcut = useCallback((next: ComposerSendShortcut) => {
     try {
       window.localStorage.setItem(storageKey, next);

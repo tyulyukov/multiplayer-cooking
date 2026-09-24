@@ -1,6 +1,7 @@
 import type { AgentSettings, Memory } from "@/features/personalization/model/types";
 
 export type Tab = "memories" | "settings" | "interface";
+
 export type PersonalSettingsProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;

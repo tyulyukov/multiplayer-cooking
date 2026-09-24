@@ -21,6 +21,7 @@ export function CookingStatus({
   loading?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
+
   return (
     <section className={cookingStyles["cooking-status"]}>
       {image && !failed && (
