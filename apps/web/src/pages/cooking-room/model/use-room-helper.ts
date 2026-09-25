@@ -9,11 +9,11 @@ import type { CookingCredential } from "@/features/cooking/lib/cooking-session";
 import type { CookingActions } from "@/features/cooking/model/types";
 import type { CookingHelperProps } from "@/features/cooking/model/helper-types";
 
-export function useRoomHelper(
+export const useRoomHelper = (
   roomId: Id<"cookingRooms">,
   credential: CookingCredential | null,
   roomApi: ReturnType<typeof useCookingRoom>,
-) {
+) => {
   const [helperRequested, setHelperRequested] = useState(false);
   const [helperChatRequest, setHelperChatRequest] = useState(0);
   const [helperPrompt, setHelperPrompt] = useState("");
@@ -147,4 +147,4 @@ export function useRoomHelper(
       : null;
 
   return { assistance, ask, helperProps };
-}
+};

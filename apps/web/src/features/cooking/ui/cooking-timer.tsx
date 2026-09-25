@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowTurnBackwardIcon from "@hugeicons/core-free-icons/ArrowTurnBackwardIcon";
@@ -12,17 +13,14 @@ import type { CookingActions, RoomTimer } from "@/features/cooking/model/types";
 
 import { timerLabel } from "../lib/timer-label";
 
-export function Timer({
-  timer,
-  now,
-  disabled,
-  actions,
-}: {
+type TimerProps = {
   timer: RoomTimer;
   now: number;
   disabled: boolean;
   actions: CookingActions;
-}) {
+};
+
+export const Timer: FC<TimerProps> = ({ timer, now, disabled, actions }) => {
   disabled ||= actions.pendingKeys?.includes(`timer:${timer.stepKey}:${timer.timerKey}`) ?? false;
   const ended = timer.status === "cancelled" || timer.status === "acknowledged";
 
@@ -120,4 +118,4 @@ export function Timer({
       </div>
     </div>
   );
-}
+};

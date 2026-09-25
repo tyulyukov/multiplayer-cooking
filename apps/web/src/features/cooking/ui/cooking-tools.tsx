@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
@@ -18,17 +19,14 @@ import {
 } from "@/features/cooking/lib/cooking-units";
 import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
 
-export function CookingTools({
-  data,
-  actions,
-  sound,
-  onSound,
-}: {
+type CookingToolsProps = {
   data: CookingRoomData;
   actions: CookingActions;
   sound: boolean;
   onSound: () => void;
-}) {
+};
+
+export const CookingTools: FC<CookingToolsProps> = ({ data, actions, sound, onSound }) => {
   const [open, setOpen] = useState(false);
   const [tool, setTool] = useState<"ingredients" | "convert" | "timer" | "servings" | null>(null);
   const [amount, setAmount] = useState("1");
@@ -289,4 +287,4 @@ export function CookingTools({
       </DrawerContent>
     </Drawer>
   );
-}
+};

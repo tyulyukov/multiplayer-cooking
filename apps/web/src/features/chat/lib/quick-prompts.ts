@@ -86,11 +86,11 @@ export const quickPromptPool: readonly QuickPrompt[] = [
 
 export const quickPromptCount = 3;
 
-export function sampleQuickPrompts(
+export const sampleQuickPrompts = (
   pool: readonly QuickPrompt[],
   count: number,
   random: () => number = Math.random,
-): QuickPrompt[] {
+) => {
   const shuffled = [...pool];
   const limit = Math.min(count, shuffled.length);
 
@@ -100,8 +100,8 @@ export function sampleQuickPrompts(
   }
 
   return shuffled.slice(0, limit);
-}
+};
 
-export function pickQuickPrompts(random: () => number = Math.random): QuickPrompt[] {
+export const pickQuickPrompts = (random: () => number = Math.random) => {
   return [...sampleQuickPrompts(quickPromptPool, quickPromptCount, random), surprisePrompt];
-}
+};

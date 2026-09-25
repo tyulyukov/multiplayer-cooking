@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/shared/ui/composer/composer.module.scss";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
@@ -13,7 +14,7 @@ import { useComposer } from "./use-composer";
 import { ComposerAttachments } from "./composer-attachments";
 import { ComposerSubmit } from "./composer-submit";
 
-export function Composer(props: ComposerProps) {
+export const Composer: FC<ComposerProps> = (props) => {
   const {
     mode,
     value,
@@ -130,4 +131,4 @@ export function Composer(props: ComposerProps) {
       </div>
     </form>
   );
-}
+};

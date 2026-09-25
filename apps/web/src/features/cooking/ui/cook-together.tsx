@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/cooking/ui/cook-together.module.scss";
 import MinusSignIcon from "@hugeicons/core-free-icons/MinusSignIcon";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
@@ -29,13 +30,14 @@ import {
   saveCookName,
 } from "@/features/cooking/lib/cook-name";
 import type { CookingSetup } from "@/features/cooking/model/types";
+import type { CooksFormProps } from "@/features/cooking/model/component-props";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 const minCooks = 1;
 
 const maxCooks = 12;
 
-function countLabel(count: number) {
+const countLabel = (count: number) => {
   if (count === 1) {
     return "1 кухар";
   }
@@ -45,23 +47,16 @@ function countLabel(count: number) {
   }
 
   return `${count} кухарів`;
-}
+};
 
-export function CooksForm({
+export const CooksForm: FC<CooksFormProps> = ({
   initial,
   initialServings = 2,
   initialName = "",
   suggestedName = "",
   disabled = false,
   onGenerate,
-}: {
-  initial: number;
-  initialServings?: number;
-  initialName?: string;
-  suggestedName?: string;
-  disabled?: boolean;
-  onGenerate: (setup: CookingSetup) => Promise<void> | void;
-}) {
+}) => {
   const [count, setCooks] = useState(initial);
 
   const [name, setName] = useState(() =>
@@ -72,7 +67,7 @@ export function CooksForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function generate() {
+  const generate = async () => {
     if (disabled || busy) return;
     const cookName = normalizeCookName(name);
 
@@ -98,7 +93,7 @@ export function CooksForm({
     } finally {
       setBusy(false);
     }
-  }
+  };
 
   return (
     <div className={styles["cook-form"]}>
@@ -156,19 +151,21 @@ export function CooksForm({
       </Button>
     </div>
   );
-}
+};
 
-export function CookTogether({
-  onGenerate,
-  servings = 2,
-  cookCount = 1,
-  profileName = "",
-}: {
+type CookTogetherProps = {
   servings?: number;
   cookCount?: number;
   profileName?: string;
   onGenerate: (setup: CookingSetup) => Promise<void> | void;
-}) {
+};
+
+export const CookTogether: FC<CookTogetherProps> = ({
+  onGenerate,
+  servings = 2,
+  cookCount = 1,
+  profileName = "",
+}) => {
   const [open, setOpen] = useState(false);
   const desktop = useMediaQuery("(min-width: 1024px)");
 
@@ -215,4 +212,4 @@ export function CookTogether({
       </DrawerContent>
     </Drawer>
   );
-}
+};

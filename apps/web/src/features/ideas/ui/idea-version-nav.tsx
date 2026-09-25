@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/ideas/ui/idea-card.module.scss";
 import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
@@ -8,7 +9,9 @@ import { Button } from "@/shared/ui/button";
 import type { IdeaVersions } from "@/features/ideas/model/types";
 
 // "Версія N з M": older versions are read-only until restored.
-export function VersionNav({ versions }: { versions: IdeaVersions }) {
+type VersionNavProps = { versions: IdeaVersions };
+
+export const VersionNav: FC<VersionNavProps> = ({ versions }) => {
   if (versions.count < 2) {
     return null;
   }
@@ -57,4 +60,4 @@ export function VersionNav({ versions }: { versions: IdeaVersions }) {
       </div>
     </nav>
   );
-}
+};

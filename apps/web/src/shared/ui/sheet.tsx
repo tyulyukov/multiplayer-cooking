@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import * as React from "react";
 import { cn } from "cn";
 import { Dialog as SheetPrimitive } from "radix-ui";
@@ -6,26 +7,33 @@ import { Button } from "@/shared/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 
-function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
+type SheetProps = React.ComponentProps<typeof SheetPrimitive.Root>;
+
+const Sheet: FC<SheetProps> = ({ ...props }) => {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
-}
+};
 
-function SheetTrigger({ ...props }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
+type SheetTriggerProps = React.ComponentProps<typeof SheetPrimitive.Trigger>;
+
+const SheetTrigger: FC<SheetTriggerProps> = ({ ...props }) => {
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
-}
+};
 
-function SheetClose({ ...props }: React.ComponentProps<typeof SheetPrimitive.Close>) {
+type SheetCloseProps = React.ComponentProps<typeof SheetPrimitive.Close>;
+
+const SheetClose: FC<SheetCloseProps> = ({ ...props }) => {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
-}
+};
 
-function SheetPortal({ ...props }: React.ComponentProps<typeof SheetPrimitive.Portal>) {
+type SheetPortalProps = React.ComponentProps<typeof SheetPrimitive.Portal>;
+
+const SheetPortal: FC<SheetPortalProps> = ({ ...props }) => {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
-}
+};
 
-function SheetOverlay({
-  className,
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
+type SheetOverlayProps = React.ComponentProps<typeof SheetPrimitive.Overlay>;
+
+const SheetOverlay: FC<SheetOverlayProps> = ({ className, ...props }) => {
   return (
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
@@ -36,18 +44,20 @@ function SheetOverlay({
       {...props}
     />
   );
-}
+};
 
-function SheetContent({
+type SheetContentProps = React.ComponentProps<typeof SheetPrimitive.Content> & {
+  side?: "top" | "right" | "bottom" | "left";
+  showCloseButton?: boolean;
+};
+
+const SheetContent: FC<SheetContentProps> = ({
   className,
   children,
   side = "right",
   showCloseButton = true,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Content> & {
-  side?: "top" | "right" | "bottom" | "left";
-  showCloseButton?: boolean;
-}) {
+}) => {
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -72,9 +82,11 @@ function SheetContent({
       </SheetPrimitive.Content>
     </SheetPortal>
   );
-}
+};
 
-function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
+type SheetHeaderProps = React.ComponentProps<"div">;
+
+const SheetHeader: FC<SheetHeaderProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="sheet-header"
@@ -82,9 +94,11 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   );
-}
+};
 
-function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+type SheetFooterProps = React.ComponentProps<"div">;
+
+const SheetFooter: FC<SheetFooterProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="sheet-footer"
@@ -92,9 +106,11 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   );
-}
+};
 
-function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Title>) {
+type SheetTitleProps = React.ComponentProps<typeof SheetPrimitive.Title>;
+
+const SheetTitle: FC<SheetTitleProps> = ({ className, ...props }) => {
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
@@ -102,12 +118,11 @@ function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPr
       {...props}
     />
   );
-}
+};
 
-function SheetDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Description>) {
+type SheetDescriptionProps = React.ComponentProps<typeof SheetPrimitive.Description>;
+
+const SheetDescription: FC<SheetDescriptionProps> = ({ className, ...props }) => {
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
@@ -115,7 +130,7 @@ function SheetDescription({
       {...props}
     />
   );
-}
+};
 
 export {
   Sheet,

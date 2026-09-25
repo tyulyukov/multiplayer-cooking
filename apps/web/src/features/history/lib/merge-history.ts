@@ -1,9 +1,9 @@
 import type { CookingHistoryItem, HistoryEntry, HistoryItem } from "@/features/history/model/types";
 
-export function mergeHistory(
+export const mergeHistory = (
   items: readonly HistoryItem[],
   rooms: readonly CookingHistoryItem[],
-): HistoryEntry[] {
+): HistoryEntry[] => {
   const entries = new Map<string, HistoryEntry>();
 
   for (const item of items) {
@@ -31,4 +31,4 @@ export function mergeHistory(
   }
 
   return [...entries.values()].sort((a, b) => b.createdAt - a.createdAt);
-}
+};

@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/personalization/ui/personal-settings.module.scss";
 import AiBrain01Icon from "@hugeicons/core-free-icons/AiBrain01Icon";
 import LaptopIcon from "@hugeicons/core-free-icons/LaptopIcon";
@@ -13,7 +14,7 @@ import { PersonalMemories } from "./personal-memories";
 import { AgentSettingsForm } from "./agent-settings-form";
 import { InterfaceSettings } from "./interface-settings";
 
-export function PersonalSettings(props: PersonalSettingsProps) {
+export const PersonalSettings: FC<PersonalSettingsProps> = (props) => {
   const { open, loading = false } = props;
   const model = usePersonalSettings(props);
 
@@ -105,4 +106,4 @@ export function PersonalSettings(props: PersonalSettingsProps) {
       </DialogContent>
     </Dialog>
   );
-}
+};

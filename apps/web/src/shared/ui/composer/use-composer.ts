@@ -15,11 +15,11 @@ const counterThreshold = Math.floor(AI_REQUEST_MAX_CHARACTERS * 0.8);
 
 const shakeDurationMs = 300;
 
-function isOverLimit(text: string) {
+const isOverLimit = (text: string) => {
   return text.length > AI_REQUEST_MAX_CHARACTERS;
-}
+};
 
-export function useComposer({
+export const useComposer = ({
   mode,
   value,
   busy,
@@ -27,7 +27,7 @@ export function useComposer({
   attachments,
   onSubmit,
   onAttach,
-}: ComposerProps) {
+}: ComposerProps) => {
   const inputId = useId();
   const composerRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -60,7 +60,7 @@ export function useComposer({
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [value]);
 
-  function shake() {
+  const shake = () => {
     const composer = composerRef.current;
 
     if (!composer) {
@@ -71,9 +71,9 @@ export function useComposer({
     void composer.offsetWidth;
     composer.classList.add(styles["is-shaking"]);
     window.setTimeout(() => composer.classList.remove(styles["is-shaking"]), shakeDurationMs);
-  }
+  };
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const submittedWithShortcut = submittedWithShortcutRef.current;
     submittedWithShortcutRef.current = false;
@@ -102,9 +102,9 @@ export function useComposer({
     }
 
     onSubmit(text);
-  }
+  };
 
-  function submitWithShortcut() {
+  const submitWithShortcut = () => {
     const form = textareaRef.current?.form;
 
     if (!form) {
@@ -113,14 +113,14 @@ export function useComposer({
 
     submittedWithShortcutRef.current = true;
     form.requestSubmit();
-  }
+  };
 
   const shortcutDescription =
     shortcut === "enter"
       ? ["Enter · надіслати", "Shift + Enter · новий рядок"]
       : ["Shift + Enter · надіслати", "Enter · новий рядок"];
 
-  function pickFiles(list: FileList | null) {
+  const pickFiles = (list: FileList | null) => {
     const files = Array.from(list ?? []).filter((file) => file.type.startsWith("image/"));
 
     if (files.length > 0) {
@@ -130,7 +130,7 @@ export function useComposer({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }
+  };
 
   return {
     inputId,
@@ -152,4 +152,4 @@ export function useComposer({
     shortcutDescription,
     pickFiles,
   };
-}
+};

@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { Button } from "@/shared/ui/button";
 import {
@@ -40,7 +41,7 @@ type StepControlsProps = Pick<
   complete: (skipChecklist?: boolean) => void;
 };
 
-export function StepControls({
+export const StepControls: FC<StepControlsProps> = ({
   step,
   runtime,
   data,
@@ -62,7 +63,7 @@ export function StepControls({
   timerPending,
   blockers,
   done,
-}: StepControlsProps) {
+}) => {
   const actionVariant = primary ? "default" : "outline";
 
   return (
@@ -191,4 +192,4 @@ export function StepControls({
       </Dialog>
     </>
   );
-}
+};

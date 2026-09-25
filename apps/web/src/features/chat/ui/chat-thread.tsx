@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/chat/ui/chat-thread.module.scss";
 import { generationStatus } from "@/features/chat/lib/generation-status";
 import { collectAnswers, isToolPart } from "@/features/chat/lib/question-messages";
@@ -12,13 +13,15 @@ import { PhotoStrip } from "@/shared/ui/photo-lightbox";
 import { QuestionSummary } from "@/features/chat/ui/question-card";
 import { questionInputSchema, type QuestionAnswer } from "@/features/chat/lib/question";
 
-function imageUrls(message: UIMessage) {
+const imageUrls = (message: UIMessage) => {
   return message.parts.flatMap((part) =>
     part.type === "file" && part.mediaType.startsWith("image/") ? [part.url] : [],
   );
-}
+};
 
-function UserMessage({ message }: { message: UIMessage }) {
+type UserMessageProps = { message: UIMessage };
+
+const UserMessage: FC<UserMessageProps> = ({ message }) => {
   const photos = imageUrls(message);
   const text = message.text.trim();
 
@@ -28,23 +31,23 @@ function UserMessage({ message }: { message: UIMessage }) {
       {text}
     </div>
   );
-}
+};
 
-function AssistantText({ text, streaming }: { text: string; streaming: boolean }) {
+type AssistantTextProps = { text: string; streaming: boolean };
+
+const AssistantText: FC<AssistantTextProps> = ({ text, streaming }) => {
   const [visibleText] = useSmoothText(text, { startStreaming: streaming });
 
   return <Markdown text={visibleText} />;
-}
+};
 
-function AssistantMessage({
-  message,
-  answers,
-  onOpenMemories,
-}: {
+type AssistantMessageProps = {
   message: UIMessage;
   answers: ReadonlyMap<string, QuestionAnswer>;
   onOpenMemories: () => void;
-}) {
+};
+
+const AssistantMessage: FC<AssistantMessageProps> = ({ message, answers, onOpenMemories }) => {
   const streaming = message.status === "streaming";
   const toolParts = message.parts.filter(isToolPart);
 
@@ -98,19 +101,21 @@ function AssistantMessage({
       )}
     </div>
   );
-}
+};
 
-export function ChatThread({
-  messages,
-  working,
-  onOpenMemories,
-  children,
-}: {
+type ChatThreadProps = {
   messages: readonly UIMessage[];
   working: boolean;
   onOpenMemories: () => void;
   children?: ReactNode;
-}) {
+};
+
+export const ChatThread: FC<ChatThreadProps> = ({
+  messages,
+  working,
+  onOpenMemories,
+  children,
+}) => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const pinnedRef = useRef(true);
   const answers = collectAnswers(messages);
@@ -157,9 +162,11 @@ export function ChatThread({
       </ol>
     </div>
   );
-}
+};
 
-export function GenerationStatus({ messages }: { messages: readonly UIMessage[] }) {
+type GenerationStatusProps = { messages: readonly UIMessage[] };
+
+export const GenerationStatus: FC<GenerationStatusProps> = ({ messages }) => {
   const { activity, label } = generationStatus(messages);
 
   return (
@@ -184,4 +191,4 @@ export function GenerationStatus({ messages }: { messages: readonly UIMessage[] 
       <span className="t-shimmer">{label}</span>
     </div>
   );
-}
+};

@@ -1,8 +1,8 @@
 import { isPlainObject, isString } from "@/shared/lib/type-guards";
 
-export function isMemoryEvent(
+export const isMemoryEvent = (
   output: unknown,
-): output is { changed: true; action: "added" | "removed"; text: string } {
+): output is { changed: true; action: "added" | "removed"; text: string } => {
   return (
     isPlainObject(output) &&
     "changed" in output &&
@@ -12,4 +12,4 @@ export function isMemoryEvent(
     "text" in output &&
     isString(output.text)
   );
-}
+};

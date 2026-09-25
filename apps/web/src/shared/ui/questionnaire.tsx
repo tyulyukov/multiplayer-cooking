@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import * as React from "react";
 import { Questionnaire as QuestionnairePrimitive } from "@shadcn/react/questionnaire";
 import { cn } from "cn";
@@ -6,10 +7,9 @@ import { buttonVariants, type Button } from "@/shared/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tick02Icon } from "@hugeicons/core-free-icons";
 
-function Questionnaire({
-  className,
-  ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Root>) {
+type QuestionnaireProps = React.ComponentProps<typeof QuestionnairePrimitive.Root>;
+
+const Questionnaire: FC<QuestionnaireProps> = ({ className, ...props }) => {
   return (
     <QuestionnairePrimitive.Root
       data-slot="questionnaire"
@@ -17,12 +17,11 @@ function Questionnaire({
       {...props}
     />
   );
-}
+};
 
-function QuestionnaireProgress({
-  className,
-  ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Progress>) {
+type QuestionnaireProgressProps = React.ComponentProps<typeof QuestionnairePrimitive.Progress>;
+
+const QuestionnaireProgress: FC<QuestionnaireProgressProps> = ({ className, ...props }) => {
   return (
     <QuestionnairePrimitive.Progress
       data-slot="questionnaire-progress"
@@ -33,12 +32,11 @@ function QuestionnaireProgress({
       {...props}
     />
   );
-}
+};
 
-function QuestionnaireItem({
-  className,
-  ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Item>) {
+type QuestionnaireItemProps = React.ComponentProps<typeof QuestionnairePrimitive.Item>;
+
+const QuestionnaireItem: FC<QuestionnaireItemProps> = ({ className, ...props }) => {
   return (
     <QuestionnairePrimitive.Item
       data-slot="questionnaire-item"
@@ -46,12 +44,11 @@ function QuestionnaireItem({
       {...props}
     />
   );
-}
+};
 
-function QuestionnaireTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Title>) {
+type QuestionnaireTitleProps = React.ComponentProps<typeof QuestionnairePrimitive.Title>;
+
+const QuestionnaireTitle: FC<QuestionnaireTitleProps> = ({ className, ...props }) => {
   return (
     <QuestionnairePrimitive.Title
       data-slot="questionnaire-title"
@@ -59,12 +56,13 @@ function QuestionnaireTitle({
       {...props}
     />
   );
-}
+};
 
-function QuestionnaireDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Description>) {
+type QuestionnaireDescriptionProps = React.ComponentProps<
+  typeof QuestionnairePrimitive.Description
+>;
+
+const QuestionnaireDescription: FC<QuestionnaireDescriptionProps> = ({ className, ...props }) => {
   return (
     <QuestionnairePrimitive.Description
       data-slot="questionnaire-description"
@@ -72,12 +70,11 @@ function QuestionnaireDescription({
       {...props}
     />
   );
-}
+};
 
-function QuestionnaireChoices({
-  className,
-  ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Choices>) {
+type QuestionnaireChoicesProps = React.ComponentProps<typeof QuestionnairePrimitive.Choices>;
+
+const QuestionnaireChoices: FC<QuestionnaireChoicesProps> = ({ className, ...props }) => {
   return (
     <QuestionnairePrimitive.Choices
       data-slot="questionnaire-choices"
@@ -85,13 +82,11 @@ function QuestionnaireChoices({
       {...props}
     />
   );
-}
+};
 
-function QuestionnaireChoice({
-  children,
-  className,
-  ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Choice>) {
+type QuestionnaireChoiceProps = React.ComponentProps<typeof QuestionnairePrimitive.Choice>;
+
+const QuestionnaireChoice: FC<QuestionnaireChoiceProps> = ({ children, className, ...props }) => {
   return (
     <QuestionnairePrimitive.Choice
       data-slot="questionnaire-choice"
@@ -134,9 +129,14 @@ function QuestionnaireChoice({
       />
     </QuestionnairePrimitive.Choice>
   );
-}
+};
 
-function QuestionnaireChoiceDescription({ className, ...props }: React.ComponentProps<"span">) {
+type QuestionnaireChoiceDescriptionProps = React.ComponentProps<"span">;
+
+const QuestionnaireChoiceDescription: FC<QuestionnaireChoiceDescriptionProps> = ({
+  className,
+  ...props
+}) => {
   return (
     <span
       data-slot="questionnaire-choice-description"
@@ -144,12 +144,11 @@ function QuestionnaireChoiceDescription({ className, ...props }: React.Component
       {...props}
     />
   );
-}
+};
 
-function QuestionnaireInput({
-  className,
-  ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Input>) {
+type QuestionnaireInputProps = React.ComponentProps<typeof QuestionnairePrimitive.Input>;
+
+const QuestionnaireInput: FC<QuestionnaireInputProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="questionnaire-input-wrapper"
@@ -166,12 +165,11 @@ function QuestionnaireInput({
       />
     </div>
   );
-}
+};
 
-function QuestionnaireError({
-  className,
-  ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Error>) {
+type QuestionnaireErrorProps = React.ComponentProps<typeof QuestionnairePrimitive.Error>;
+
+const QuestionnaireError: FC<QuestionnaireErrorProps> = ({ className, ...props }) => {
   return (
     <QuestionnairePrimitive.Error
       data-slot="questionnaire-error"
@@ -179,9 +177,11 @@ function QuestionnaireError({
       {...props}
     />
   );
-}
+};
 
-function QuestionnaireActions({ className, ...props }: React.ComponentProps<"div">) {
+type QuestionnaireActionsProps = React.ComponentProps<"div">;
+
+const QuestionnaireActions: FC<QuestionnaireActionsProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="questionnaire-actions"
@@ -192,16 +192,18 @@ function QuestionnaireActions({ className, ...props }: React.ComponentProps<"div
       {...props}
     />
   );
-}
+};
 
-function QuestionnairePrevious({
+type QuestionnairePreviousProps = React.ComponentProps<typeof QuestionnairePrimitive.Previous> &
+  Pick<React.ComponentProps<typeof Button>, "size" | "variant">;
+
+const QuestionnairePrevious: FC<QuestionnairePreviousProps> = ({
   children,
   className,
   size = "default",
   variant = "outline",
   ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Previous> &
-  Pick<React.ComponentProps<typeof Button>, "size" | "variant">) {
+}) => {
   return (
     <QuestionnairePrimitive.Previous
       data-slot="questionnaire-previous"
@@ -217,16 +219,18 @@ function QuestionnairePrevious({
       {children ?? "Previous"}
     </QuestionnairePrimitive.Previous>
   );
-}
+};
 
-function QuestionnaireSkip({
+type QuestionnaireSkipProps = React.ComponentProps<typeof QuestionnairePrimitive.Skip> &
+  Pick<React.ComponentProps<typeof Button>, "size" | "variant">;
+
+const QuestionnaireSkip: FC<QuestionnaireSkipProps> = ({
   children,
   className,
   size = "default",
   variant = "outline",
   ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Skip> &
-  Pick<React.ComponentProps<typeof Button>, "size" | "variant">) {
+}) => {
   return (
     <QuestionnairePrimitive.Skip
       data-slot="questionnaire-skip"
@@ -242,16 +246,18 @@ function QuestionnaireSkip({
       {children ?? "Skip"}
     </QuestionnairePrimitive.Skip>
   );
-}
+};
 
-function QuestionnaireNext({
+type QuestionnaireNextProps = React.ComponentProps<typeof QuestionnairePrimitive.Next> &
+  Pick<React.ComponentProps<typeof Button>, "size" | "variant">;
+
+const QuestionnaireNext: FC<QuestionnaireNextProps> = ({
   children,
   className,
   size = "default",
   variant = "default",
   ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Next> &
-  Pick<React.ComponentProps<typeof Button>, "size" | "variant">) {
+}) => {
   return (
     <QuestionnairePrimitive.Next
       data-slot="questionnaire-next"
@@ -267,16 +273,18 @@ function QuestionnaireNext({
       {children ?? "Next"}
     </QuestionnairePrimitive.Next>
   );
-}
+};
 
-function QuestionnaireSubmit({
+type QuestionnaireSubmitProps = React.ComponentProps<typeof QuestionnairePrimitive.Submit> &
+  Pick<React.ComponentProps<typeof Button>, "size" | "variant">;
+
+const QuestionnaireSubmit: FC<QuestionnaireSubmitProps> = ({
   children,
   className,
   size = "default",
   variant = "default",
   ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Submit> &
-  Pick<React.ComponentProps<typeof Button>, "size" | "variant">) {
+}) => {
   return (
     <QuestionnairePrimitive.Submit
       data-slot="questionnaire-submit"
@@ -292,7 +300,7 @@ function QuestionnaireSubmit({
       {children ?? "Submit"}
     </QuestionnairePrimitive.Submit>
   );
-}
+};
 
 export {
   Questionnaire,

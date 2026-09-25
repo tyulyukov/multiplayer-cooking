@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import type { UIMessage } from "@convex-dev/agent";
 import { generationStatus } from "./generation-status";
 
-function message(parts: UIMessage["parts"], key = "request"): UIMessage {
+const message = (parts: UIMessage["parts"], key = "request"): UIMessage => {
   return {
     id: key,
     key,
@@ -14,7 +14,7 @@ function message(parts: UIMessage["parts"], key = "request"): UIMessage {
     status: "streaming",
     parts,
   };
-}
+};
 
 test("status follows every active tool including questions and ignores finished tools", () => {
   for (const name of [

@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/shared/ui/composer/composer.module.scss";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -12,11 +13,9 @@ import {
 
 import type { ComposerProps } from "./types";
 
-export function ComposerAttachments({
-  attachments,
-  busy,
-  onRemoveAttachment,
-}: Pick<ComposerProps, "attachments" | "busy" | "onRemoveAttachment">) {
+export const ComposerAttachments: FC<
+  Pick<ComposerProps, "attachments" | "busy" | "onRemoveAttachment">
+> = ({ attachments, busy, onRemoveAttachment }) => {
   return (
     <>
       {attachments.length > 0 && (
@@ -45,4 +44,4 @@ export function ComposerAttachments({
       )}
     </>
   );
-}
+};

@@ -15,11 +15,11 @@ export const cookingUnits = {
 
 export type CookingUnit = keyof typeof cookingUnits;
 
-export function isCookingUnit(value: string): value is CookingUnit {
+export const isCookingUnit = (value: string): value is CookingUnit => {
   return Object.hasOwn(cookingUnits, value);
-}
+};
 
-export function convertCookingQuantity(value: number, from: CookingUnit, to: CookingUnit) {
+export const convertCookingQuantity = (value: number, from: CookingUnit, to: CookingUnit) => {
   if (!Number.isFinite(value) || cookingUnits[from].kind !== cookingUnits[to].kind) return null;
 
   if (cookingUnits[from].kind === "temperature") {
@@ -35,13 +35,13 @@ export function convertCookingQuantity(value: number, from: CookingUnit, to: Coo
   const converted = (value * cookingUnits[from].factor) / cookingUnits[to].factor;
 
   return Number.isFinite(converted) ? converted : null;
-}
+};
 
-export function parseCookingQuantity(value: string) {
+export const parseCookingQuantity = (value: string) => {
   const normalized = value.trim().replace(",", ".");
 
   if (!/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized)) return null;
   const parsed = Number(normalized);
 
   return Number.isFinite(parsed) ? parsed : null;
-}
+};

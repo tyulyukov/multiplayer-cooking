@@ -3,7 +3,7 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 import type { PlanStep, RuntimeStep } from "../model/types";
 import { getCookingStepState } from "./cooking-step-state";
 
-function fixture() {
+const fixture = () => {
   const step: PlanStep = {
     id: "prep",
     title: "Нарізати овочі",
@@ -45,7 +45,7 @@ function fixture() {
   };
 
   return input;
-}
+};
 
 describe("getCookingStepState", () => {
   test("дозволяє власний доступний крок, але зберігає непозначений checklist", () => {

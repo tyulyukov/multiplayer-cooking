@@ -1,27 +1,35 @@
+import type { FC } from "react";
 import * as React from "react";
 import { cn } from "cn";
 import { Drawer as DrawerPrimitive } from "vaul";
 
-function Drawer({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
+type DrawerProps = React.ComponentProps<typeof DrawerPrimitive.Root>;
+
+const Drawer: FC<DrawerProps> = ({ ...props }) => {
   return <DrawerPrimitive.Root data-slot="drawer" {...props} />;
-}
+};
 
-function DrawerTrigger({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {
+type DrawerTriggerProps = React.ComponentProps<typeof DrawerPrimitive.Trigger>;
+
+const DrawerTrigger: FC<DrawerTriggerProps> = ({ ...props }) => {
   return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />;
-}
+};
 
-function DrawerPortal({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
+type DrawerPortalProps = React.ComponentProps<typeof DrawerPrimitive.Portal>;
+
+const DrawerPortal: FC<DrawerPortalProps> = ({ ...props }) => {
   return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />;
-}
+};
 
-function DrawerClose({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Close>) {
+type DrawerCloseProps = React.ComponentProps<typeof DrawerPrimitive.Close>;
+
+const DrawerClose: FC<DrawerCloseProps> = ({ ...props }) => {
   return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
-}
+};
 
-function DrawerOverlay({
-  className,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
+type DrawerOverlayProps = React.ComponentProps<typeof DrawerPrimitive.Overlay>;
+
+const DrawerOverlay: FC<DrawerOverlayProps> = ({ className, ...props }) => {
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
@@ -32,13 +40,11 @@ function DrawerOverlay({
       {...props}
     />
   );
-}
+};
 
-function DrawerContent({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content>) {
+type DrawerContentProps = React.ComponentProps<typeof DrawerPrimitive.Content>;
+
+const DrawerContent: FC<DrawerContentProps> = ({ className, children, ...props }) => {
   return (
     <DrawerPortal data-slot="drawer-portal">
       <DrawerOverlay />
@@ -55,9 +61,11 @@ function DrawerContent({
       </DrawerPrimitive.Content>
     </DrawerPortal>
   );
-}
+};
 
-function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
+type DrawerHeaderProps = React.ComponentProps<"div">;
+
+const DrawerHeader: FC<DrawerHeaderProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="drawer-header"
@@ -68,9 +76,11 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   );
-}
+};
 
-function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
+type DrawerFooterProps = React.ComponentProps<"div">;
+
+const DrawerFooter: FC<DrawerFooterProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="drawer-footer"
@@ -78,9 +88,11 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   );
-}
+};
 
-function DrawerTitle({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Title>) {
+type DrawerTitleProps = React.ComponentProps<typeof DrawerPrimitive.Title>;
+
+const DrawerTitle: FC<DrawerTitleProps> = ({ className, ...props }) => {
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
@@ -88,12 +100,11 @@ function DrawerTitle({ className, ...props }: React.ComponentProps<typeof Drawer
       {...props}
     />
   );
-}
+};
 
-function DrawerDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Description>) {
+type DrawerDescriptionProps = React.ComponentProps<typeof DrawerPrimitive.Description>;
+
+const DrawerDescription: FC<DrawerDescriptionProps> = ({ className, ...props }) => {
   return (
     <DrawerPrimitive.Description
       data-slot="drawer-description"
@@ -101,7 +112,7 @@ function DrawerDescription({
       {...props}
     />
   );
-}
+};
 
 export {
   Drawer,

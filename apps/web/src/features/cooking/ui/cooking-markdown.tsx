@@ -1,9 +1,12 @@
+import type { FC } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const plugins = [remarkGfm];
 
-export function CookingMarkdown({ text, className = "" }: { text: string; className?: string }) {
+type CookingMarkdownProps = { text: string; className?: string };
+
+export const CookingMarkdown: FC<CookingMarkdownProps> = ({ text, className = "" }) => {
   return (
     <div className={`markdown ${className}`}>
       <ReactMarkdown
@@ -21,4 +24,4 @@ export function CookingMarkdown({ text, className = "" }: { text: string; classN
       </ReactMarkdown>
     </div>
   );
-}
+};

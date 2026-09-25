@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/silpo/ui/address-prompt.module.scss";
 import Location01Icon from "@hugeicons/core-free-icons/Location01Icon";
@@ -9,18 +10,16 @@ import { ADDRESS_MAX_CHARACTERS } from "@multiplayer-cooking/backend/convex/lib/
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
-export function AddressPrompt({
-  pending,
-  error,
-  onSubmit,
-}: {
+type AddressPromptProps = {
   pending: boolean;
   error: string | null;
   onSubmit: (address: string) => void;
-}) {
+};
+
+export const AddressPrompt: FC<AddressPromptProps> = ({ pending, error, onSubmit }) => {
   const [value, setValue] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const address = value.trim();
@@ -31,7 +30,7 @@ export function AddressPrompt({
 
     onSubmit(address);
     setValue("");
-  }
+  };
 
   return (
     <form
@@ -72,4 +71,4 @@ export function AddressPrompt({
       )}
     </form>
   );
-}
+};

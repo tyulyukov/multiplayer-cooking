@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { cn } from "@/shared/lib/utils";
 import { Fragment, useState } from "react";
@@ -12,19 +13,7 @@ import type { PlanStep, RuntimeStep } from "../model/types";
 import { getCookingStepState } from "../lib/cooking-step-state";
 import { StepControls } from "./cooking-step-controls";
 
-export function StepCard({
-  step,
-  runtime,
-  data,
-  timers,
-  now,
-  actions,
-  expanded,
-  primary,
-  index,
-  onExpand,
-  onAdvance,
-}: {
+type StepCardProps = {
   step: PlanStep;
   runtime?: RuntimeStep;
   data: CookingRoomData;
@@ -36,7 +25,21 @@ export function StepCard({
   index: number;
   onExpand: () => void;
   onAdvance: () => void;
-}) {
+};
+
+export const StepCard: FC<StepCardProps> = ({
+  step,
+  runtime,
+  data,
+  timers,
+  now,
+  actions,
+  expanded,
+  primary,
+  index,
+  onExpand,
+  onAdvance,
+}) => {
   const state = getCookingStepState({ step, runtime, data, timers, actions });
   const { done, active, waiting, people, blockers, title, canInteract } = state;
   const [confirmed, setConfirmed] = useState(false);
@@ -209,4 +212,4 @@ export function StepCard({
       </div>
     </article>
   );
-}
+};

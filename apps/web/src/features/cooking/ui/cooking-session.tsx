@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import Home01Icon from "@hugeicons/core-free-icons/Home01Icon";
@@ -16,13 +17,12 @@ import { timerLabel } from "../lib/timer-label";
 
 export { Timer } from "./cooking-timer";
 
-export function CookingSession({
-  data,
-  actions,
-}: {
+type CookingSessionProps = {
   data: CookingRoomData;
   actions: CookingActions;
-}) {
+};
+
+export const CookingSession: FC<CookingSessionProps> = ({ data, actions }) => {
   const {
     now,
     expanded,
@@ -205,4 +205,4 @@ export function CookingSession({
       )}
     </main>
   );
-}
+};

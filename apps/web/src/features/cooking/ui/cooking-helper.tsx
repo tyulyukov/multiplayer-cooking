@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/cooking/ui/cooking-helper.module.scss";
 import BubbleChatIcon from "@hugeicons/core-free-icons/BubbleChatIcon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
@@ -12,7 +13,7 @@ import { useCookingHelper } from "../model/use-cooking-helper";
 import { HelperChat } from "./helper-chat";
 import { HelperNotes } from "./helper-notes";
 
-export function CookingHelper(props: CookingHelperProps) {
+export const CookingHelper: FC<CookingHelperProps> = (props) => {
   const { open, onOpenChange, helperBusy, notes } = props;
   const model = useCookingHelper(props);
 
@@ -112,4 +113,4 @@ export function CookingHelper(props: CookingHelperProps) {
       </DialogPrimitive.Portal>
     </Dialog>
   );
-}
+};

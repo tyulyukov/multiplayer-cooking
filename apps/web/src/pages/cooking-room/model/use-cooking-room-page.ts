@@ -1,4 +1,3 @@
-import type { CooksForm } from "@/features/cooking/ui/cook-together";
 import { ConvexError } from "convex/values";
 import { useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
@@ -6,8 +5,11 @@ import { useRef, useState } from "react";
 
 import { isString } from "@/shared/lib/type-guards";
 import { useCookingRoom } from "@/features/cooking/api/use-cooking-room";
-import type { People } from "@/features/cooking/ui/cooking-people";
-import type { JoinRoom } from "@/features/cooking/ui/join-room";
+import type {
+  CooksFormProps,
+  JoinRoomProps,
+  PeopleProps,
+} from "@/features/cooking/model/component-props";
 import {
   createCookingCredential,
   inviteFromHash,
@@ -16,11 +18,10 @@ import {
 } from "@/features/cooking/lib/cooking-session";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 
-import type { ComponentProps } from "react";
 import { useRoomHelper } from "./use-room-helper";
 import { useCookingActions } from "./use-cooking-actions";
 
-export function useCookingRoomPage(roomId: Id<"cookingRooms">) {
+export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
   const navigate = useNavigate();
   const [sessionId] = useSessionId();
   const [credential, setCredential] = useState(() => readCookingCredential(roomId));
@@ -132,7 +133,7 @@ export function useCookingRoomPage(roomId: Id<"cookingRooms">) {
     setPeopleOpen,
   });
 
-  const joinProps: ComponentProps<typeof JoinRoom> = {
+  const joinProps: JoinRoomProps = {
     roomId,
     sessionId,
     inviteToken: inviteFromHash(),
@@ -147,7 +148,7 @@ export function useCookingRoomPage(roomId: Id<"cookingRooms">) {
 
   if (read === undefined) return { screen: "loading" as const };
 
-  const setupProps: ComponentProps<typeof CooksForm> = {
+  const setupProps: CooksFormProps = {
     disabled: !online || pending,
     initial: read.room.cookCount,
     initialServings: read.room.requestedServings,
@@ -171,7 +172,7 @@ export function useCookingRoomPage(roomId: Id<"cookingRooms">) {
     },
   };
 
-  const peopleProps: ComponentProps<typeof People> = {
+  const peopleProps: PeopleProps = {
     open: peopleOpen,
     room: read,
     disabled: !online || pending,
@@ -247,4 +248,4 @@ export function useCookingRoomPage(roomId: Id<"cookingRooms">) {
     helperProps,
     inviteProps,
   };
-}
+};

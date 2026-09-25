@@ -8,7 +8,7 @@ const changeEvent = "multiplayer-cooking:composer-send-shortcut";
 
 const defaultShortcut: ComposerSendShortcut = "enter";
 
-function readShortcut(): ComposerSendShortcut {
+const readShortcut = (): ComposerSendShortcut => {
   if (typeof window === "undefined") {
     return defaultShortcut;
   }
@@ -20,9 +20,9 @@ function readShortcut(): ComposerSendShortcut {
   } catch {
     return defaultShortcut;
   }
-}
+};
 
-function subscribe(onChange: () => void) {
+const subscribe = (onChange: () => void) => {
   if (typeof window === "undefined") {
     return () => undefined;
   }
@@ -34,9 +34,9 @@ function subscribe(onChange: () => void) {
     window.removeEventListener("storage", onChange);
     window.removeEventListener(changeEvent, onChange);
   };
-}
+};
 
-export function useComposerShortcut() {
+export const useComposerShortcut = () => {
   const shortcut = useSyncExternalStore(subscribe, readShortcut, () => defaultShortcut);
 
   const setShortcut = useCallback((next: ComposerSendShortcut) => {
@@ -50,4 +50,4 @@ export function useComposerShortcut() {
   }, []);
 
   return [shortcut, setShortcut] as const;
-}
+};

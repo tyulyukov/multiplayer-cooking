@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/cooking/ui/cooking-helper.module.scss";
 import { cn } from "@/shared/lib/utils";
 import ArrowDown02Icon from "@hugeicons/core-free-icons/ArrowDown02Icon";
@@ -47,7 +48,7 @@ type HelperChatProps = Pick<
     | "send"
   >;
 
-export function HelperChat({
+export const HelperChat: FC<HelperChatProps> = ({
   plan,
   onContextChange,
   loaded,
@@ -76,7 +77,7 @@ export function HelperChat({
   error,
   attachmentError,
   send,
-}: HelperChatProps) {
+}) => {
   return (
     <>
       <label className={styles["helper-context"]}>
@@ -254,4 +255,4 @@ export function HelperChat({
       </footer>
     </>
   );
-}
+};

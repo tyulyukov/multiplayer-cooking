@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/cooking/ui/cooking-completion.module.scss";
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
@@ -9,15 +10,17 @@ import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 import { CompletionConfetti } from "./completion-confetti";
 import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
 
-export function CookingCompletion({
-  data,
-  actions,
-  onInstructions,
-}: {
+type CookingCompletionProps = {
   data: CookingRoomData;
   actions: Pick<CookingActions, "cookAgain" | "online" | "busy">;
   onInstructions: () => void;
-}) {
+};
+
+export const CookingCompletion: FC<CookingCompletionProps> = ({
+  data,
+  actions,
+  onInstructions,
+}) => {
   const heading = useRef<HTMLHeadingElement>(null);
   const [failedImage, setFailedImage] = useState<string | null>(null);
   const photo = data.room.dishImage;
@@ -106,4 +109,4 @@ export function CookingCompletion({
       <KitchenIllustration name="serving-bell" className={styles["completion-bell"]} />
     </section>
   );
-}
+};

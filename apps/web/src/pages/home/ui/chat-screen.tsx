@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/pages/home/home-page.module.scss";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
@@ -16,7 +17,7 @@ import { Brand, SendError } from "./home-shell";
 import type { ChatScreenProps } from "../model/chat-screen-types";
 import { useChatScreen } from "../model/use-chat-screen";
 
-export function ChatScreen(props: ChatScreenProps) {
+export const ChatScreen: FC<ChatScreenProps> = (props) => {
   const {
     backendReady,
     menu,
@@ -165,4 +166,4 @@ export function ChatScreen(props: ChatScreenProps) {
       )}
     </main>
   );
-}
+};

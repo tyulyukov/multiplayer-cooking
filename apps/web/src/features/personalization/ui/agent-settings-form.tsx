@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/personalization/ui/personal-settings.module.scss";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
@@ -16,13 +17,13 @@ type Props = Pick<
   "cookName" | "changeCookName" | "draft" | "changeDraft"
 > & { loading: boolean };
 
-export function AgentSettingsForm({
+export const AgentSettingsForm: FC<Props> = ({
   cookName,
   changeCookName,
   draft,
   changeDraft,
   loading,
-}: Props) {
+}) => {
   return (
     <section className={styles["personal-settings__form"]}>
       <label>
@@ -81,4 +82,4 @@ export function AgentSettingsForm({
       </label>
     </section>
   );
-}
+};

@@ -4,28 +4,28 @@ const keyPrefix = "multiplayer-cooking:room:";
 
 export type CookingCredential = Readonly<{ participantToken: string; inviteToken?: string }>;
 
-function isStoredCredential(value: unknown): value is CookingCredential {
+const isStoredCredential = (value: unknown): value is CookingCredential => {
   return (
     isPlainObject(value) &&
     "participantToken" in value &&
     isString(value.participantToken) &&
     (!("inviteToken" in value) || isString(value.inviteToken))
   );
-}
+};
 
-function roomKey(roomId: string) {
+const roomKey = (roomId: string) => {
   return `${keyPrefix}${roomId}`;
-}
+};
 
-function makeToken() {
+const makeToken = () => {
   return crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
-}
+};
 
-export function createCookingCredential(inviteToken?: string): CookingCredential {
+export const createCookingCredential = (inviteToken?: string): CookingCredential => {
   return { participantToken: makeToken(), inviteToken };
-}
+};
 
-export function readCookingCredential(roomId: string): CookingCredential | null {
+export const readCookingCredential = (roomId: string): CookingCredential | null => {
   try {
     const raw = localStorage.getItem(roomKey(roomId));
 
@@ -40,18 +40,18 @@ export function readCookingCredential(roomId: string): CookingCredential | null 
   }
 
   return null;
-}
+};
 
-export function saveCookingCredential(roomId: string, credential: CookingCredential) {
+export const saveCookingCredential = (roomId: string, credential: CookingCredential) => {
   localStorage.setItem(roomKey(roomId), JSON.stringify(credential));
-}
+};
 
-export function clearCookingCredential(roomId: string) {
+export const clearCookingCredential = (roomId: string) => {
   localStorage.removeItem(roomKey(roomId));
-}
+};
 
-export function inviteFromHash() {
+export const inviteFromHash = () => {
   const value = new URLSearchParams(window.location.hash.slice(1)).get("invite");
 
   return value?.trim() || undefined;
-}
+};

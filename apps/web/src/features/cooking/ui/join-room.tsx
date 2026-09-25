@@ -1,46 +1,28 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
-import type { FunctionReturnType } from "convex/server";
-import type { SessionId } from "convex-helpers/server/sessions";
 import { useState } from "react";
-
-import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
-import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import {
   createCookingCredential,
   saveCookingCredential,
-  type CookingCredential,
 } from "@/features/cooking/lib/cooking-session";
+import type { JoinRoomProps } from "@/features/cooking/model/component-props";
 
-export function JoinRoom({
+export const JoinRoom: FC<JoinRoomProps> = ({
   roomId,
   sessionId,
   inviteToken,
   onJoined,
   onRecoverHost,
   onJoin,
-}: {
-  roomId: Id<"cookingRooms">;
-  sessionId: SessionId | undefined;
-  inviteToken?: string;
-  onJoined: (credential: CookingCredential) => void;
-  onRecoverHost: (
-    sessionId: SessionId,
-    participantToken: string,
-  ) => Promise<FunctionReturnType<typeof api.cookingRooms.recoverHost>>;
-  onJoin: (
-    inviteToken: string,
-    participantToken: string,
-    name: string,
-  ) => Promise<FunctionReturnType<typeof api.cookingRooms.join>>;
-}) {
+}) => {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function enter() {
+  const enter = async () => {
     setBusy(true);
     setError(null);
     const credential = createCookingCredential(inviteToken);
@@ -72,7 +54,7 @@ export function JoinRoom({
     } finally {
       setBusy(false);
     }
-  }
+  };
 
   return (
     <main className={cn(cookingStyles["cooking-shell"], cookingStyles["cooking-join"])}>
@@ -101,4 +83,4 @@ export function JoinRoom({
       </Button>
     </main>
   );
-}
+};

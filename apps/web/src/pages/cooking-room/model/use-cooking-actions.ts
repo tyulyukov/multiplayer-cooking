@@ -22,7 +22,7 @@ type ActionContext = {
   setPeopleOpen: (open: boolean) => void;
 };
 
-export function useCookingActions({
+export const useCookingActions = ({
   roomId,
   credential,
   online,
@@ -35,7 +35,7 @@ export function useCookingActions({
   setAgainOpen,
   setInviteOpen,
   setPeopleOpen,
-}: ActionContext) {
+}: ActionContext) => {
   const steps = useCookingSteps();
   const timers = useCookingTimers();
   const participantToken = credential?.participantToken;
@@ -127,4 +127,4 @@ export function useCookingActions({
   };
 
   return { actions, steps };
-}
+};

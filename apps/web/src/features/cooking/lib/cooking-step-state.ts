@@ -6,7 +6,7 @@ import type {
   RuntimeStep,
 } from "../model/types";
 
-export function getCookingStepState({
+export const getCookingStepState = ({
   step,
   runtime,
   data,
@@ -20,7 +20,7 @@ export function getCookingStepState({
   };
   timers: RoomTimer[];
   actions: Pick<CookingActions, "online" | "busy">;
-}) {
+}) => {
   const slots = runtime?.slots ?? step.slots;
   const mine = slots.some((slot) => data.me.slots.includes(slot));
   const done = runtime?.status === "done";
@@ -81,4 +81,4 @@ export function getCookingStepState({
     checked,
     timerPending,
   };
-}
+};

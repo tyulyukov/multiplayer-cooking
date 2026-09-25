@@ -5,7 +5,7 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 import { uploadImage } from "@/shared/lib/images";
 import { useAttachments } from "@/shared/hooks/use-attachments";
 
-export function useCookingAssistance({
+export const useCookingAssistance = ({
   roomId,
   participantToken,
   enabled,
@@ -13,7 +13,7 @@ export function useCookingAssistance({
   roomId: Id<"cookingRooms">;
   participantToken?: string;
   enabled: boolean;
-}) {
+}) => {
   const memberArgs = participantToken && enabled ? { roomId, participantToken } : ("skip" as const);
   const notes = useQuery(api.cookingAssistance.listNotes, memberArgs);
   const proposals = useQuery(api.cookingAssistance.listProposals, memberArgs);
@@ -65,4 +65,4 @@ export function useCookingAssistance({
     deleteNote,
     requestReference,
   };
-}
+};

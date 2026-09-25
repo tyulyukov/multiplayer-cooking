@@ -10,6 +10,8 @@
   "scripts": {
     "dev": "bun --cwd apps/backend dev:with-web",
     "dev:web": "bun --cwd apps/web dev",
+    "storybook": "bun --cwd apps/web storybook",
+    "build:storybook": "bun --cwd apps/web build:storybook",
     "dev:backend": "bun --cwd apps/backend dev",
     "dev:mobile": "bun --cwd apps/mobile start",
     "build:web": "bun --cwd apps/web build",

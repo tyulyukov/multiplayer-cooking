@@ -8,11 +8,11 @@ import {
   surprisePrompt,
 } from "./quick-prompts";
 
-function sequence(values: number[]) {
+const sequence = (values: number[]) => {
   let index = 0;
 
   return () => values[index++ % values.length]!;
-}
+};
 
 describe("sampleQuickPrompts", () => {
   test("returns distinct prompts from the pool", () => {

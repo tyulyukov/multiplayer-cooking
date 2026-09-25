@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/silpo/ui/silpo-connect.module.scss";
 import Location01Icon from "@hugeicons/core-free-icons/Location01Icon";
 import Store01Icon from "@hugeicons/core-free-icons/Store01Icon";
@@ -18,7 +19,9 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 
-export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () => void }) {
+type ConnectCardProps = { busy: boolean; onConnect: () => void };
+
+export const ConnectCard: FC<ConnectCardProps> = ({ busy, onConnect }) => {
   return (
     <section className={styles["connect-card"]} aria-label="Підключення Сільпо">
       <KitchenIllustration name="starter-sign" className={styles["connect-illustration"]} />
@@ -30,19 +33,21 @@ export function ConnectCard({ busy, onConnect }: { busy: boolean; onConnect: () 
       <p className={styles["connect-note"]}>Вхід за номером телефону на сайті Сільпо.</p>
     </section>
   );
-}
+};
 
-export function ProfileMenu({
-  connection,
-  onForgetAddress,
-  onDisconnect,
-  onOpenSettings,
-}: {
+type ProfileMenuProps = {
   connection: SilpoConnection;
   onForgetAddress: () => void;
   onDisconnect: () => void;
   onOpenSettings?: () => void;
-}) {
+};
+
+export const ProfileMenu: FC<ProfileMenuProps> = ({
+  connection,
+  onForgetAddress,
+  onDisconnect,
+  onOpenSettings,
+}) => {
   const title = connection.name ?? "Профіль";
 
   return (
@@ -77,22 +82,24 @@ export function ProfileMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
 
 const letters = "abcdefghijklmnopqrstuvwxyz";
 
-function randomFrom(pool: string) {
+const randomFrom = (pool: string) => {
   return pool[Math.floor(Math.random() * pool.length)] ?? pool[0];
-}
+};
 
 // Same length and character classes as the real value, so the blurred row is as wide as the revealed one.
-function scramble(value: string) {
+const scramble = (value: string) => {
   return value
     .replace(/\d/g, () => randomFrom("0123456789"))
     .replace(/\p{L}/gu, () => randomFrom(letters));
-}
+};
 
-function RedactedContact({ value, kind }: { value: string; kind: "phone" | "email" }) {
+type RedactedContactProps = { value: string; kind: "phone" | "email" };
+
+const RedactedContact: FC<RedactedContactProps> = ({ value, kind }) => {
   const label = kind === "phone" ? "телефон" : "пошту";
   const [revealed, setRevealed] = React.useState(false);
   const scrambled = React.useMemo(() => scramble(value), [value]);
@@ -111,4 +118,4 @@ function RedactedContact({ value, kind }: { value: string; kind: "phone" | "emai
       <span data-hidden={!revealed}>{revealed ? value : scrambled}</span>
     </DropdownMenuItem>
   );
-}
+};

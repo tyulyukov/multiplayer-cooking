@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/chat/ui/question-card.module.scss";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -23,13 +24,12 @@ import {
   QuestionnaireTitle,
 } from "@/shared/ui/questionnaire";
 
-export function QuestionSummary({
-  input,
-  answer,
-}: {
+type QuestionSummaryProps = {
   input: QuestionInput;
   answer: QuestionAnswer;
-}) {
+};
+
+export const QuestionSummary: FC<QuestionSummaryProps> = ({ input, answer }) => {
   return (
     <section className={styles["question-card"]} data-answered aria-label="Твої відповіді">
       {input.questions.map((question) => {
@@ -48,17 +48,15 @@ export function QuestionSummary({
       })}
     </section>
   );
-}
+};
 
-export function QuestionCard({
-  input,
-  pending,
-  onSubmit,
-}: {
+type QuestionCardProps = {
   input: QuestionInput;
   pending: boolean;
   onSubmit: (answer: QuestionResponse) => void;
-}) {
+};
+
+export const QuestionCard: FC<QuestionCardProps> = ({ input, pending, onSubmit }) => {
   const [current, setCurrent] = useState(input.questions[0]?.id);
   const [collapsed, setCollapsed] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -72,12 +70,12 @@ export function QuestionCard({
     [current, pending, collapsed],
   );
 
-  function cancelAdvance() {
+  const cancelAdvance = () => {
     if (advanceTimer.current !== null) clearTimeout(advanceTimer.current);
     advanceTimer.current = null;
-  }
+  };
 
-  function advanceSingleChoice() {
+  const advanceSingleChoice = () => {
     cancelAdvance();
     advanceTimer.current = setTimeout(() => {
       advanceTimer.current = null;
@@ -92,11 +90,11 @@ export function QuestionCard({
       if (next) next.click();
       else form.requestSubmit();
     }, 200);
-  }
+  };
 
   const currentIndex = input.questions.findIndex((question) => question.id === current);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     cancelAdvance();
 
@@ -127,7 +125,7 @@ export function QuestionCard({
     }
 
     onSubmit({ answers });
-  }
+  };
 
   return (
     <Questionnaire
@@ -226,4 +224,4 @@ export function QuestionCard({
       </QuestionnaireActions>
     </Questionnaire>
   );
-}
+};

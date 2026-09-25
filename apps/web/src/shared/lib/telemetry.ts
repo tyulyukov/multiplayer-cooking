@@ -7,7 +7,7 @@ export type WebVitalEvent = Pick<
 
 export type WebVitalReporter = (event: WebVitalEvent) => void;
 
-export async function observeWebVitals(report: WebVitalReporter) {
+export const observeWebVitals = async (report: WebVitalReporter) => {
   const { onCLS, onFCP, onINP, onLCP, onTTFB } = await import("web-vitals");
 
   const forward = (metric: Metric) => {
@@ -20,4 +20,4 @@ export async function observeWebVitals(report: WebVitalReporter) {
   onINP(forward);
   onLCP(forward);
   onTTFB(forward);
-}
+};

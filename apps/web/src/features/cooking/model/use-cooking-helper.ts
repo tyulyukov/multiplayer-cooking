@@ -3,7 +3,7 @@ import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 import type { CookingHelperProps } from "../model/helper-types";
 
-export function useCookingHelper({
+export const useCookingHelper = ({
   plan,
   contextStepKey,
   chatRequestKey = 0,
@@ -19,7 +19,7 @@ export function useCookingHelper({
   onAsk,
   onNote,
   onDeleteNote,
-}: CookingHelperProps) {
+}: CookingHelperProps) => {
   const mobile = useMediaQuery("(max-width: 639px)");
 
   const [tabSelection, setTabSelection] = useState<{ requestKey: number; tab: "chat" | "notes" }>({
@@ -129,14 +129,14 @@ export function useCookingHelper({
     };
   }, [open, mobile]);
 
-  function scrollToLatest() {
+  const scrollToLatest = () => {
     const scroll = scrollRef.current;
 
     if (scroll) scroll.scrollTop = scroll.scrollHeight;
     setNearBottom(true);
-  }
+  };
 
-  async function run<T>(call: () => Promise<T>, failure: string): Promise<boolean> {
+  const run = async <T>(call: () => Promise<T>, failure: string) => {
     if (pendingRef.current || !online) return false;
     pendingRef.current = true;
     setPending(true);
@@ -156,9 +156,9 @@ export function useCookingHelper({
       pendingRef.current = false;
       setPending(false);
     }
-  }
+  };
 
-  async function send(text: string) {
+  const send = async (text: string) => {
     if (helperBusy || finished || uploading || attachmentError) return;
     scrollToLatest();
 
@@ -166,20 +166,20 @@ export function useCookingHelper({
       if (currentPrompt.current.trim() === text) onPromptChange("");
       attachments.clear();
     }
-  }
+  };
 
-  async function saveNote() {
+  const saveNote = async () => {
     const text = note.trim();
 
     if (!text) return;
     const ok = await run(() => onNote(text), "Не вдалося зберегти нотатку. Спробуй ще раз.");
 
     if (ok && currentNote.current.trim() === text) setNote("");
-  }
+  };
 
-  function deleteNote(id: Parameters<CookingHelperProps["onDeleteNote"]>[0]) {
+  const deleteNote = (id: Parameters<CookingHelperProps["onDeleteNote"]>[0]) => {
     return run(() => onDeleteNote(id), "Не вдалося прибрати нотатку. Спробуй ще раз.");
-  }
+  };
 
   return {
     mobile,
@@ -209,4 +209,4 @@ export function useCookingHelper({
     run,
     send,
   };
-}
+};

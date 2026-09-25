@@ -2,7 +2,7 @@ import { useMutation } from "convex/react";
 
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 
-export function useCookingSteps() {
+export const useCookingSteps = () => {
   const toggleChecklist = useMutation(api.cookingSteps.toggleChecklist).withOptimisticUpdate(
     (store, args) => {
       const queryArgs = { roomId: args.roomId, participantToken: args.participantToken };
@@ -36,4 +36,4 @@ export function useCookingSteps() {
     takeover: useMutation(api.cookingSteps.takeover),
     swapRoles: useMutation(api.cookingSteps.swapRoles),
   };
-}
+};

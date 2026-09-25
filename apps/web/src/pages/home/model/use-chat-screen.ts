@@ -5,13 +5,13 @@ import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 import type { ChatScreenProps } from "./chat-screen-types";
 
-export function useChatScreen({
+export const useChatScreen = ({
   messages,
   idea,
   ideas,
   connection,
   working,
-}: Pick<ChatScreenProps, "messages" | "idea" | "ideas" | "connection" | "working">) {
+}: Pick<ChatScreenProps, "messages" | "idea" | "ideas" | "connection" | "working">) => {
   const question = pendingQuestion(messages);
   const [hidden, setHidden] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -44,4 +44,4 @@ export function useChatScreen({
     showAddressPrompt,
     compactIdea,
   };
-}
+};

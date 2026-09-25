@@ -1,6 +1,9 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 
-export function RoomNotice({ title, body }: { title: string; body: string }) {
+type RoomNoticeProps = { title: string; body: string };
+
+export const RoomNotice: FC<RoomNoticeProps> = ({ title, body }) => {
   return (
     <main className={cookingStyles["cooking-shell"]}>
       <div className="checker-band" aria-hidden />
@@ -16,4 +19,4 @@ export function RoomNotice({ title, body }: { title: string; body: string }) {
       </section>
     </main>
   );
-}
+};

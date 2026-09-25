@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/ideas/ui/idea-card.module.scss";
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
@@ -18,7 +19,9 @@ import { VersionNav } from "./idea-version-nav";
 
 export { IdeaCompact } from "./idea-compact";
 
-function IdeaMeta({ idea }: { idea: Idea }) {
+type IdeaMetaProps = { idea: Idea };
+
+const IdeaMeta: FC<IdeaMetaProps> = ({ idea }) => {
   return (
     <p className={styles["idea-meta"]}>
       <span>
@@ -31,23 +34,25 @@ function IdeaMeta({ idea }: { idea: Idea }) {
       </span>
     </p>
   );
-}
+};
 
-export function IdeaPane({
-  idea,
-  canAddToCart,
-  versions,
-  onAddToCart,
-  onCookCount,
-  profileName,
-}: {
+type IdeaPaneProps = {
   idea: Idea;
   canAddToCart: boolean;
   versions: IdeaVersions;
   onAddToCart: () => void;
   onCookCount: (setup: CookingSetup) => Promise<void> | void;
   profileName?: string;
-}) {
+};
+
+export const IdeaPane: FC<IdeaPaneProps> = ({
+  idea,
+  canAddToCart,
+  versions,
+  onAddToCart,
+  onCookCount,
+  profileName,
+}) => {
   return (
     <article className={cn(styles["idea-pane"], "chrome")} aria-label={idea.title}>
       <div
@@ -84,4 +89,4 @@ export function IdeaPane({
       </div>
     </article>
   );
-}
+};

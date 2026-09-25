@@ -8,11 +8,11 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 import type { QuestionResponse } from "@/features/chat/model/types";
 import { uploadImage } from "@/shared/lib/images";
 
-function sortMessages(messages: readonly UIMessage[]) {
+const sortMessages = (messages: readonly UIMessage[]) => {
   return [...messages].sort((a, b) => a.order - b.order || a.stepOrder - b.stepOrder);
-}
+};
 
-function isAgentWorking(messages: readonly UIMessage[]) {
+const isAgentWorking = (messages: readonly UIMessage[]) => {
   const last = messages.at(-1);
 
   if (!last) {
@@ -23,9 +23,9 @@ function isAgentWorking(messages: readonly UIMessage[]) {
     last.role === "user" ||
     (last.role === "assistant" && (last.status === "pending" || last.status === "streaming"))
   );
-}
+};
 
-export function useChat(sessionId: SessionId | undefined, enabled: boolean) {
+export const useChat = (sessionId: SessionId | undefined, enabled: boolean) => {
   const active = useQuery(api.chat.activeThread, sessionId && enabled ? { sessionId } : "skip");
   const threadId = active?.threadId ?? null;
   const threadArgs = sessionId && threadId ? { sessionId, threadId } : ("skip" as const);
@@ -104,4 +104,4 @@ export function useChat(sessionId: SessionId | undefined, enabled: boolean) {
       return storageId;
     },
   };
-}
+};

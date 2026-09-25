@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/ideas/ui/idea-card.module.scss";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -6,7 +7,9 @@ import { useState } from "react";
 import type { Idea } from "@/features/ideas/model/types";
 import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 
-export function IdeaCompact({ idea, onOpen }: { idea: Idea; onOpen: () => void }) {
+type IdeaCompactProps = { idea: Idea; onOpen: () => void };
+
+export const IdeaCompact: FC<IdeaCompactProps> = ({ idea, onOpen }) => {
   const [imageFailed, setImageFailed] = useState(false);
 
   return (
@@ -30,4 +33,4 @@ export function IdeaCompact({ idea, onOpen }: { idea: Idea; onOpen: () => void }
       <HugeiconsIcon icon={ArrowRight01Icon} size={20} strokeWidth={1.5} aria-hidden />
     </button>
   );
-}
+};

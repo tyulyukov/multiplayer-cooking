@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/cooking/ui/cooking-helper.module.scss";
 import { Button } from "@/shared/ui/button";
 import { Textarea } from "@/shared/ui/textarea";
@@ -11,7 +12,7 @@ type HelperNotesProps = Pick<CookingHelperProps, "notes"> &
     "disabled" | "error" | "note" | "setNote" | "saveNote" | "deleteNote"
   >;
 
-export function HelperNotes({
+export const HelperNotes: FC<HelperNotesProps> = ({
   notes,
   disabled,
   error,
@@ -19,7 +20,7 @@ export function HelperNotes({
   saveNote,
   deleteNote,
   setNote,
-}: HelperNotesProps) {
+}) => {
   return (
     <div className={styles["helper-notes"]}>
       <div className={styles["helper-note-list"]}>
@@ -70,4 +71,4 @@ export function HelperNotes({
       </form>
     </div>
   );
-}
+};

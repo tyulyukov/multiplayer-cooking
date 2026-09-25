@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 
-export function useHistory(sessionId: SessionId | undefined, enabled: boolean) {
+export const useHistory = (sessionId: SessionId | undefined, enabled: boolean) => {
   const items = useQuery(api.chat.history, sessionId && enabled ? { sessionId } : "skip");
 
   const cookingRooms = useQuery(
@@ -24,4 +24,4 @@ export function useHistory(sessionId: SessionId | undefined, enabled: boolean) {
       return sessionId ? deleteThreadMutation({ sessionId, threadId }) : Promise.resolve(null);
     },
   };
-}
+};

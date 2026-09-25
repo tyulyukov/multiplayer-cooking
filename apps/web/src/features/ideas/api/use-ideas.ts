@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import { useIdeaVersions } from "@/features/ideas/api/use-idea-versions";
 
-export function useIdeas(sessionId: SessionId | undefined, threadId: string | null) {
+export const useIdeas = (sessionId: SessionId | undefined, threadId: string | null) => {
   const threadArgs = sessionId && threadId ? { sessionId, threadId } : ("skip" as const);
   const latest = useQuery(api.ideas.latest, threadArgs);
   const versions = useIdeaVersions(sessionId, threadId, latest);
@@ -18,4 +18,4 @@ export function useIdeas(sessionId: SessionId | undefined, threadId: string | nu
         : Promise.resolve(null);
     },
   };
-}
+};

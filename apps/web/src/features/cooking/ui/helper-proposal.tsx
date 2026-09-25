@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/cooking/ui/cooking-helper.module.scss";
 import type { CookingRoomData, HelperProposal } from "@/features/cooking/model/types";
 import { Button } from "@/shared/ui/button";
@@ -5,19 +6,21 @@ import { CookingMarkdown } from "./cooking-markdown";
 
 type Plan = NonNullable<CookingRoomData["room"]["plan"]>;
 
-export function HelperProposalCard({
-  proposal,
-  currentPlan,
-  disabled,
-  onApprove,
-  onReject,
-}: {
+type HelperProposalCardProps = {
   proposal: HelperProposal;
   currentPlan: Plan;
   disabled: boolean;
   onApprove: () => void;
   onReject: () => void;
-}) {
+};
+
+export const HelperProposalCard: FC<HelperProposalCardProps> = ({
+  proposal,
+  currentPlan,
+  disabled,
+  onApprove,
+  onReject,
+}) => {
   const removedSteps = currentPlan.steps.filter(
     (step) => !proposal.plan.steps.some((next) => next.id === step.id),
   );
@@ -94,4 +97,4 @@ export function HelperProposalCard({
       )}
     </article>
   );
-}
+};

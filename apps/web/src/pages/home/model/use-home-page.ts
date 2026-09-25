@@ -16,7 +16,7 @@ import { usePersonalization } from "@/features/personalization/api/use-personali
 import { useSilpoConnection } from "@/features/silpo/api/use-silpo-connection";
 import { useAttachments } from "@/shared/hooks/use-attachments";
 
-export function useHomePageModel() {
+export const useHomePageModel = () => {
   const [sessionId] = useSessionId();
   const navigate = useNavigate();
   const status = useQuery(api.status.current);
@@ -53,7 +53,7 @@ export function useHomePageModel() {
   const working = sending || answering || chat.agentWorking;
   const backendReady = status?.ready === true;
 
-  async function submit(text: string) {
+  const submit = async (text: string) => {
     if (!sessionId) return;
     setSending(true);
     setError(null);
@@ -80,9 +80,9 @@ export function useHomePageModel() {
       draftSync.endSend(sentThreadId);
       setSending(false);
     }
-  }
+  };
 
-  async function submitAddress(address: string) {
+  const submitAddress = async (address: string) => {
     if (!sessionId) return;
     setAddressError(null);
 
@@ -93,13 +93,13 @@ export function useHomePageModel() {
     } catch {
       setAddressError("Не вдалося зберегти адресу. Спробуй ще раз.");
     }
-  }
+  };
 
-  async function cookCount(setup: CookingSetup) {
+  const cookCount = async (setup: CookingSetup) => {
     if (sessionId && idea) await createCookingRoom(idea._id, setup);
-  }
+  };
 
-  async function submitCart() {
+  const submitCart = async () => {
     if (!sessionId || !idea) return;
     setError(null);
 
@@ -110,9 +110,9 @@ export function useHomePageModel() {
     } catch {
       setError("Не вдалося додати в кошик. Спробуй ще раз.");
     }
-  }
+  };
 
-  async function startNew() {
+  const startNew = async () => {
     if (!sessionId) return;
     setError(null);
 
@@ -123,9 +123,9 @@ export function useHomePageModel() {
     } catch {
       setError("Не вдалося створити нову розмову. Спробуй ще раз.");
     }
-  }
+  };
 
-  async function answer(toolCallId: string, value: Parameters<QuestionSubmit>[1]) {
+  const answer = async (toolCallId: string, value: Parameters<QuestionSubmit>[1]) => {
     if (!sessionId || !threadId) return;
     setAnswering(true);
     setError(null);
@@ -139,9 +139,9 @@ export function useHomePageModel() {
     } finally {
       setAnswering(false);
     }
-  }
+  };
 
-  async function openFromHistory(target: string) {
+  const openFromHistory = async (target: string) => {
     if (!sessionId) return;
     setError(null);
 
@@ -151,9 +151,9 @@ export function useHomePageModel() {
     } catch {
       setError("Не вдалося відкрити розмову. Спробуй ще раз.");
     }
-  }
+  };
 
-  async function removeFromHistory(target: string) {
+  const removeFromHistory = async (target: string) => {
     if (!sessionId) return;
     setError(null);
 
@@ -162,7 +162,7 @@ export function useHomePageModel() {
     } catch {
       setError("Не вдалося видалити розмову. Спробуй ще раз.");
     }
-  }
+  };
 
   if (silpo.connection === undefined) {
     return { screen: "loading", backendReady } as const;
@@ -247,9 +247,9 @@ export function useHomePageModel() {
       onOpenIdea: selectVersion,
     },
   } as const;
-}
+};
 
-export function useMissingConvexHomeModel() {
+export const useMissingConvexHomeModel = () => {
   const draft = useComposerDraft();
   const attachments = useAttachments(null);
   const [error, setError] = useState<string | null>(null);
@@ -261,4 +261,4 @@ export function useMissingConvexHomeModel() {
     error,
     onSubmit: () => setError("Convex ще не налаштований. Запусти bun run dev:backend."),
   };
-}
+};

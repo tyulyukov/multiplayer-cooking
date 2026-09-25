@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/shared/ui/composer/composer.module.scss";
 import ArrowUp02Icon from "@hugeicons/core-free-icons/ArrowUp02Icon";
@@ -22,7 +23,7 @@ type SubmitProps = Pick<ComposerProps, "mode" | "busy" | "value"> &
     | "shortcutDescription"
   >;
 
-export function ComposerSubmit({
+export const ComposerSubmit: FC<SubmitProps> = ({
   mode,
   busy,
   value,
@@ -32,7 +33,7 @@ export function ComposerSubmit({
   attachmentError,
   readyAttachments,
   shortcutDescription,
-}: SubmitProps) {
+}) => {
   return (
     <Tooltip.Provider delayDuration={300}>
       <Tooltip.Root
@@ -100,4 +101,4 @@ export function ComposerSubmit({
       </Tooltip.Root>
     </Tooltip.Provider>
   );
-}
+};

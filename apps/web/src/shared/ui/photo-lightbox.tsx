@@ -1,10 +1,13 @@
+import type { FC } from "react";
 import styles from "@/shared/ui/photo-lightbox.module.scss";
 import { useState } from "react";
 
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 
 // Thumbnails in a message; tapping one opens the full photo in a dialog.
-export function PhotoStrip({ urls, alt }: { urls: readonly string[]; alt: string }) {
+type PhotoStripProps = { urls: readonly string[]; alt: string };
+
+export const PhotoStrip: FC<PhotoStripProps> = ({ urls, alt }) => {
   const [openUrl, setOpenUrl] = useState<string | null>(null);
 
   if (urls.length === 0) {
@@ -34,4 +37,4 @@ export function PhotoStrip({ urls, alt }: { urls: readonly string[]; alt: string
       </Dialog>
     </>
   );
-}
+};

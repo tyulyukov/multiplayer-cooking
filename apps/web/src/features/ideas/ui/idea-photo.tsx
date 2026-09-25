@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import styles from "@/features/ideas/ui/idea-card.module.scss";
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -8,7 +9,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import type { Idea } from "@/features/ideas/model/types";
 import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 
-export function IdeaPhoto({ idea }: { idea: Idea }) {
+type IdeaPhotoProps = { idea: Idea };
+
+export const IdeaPhoto: FC<IdeaPhotoProps> = ({ idea }) => {
   const [failed, setFailed] = useState(false);
 
   if (!idea.imageUrl || !idea.image) {
@@ -37,9 +40,11 @@ export function IdeaPhoto({ idea }: { idea: Idea }) {
       )}
     </figure>
   );
-}
+};
 
-function IdeaImageNotice({ message }: { message?: string }) {
+type IdeaImageNoticeProps = { message?: string };
+
+const IdeaImageNotice: FC<IdeaImageNoticeProps> = ({ message }) => {
   if (!message) {
     return null;
   }
@@ -56,4 +61,4 @@ function IdeaImageNotice({ message }: { message?: string }) {
       </Alert>
     </div>
   );
-}
+};

@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { cn } from "@/shared/lib/utils";
 import { useEffect, useRef, useState } from "react";
@@ -7,19 +8,21 @@ import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 
 type ImageStatus = CookingRoomData["steps"][number]["imageStatus"];
 
-export function CookingReference({
-  imageUrl,
-  status,
-  alt,
-  disabled,
-  onRetry,
-}: {
+type CookingReferenceProps = {
   imageUrl?: string;
   status?: ImageStatus;
   alt: string;
   disabled: boolean;
   onRetry: () => void;
-}) {
+};
+
+export const CookingReference: FC<CookingReferenceProps> = ({
+  imageUrl,
+  status,
+  alt,
+  disabled,
+  onRetry,
+}) => {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
@@ -98,9 +101,11 @@ export function CookingReference({
       </Button>
     </p>
   );
-}
+};
 
-function ReferencePlaceholder({ animate }: { animate: boolean }) {
+type ReferencePlaceholderProps = { animate: boolean };
+
+const ReferencePlaceholder: FC<ReferencePlaceholderProps> = ({ animate }) => {
   const canvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -201,4 +206,4 @@ function ReferencePlaceholder({ animate }: { animate: boolean }) {
   return (
     <canvas className={cookingStyles["cooking-reference-placeholder"]} ref={canvas} aria-hidden />
   );
-}
+};

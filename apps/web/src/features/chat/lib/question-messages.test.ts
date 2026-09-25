@@ -17,7 +17,7 @@ const input = {
   ],
 };
 
-function message(parts: UIMessage["parts"], status: UIMessage["status"] = "success"): UIMessage {
+const message = (parts: UIMessage["parts"], status: UIMessage["status"] = "success"): UIMessage => {
   return {
     id: "message",
     key: "message",
@@ -29,7 +29,7 @@ function message(parts: UIMessage["parts"], status: UIMessage["status"] = "succe
     parts,
     status,
   };
-}
+};
 
 const call = {
   type: "tool-ask_user",

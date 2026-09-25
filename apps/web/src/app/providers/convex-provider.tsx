@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import type { ReactNode } from "react";
 
@@ -11,10 +12,12 @@ const convexClient = convexUrl
 
 export const isConvexConfigured = convexClient !== null;
 
-export function ConvexBoundary({ children }: { children: ReactNode }) {
+type ConvexBoundaryProps = { children: ReactNode };
+
+export const ConvexBoundary: FC<ConvexBoundaryProps> = ({ children }) => {
   if (!convexClient) {
     return children;
   }
 
   return <ConvexProvider client={convexClient}>{children}</ConvexProvider>;
-}
+};

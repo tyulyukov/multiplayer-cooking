@@ -1,15 +1,15 @@
+import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { Button } from "@/shared/ui/button";
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
 
-export function CookingLobby({
-  data,
-  actions,
-}: {
+type CookingLobbyProps = {
   data: CookingRoomData;
   actions: CookingActions;
-}) {
+};
+
+export const CookingLobby: FC<CookingLobbyProps> = ({ data, actions }) => {
   const host = data.me.role === "host";
   const missing = Math.max(0, data.room.cookCount - data.members.length);
   const failed = data.room.state === "error";
@@ -97,4 +97,4 @@ export function CookingLobby({
       )}
     </section>
   );
-}
+};

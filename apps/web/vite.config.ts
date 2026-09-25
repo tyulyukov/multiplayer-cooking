@@ -9,14 +9,14 @@ import { VitePWA } from "vite-plugin-pwa";
 
 const workspaceRoot = fileURLToPath(new URL("../..", import.meta.url));
 
-function readBackendConvexUrl() {
+const readBackendConvexUrl = () => {
   try {
     return parseEnv(readFileSync(new URL("../backend/.env.local", import.meta.url), "utf8"))
       .CONVEX_URL;
   } catch {
     return undefined;
   }
-}
+};
 
 export default defineConfig(({ command, mode }) => {
   const workspaceEnv = loadEnv(mode, workspaceRoot, "");

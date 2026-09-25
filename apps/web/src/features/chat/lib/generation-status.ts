@@ -107,7 +107,7 @@ function isPhraseKey(key: string): key is keyof typeof phrases {
   return key in phrases;
 }
 
-export function generationStatus(messages: readonly UIMessage[]) {
+export const generationStatus = (messages: readonly UIMessage[]) => {
   const latest = messages.at(-1);
 
   const active =
@@ -130,4 +130,4 @@ export function generationStatus(messages: readonly UIMessage[]) {
   for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
 
   return { activity, label: options[hash % options.length] ?? options[0] };
-}
+};

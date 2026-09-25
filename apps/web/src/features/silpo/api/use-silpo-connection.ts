@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 
-export function useSilpoConnection(sessionId: SessionId | undefined) {
+export const useSilpoConnection = (sessionId: SessionId | undefined) => {
   const search = useSearch({ from: "/" });
   const navigate = useNavigate();
   const connection = useQuery(api.silpo.connection, sessionId ? { sessionId } : "skip");
@@ -38,7 +38,7 @@ export function useSilpoConnection(sessionId: SessionId | undefined) {
     }
   }, [search.silpo, search.code, search.state, sessionId, navigate, finishConnect]);
 
-  async function connect() {
+  const connect = async () => {
     if (!sessionId) {
       return;
     }
@@ -53,7 +53,7 @@ export function useSilpoConnection(sessionId: SessionId | undefined) {
       setError("Не вдалося відкрити Сільпо. Спробуй ще раз.");
       setConnecting(false);
     }
-  }
+  };
 
   return {
     connection,
@@ -65,4 +65,4 @@ export function useSilpoConnection(sessionId: SessionId | undefined) {
     saveAddress: (address: string) =>
       sessionId ? saveAddressMutation({ sessionId, address }) : Promise.resolve(null),
   };
-}
+};

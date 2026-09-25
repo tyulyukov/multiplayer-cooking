@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { HistoryPanel } from "@/features/history/ui/history-panel";
 import { ProfileMenu } from "@/features/silpo/ui/silpo-connect";
 import { PersonalSettings } from "@/features/personalization/ui/personal-settings";
@@ -8,7 +9,7 @@ import { ConnectScreen } from "./ui/connect-screen";
 import { HomeScreen } from "./ui/home-screen";
 import { ChatScreen } from "./ui/chat-screen";
 
-function ConnectedHome() {
+const ConnectedHome: FC = () => {
   const model = useHomePageModel();
 
   if (model.screen === "loading") {
@@ -39,14 +40,14 @@ function ConnectedHome() {
       {...model.props}
     />
   );
-}
+};
 
-function MissingConvexHome() {
+const MissingConvexHome: FC = () => {
   const model = useMissingConvexHomeModel();
 
   return <HomeScreen backendReady={false} {...model} />;
-}
+};
 
-export function HomePage() {
+export const HomePage: FC = () => {
   return isConvexConfigured ? <ConnectedHome /> : <MissingConvexHome />;
-}
+};

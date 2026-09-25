@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
@@ -19,11 +20,9 @@ const alertVariants = cva(
   },
 );
 
-function Alert({
-  className,
-  variant,
-  ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
+type AlertProps = React.ComponentProps<"div"> & VariantProps<typeof alertVariants>;
+
+const Alert: FC<AlertProps> = ({ className, variant, ...props }) => {
   return (
     <div
       data-slot="alert"
@@ -32,9 +31,11 @@ function Alert({
       {...props}
     />
   );
-}
+};
 
-function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
+type AlertTitleProps = React.ComponentProps<"div">;
+
+const AlertTitle: FC<AlertTitleProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="alert-title"
@@ -45,9 +46,11 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
       {...props}
     />
   );
-}
+};
 
-function AlertDescription({ className, ...props }: React.ComponentProps<"div">) {
+type AlertDescriptionProps = React.ComponentProps<"div">;
+
+const AlertDescription: FC<AlertDescriptionProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="alert-description"
@@ -58,12 +61,14 @@ function AlertDescription({ className, ...props }: React.ComponentProps<"div">) 
       {...props}
     />
   );
-}
+};
 
-function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
+type AlertActionProps = React.ComponentProps<"div">;
+
+const AlertAction: FC<AlertActionProps> = ({ className, ...props }) => {
   return (
     <div data-slot="alert-action" className={cn("absolute top-2 right-2", className)} {...props} />
   );
-}
+};
 
 export { Alert, AlertTitle, AlertDescription, AlertAction };
