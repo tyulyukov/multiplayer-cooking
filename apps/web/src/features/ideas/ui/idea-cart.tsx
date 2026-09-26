@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import styles from "@/features/ideas/ui/idea-card.module.scss";
+import styles from "@/features/ideas/ui/idea-cart.module.scss";
 import LinkSquare01Icon from "@hugeicons/core-free-icons/LinkSquare01Icon";
 import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import ShoppingBasketAdd01Icon from "@hugeicons/core-free-icons/ShoppingBasketAdd01Icon";

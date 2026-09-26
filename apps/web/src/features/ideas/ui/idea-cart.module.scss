@@ -1,0 +1,145 @@
+.cart-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cart-heading-row :global(.kitchen-illustration) {
+  width: 64px;
+  height: 64px;
+}
+
+.cart-heading-row > .cart-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-button {
+  justify-self: start;
+}
+
+.cart-done {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--background);
+  font-weight: 400;
+}
+
+.cart-done[aria-busy="true"] .cart-breakdown {
+  opacity: 0.6;
+}
+
+.cart-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.cart-heading strong {
+  font-family: var(--font-sign);
+  font-size: 1.125rem;
+}
+
+.cart-heading span {
+  color: var(--teal-deep);
+  font-size: 0.75rem;
+}
+
+.cart-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cart-payable {
+  display: grid;
+  gap: 2px;
+}
+
+.cart-payable > span {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.cart-payable > strong {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-details {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.cart-details > summary {
+  color: var(--teal-deep);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.cart-details-content {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.cart-breakdown {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.cart-breakdown > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cart-breakdown dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cart-note,
+.cart-discount {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.cart-discount {
+  color: var(--teal-deep);
+}
+
+.cart-warnings {
+  display: grid;
+  gap: 6px;
+  border-left: 2px solid var(--destructive);
+  padding-left: 10px;
+  font-size: 0.8125rem;
+}
+
+.cart-warnings strong {
+  color: var(--destructive);
+}
+
+.cart-warnings p {
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .cart-done {
+    padding: 12px;
+  }
+}

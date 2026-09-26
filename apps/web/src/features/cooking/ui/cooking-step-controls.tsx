@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+import cookingStyles from "@/features/cooking/ui/cooking-step.module.scss";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,

@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+import statusStyles from "@/features/cooking/ui/cooking-status.module.scss";
 
 type RoomNoticeProps = { title: string; body: string };
 
@@ -13,7 +14,7 @@ export const RoomNotice: FC<RoomNoticeProps> = ({ title, body }) => {
           Multiplayer Cooking
         </a>
       </header>
-      <section className={cookingStyles["cooking-status"]}>
+      <section className={statusStyles["cooking-status"]}>
         <h1>{title}</h1>
         <p>{body}</p>
       </section>

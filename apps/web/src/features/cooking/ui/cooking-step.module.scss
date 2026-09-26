@@ -1,0 +1,148 @@
+.cooking-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  padding-bottom: 18px;
+  scroll-margin-top: 12px;
+}
+.cooking-step-rail {
+  display: flex;
+  justify-content: center;
+}
+.cooking-step-rail::before {
+  position: absolute;
+  top: 12px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+  content: "";
+}
+.cooking-step:last-child .cooking-step-rail::before {
+  display: none;
+}
+.cooking-step-rail span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 28px;
+  height: 30px;
+  place-items: center;
+  border: 2px solid var(--foreground);
+  border-radius: 8px;
+  background: var(--background);
+  font: 600 20px/1 var(--font-sign);
+}
+.cooking-step[data-state="done"] .cooking-step-rail span,
+.cooking-step-active .cooking-step-rail span {
+  background: var(--teal);
+}
+.cooking-step-content {
+  min-width: 0;
+}
+.cooking-step-heading {
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  padding: 0 0 6px;
+  border: 0;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+  color: var(--foreground);
+}
+.cooking-step-heading h2 {
+  margin: 2px 0 0;
+  font: 600 24px/1.12 var(--font-sign);
+}
+.cooking-step-owner {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.cooking-step[data-state="done"]:not(.cooking-step-active) .cooking-step-heading h2 {
+  font: 500 16px/1.4 var(--font-sans);
+}
+.cooking-step-active .cooking-step-content {
+  padding: 14px;
+  border: 2px solid var(--foreground);
+  border-radius: 14px;
+  background: var(--card);
+}
+.cooking-step-body {
+  font-size: 17px;
+  line-height: 1.5;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.cooking-step-body p {
+  margin: 8px 0;
+}
+.cooking-step-body pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.cooking-step-body table {
+  display: block;
+  overflow: auto;
+}
+
+.cooking-wait-reason,
+.cooking-temperature {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--muted);
+  font-size: 14px;
+}
+.cooking-checklist {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.cooking-checklist label,
+.cooking-confirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  cursor: pointer;
+}
+.cooking-checklist input,
+.cooking-confirm input {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  accent-color: var(--teal-deep);
+}
+
+.cooking-confirm {
+  margin-top: 12px;
+  font-size: 16px;
+}
+.cooking-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.cooking-step-actions > button:first-child {
+  width: 100%;
+}
+
+@media (min-width: 720px) {
+  .cooking-step {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .cooking-step-active .cooking-step-content {
+    padding: 20px;
+  }
+  .cooking-step-actions > button:first-child {
+    width: auto;
+  }
+}
+
+.cooking-skip-dialog [data-slot="dialog-title"] {
+  font: 600 24px/1.1 var(--font-sign);
+}

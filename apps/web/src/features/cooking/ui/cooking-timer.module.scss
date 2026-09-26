@@ -1,0 +1,132 @@
+.cooking-timer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  margin-top: 12px;
+  border: 3px solid transparent;
+  border-radius: 18px;
+  background:
+    linear-gradient(var(--foreground), var(--foreground)) padding-box,
+    var(--chrome) border-box;
+  color: var(--card);
+}
+.cooking-timer-display {
+  container-type: inline-size;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.cooking-timer strong {
+  color: var(--primary);
+  font: 700 min(36px, 28cqi)/36px var(--font-sign);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cooking-timer-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 16px;
+}
+.cooking-timer-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  gap: 4px;
+}
+.cooking-timer button {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--card);
+  background: color-mix(in oklch, var(--card) 14%, var(--foreground));
+}
+.cooking-timer button:first-child {
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+.cooking-timer button:hover {
+  background: color-mix(in oklch, var(--card) 25%, var(--foreground));
+}
+.cooking-timer button:first-child:hover {
+  background: color-mix(in oklch, var(--primary), var(--card) 15%);
+}
+.cooking-timer button svg {
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+}
+@media (max-width: 360px) {
+  .cooking-timer {
+    margin-inline: -8px;
+    padding-inline: 6px;
+    gap: 4px;
+  }
+  .cooking-timer-controls {
+    gap: 2px;
+  }
+}
+.cooking-inline-timer {
+  display: inline-block;
+  margin: 2px 0 0;
+  padding: 7px 10px;
+  background: var(--foreground);
+  border-radius: 8px;
+  color: var(--primary);
+  font: 500 16px var(--font-sign);
+}
+.cooking-timer-ended {
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+.cooking-timer-dock {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  width: min(100% - 24px, 760px);
+  margin: 16px auto 0;
+  overflow-x: auto;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  background: var(--background);
+}
+.cooking-timer-dock button {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 2px solid var(--foreground);
+  border-radius: 10px;
+  color: var(--card);
+  background: var(--foreground);
+}
+.cooking-timer-dock strong {
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cooking-timer[data-ended="true"] {
+  background: var(--muted);
+  border-color: var(--border);
+  color: var(--muted-foreground);
+}
+.cooking-timer[data-ended="true"] strong {
+  color: var(--muted-foreground);
+}
+.cooking-timer-dock button[data-mine="true"] {
+  border-color: var(--teal-deep);
+}
+.cooking-timer-dock small {
+  display: block;
+  color: var(--teal);
+  font-size: 12px;
+  text-align: left;
+}

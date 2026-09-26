@@ -1,0 +1,7 @@
+// Reusable sign typography. Font families and colors remain theme CSS variables.
+@mixin sign-label($size) {
+  font-family: var(--font-sign);
+  font-weight: 600;
+  font-size: $size;
+  letter-spacing: 0.02em;
+}

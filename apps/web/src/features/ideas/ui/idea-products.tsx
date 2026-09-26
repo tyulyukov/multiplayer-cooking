@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
-import styles from "@/features/ideas/ui/idea-card.module.scss";
+import styles from "@/features/ideas/ui/idea-products.module.scss";
+import cartStyles from "@/features/ideas/ui/idea-cart.module.scss";
 import { productRegistryKey } from "@multiplayer-cooking/backend/convex/lib/ingredient";
 import LinkSquare01Icon from "@hugeicons/core-free-icons/LinkSquare01Icon";
 import ShoppingBasketAdd01Icon from "@hugeicons/core-free-icons/ShoppingBasketAdd01Icon";
@@ -12,6 +13,7 @@ import type { Idea } from "@/features/ideas/model/types";
 import { formatPrice, formatQuantity } from "../lib/idea-format";
 import { getIdeaProducts } from "../lib/idea-products";
 import { IdeaCart } from "./idea-cart";
+import { ProductEmptyState } from "./product-empty-state";
 
 type ProductThumbnailProps = { url: string };
 
@@ -148,7 +150,7 @@ export const IdeaProducts: FC<IdeaProductsProps> = ({ idea, canAddToCart, onAddT
         </p>
       )}
       {matched.some((product) => product.price === undefined) && (
-        <p className={styles["cart-note"]}>Товари без ціни в суму не входять.</p>
+        <p className={cartStyles["cart-note"]}>Товари без ціни в суму не входять.</p>
       )}
       {idea.cartError && <p className="address-error">{idea.cartError}</p>}
       <IdeaCart
@@ -157,61 +159,6 @@ export const IdeaProducts: FC<IdeaProductsProps> = ({ idea, canAddToCart, onAddT
         onAddToCart={onAddToCart}
         matchedCount={matched.length}
       />
-    </section>
-  );
-};
-
-type ProductEmptyStateProps = {
-  ingredients: Idea["ingredients"];
-  status: Idea["productsStatus"];
-};
-
-const ProductEmptyState: FC<ProductEmptyStateProps> = ({ ingredients, status }) => {
-  const [imageFailed, setImageFailed] = useState(false);
-
-  const messages = {
-    unavailable: {
-      title: "Сільпо зараз не відповідає",
-      description: "Спробуй підібрати товари пізніше. А поки купи інгредієнти окремо.",
-    },
-    empty: {
-      title: "У Сільпо не знайшлося товарів",
-      description: "Купи ці інгредієнти окремо.",
-    },
-    not_connected: {
-      title: "Потрібно підключити Сільпо",
-      description: "Вийди з профілю та підключи Сільпо знову або купи інгредієнти окремо.",
-    },
-    needs_address: {
-      title: "Для товарів потрібна адреса",
-      description: "Вкажи адресу доставки у формі або купи інгредієнти окремо.",
-    },
-  };
-
-  const { title, description } = status
-    ? messages[status]
-    : {
-        title: "Товари Сільпо ще не підібрано",
-        description: "Купи ці інгредієнти окремо.",
-      };
-
-  return (
-    <section className={styles["products-empty"]} aria-label={title}>
-      {!imageFailed && (
-        <img src="/images/ingredients-basket.webp" alt="" onError={() => setImageFailed(true)} />
-      )}
-      <div className={imageFailed ? styles["products-empty-text-only"] : undefined}>
-        <h4>{title}</h4>
-        <p>{description}</p>
-      </div>
-      <ul className={styles["missing-ingredients-list"]}>
-        {ingredients.map((ingredient, index) => (
-          <li key={`${ingredient.name}-${index}`}>
-            <span>{ingredient.name}</span>
-            {ingredient.amount && <span>{ingredient.amount}</span>}
-          </li>
-        ))}
-      </ul>
     </section>
   );
 };

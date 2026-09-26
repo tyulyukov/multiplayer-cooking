@@ -1,5 +1,6 @@
 import type { FC } from "react";
-import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+import cookingStyles from "@/features/cooking/ui/cooking-step.module.scss";
+import timerStyles from "@/features/cooking/ui/cooking-timer.module.scss";
 import { cn } from "@/shared/lib/utils";
 import { Fragment, useState } from "react";
 import { CookingMarkdown } from "./cooking-markdown";
@@ -202,7 +203,7 @@ export const StepCard: FC<StepCardProps> = ({
                 timer.status === "running" || timer.status === "paused" || timer.status === "fired",
             )
             .map((timer) => (
-              <p className={cookingStyles["cooking-inline-timer"]} key={timer._id}>
+              <p className={timerStyles["cooking-inline-timer"]} key={timer._id}>
                 {timer.label} ·{" "}
                 {timer.status === "fired"
                   ? "Час перевірити"

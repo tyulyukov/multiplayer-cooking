@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+import cookingStyles from "@/features/cooking/ui/cooking-reference.module.scss";
 import { cn } from "@/shared/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import type { CookingRoomData } from "@/features/cooking/model/types";

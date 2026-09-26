@@ -1,0 +1,32 @@
+.cooking-status {
+  width: min(100% - 32px, 760px);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.cooking-status {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 28px 12px;
+}
+.cooking-status img {
+  object-fit: contain;
+}
+.cooking-status h1,
+.cooking-status h2 {
+  margin: 0;
+  font: 600 28px/1.15 var(--font-sign);
+}
+.cooking-status p {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
+.cooking-generation-spinner {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 12px;
+  color: var(--teal-deep);
+}

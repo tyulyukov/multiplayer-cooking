@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
+import timerStyles from "@/features/cooking/ui/cooking-timer.module.scss";
 import Home01Icon from "@hugeicons/core-free-icons/Home01Icon";
 import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -171,7 +172,7 @@ export const CookingSession: FC<CookingSessionProps> = ({ data, actions }) => {
               )}
               {running.length > 0 && (
                 <aside
-                  className={cookingStyles["cooking-timer-dock"]}
+                  className={timerStyles["cooking-timer-dock"]}
                   data-timer-dock
                   aria-label="Активні таймери"
                 >

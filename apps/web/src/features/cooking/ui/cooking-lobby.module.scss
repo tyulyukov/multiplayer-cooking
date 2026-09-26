@@ -1,0 +1,110 @@
+.cooking-lobby {
+  width: min(100% - 32px, 480px);
+  margin: 24px auto 0;
+  display: grid;
+  gap: 16px;
+}
+.cooking-lobby-intro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.cooking-lobby-copy {
+  flex: 1;
+  min-width: 0;
+}
+.cooking-lobby-art {
+  width: clamp(88px, 28vw, 112px);
+  height: auto;
+  flex-shrink: 0;
+}
+.cooking-lobby h2 {
+  margin: 0;
+  font: 600 28px/1.15 var(--font-sign);
+}
+.cooking-lobby-count {
+  margin-top: 8px;
+  color: var(--muted-foreground);
+}
+.cooking-lobby-cooks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cooking-lobby-cooks li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  border-bottom: 1px solid var(--border);
+}
+.cooking-lobby-cooks li > span:nth-child(2),
+.cooking-lobby-member > span:nth-child(2) {
+  flex: 1;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.cooking-lobby-cooks small,
+.cooking-lobby-empty,
+.cooking-lobby-wait {
+  color: var(--muted-foreground);
+}
+.cooking-lobby-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--muted);
+  color: var(--foreground);
+  font-weight: 700;
+}
+.cooking-lobby-avatar[data-mine="true"] {
+  background: var(--teal);
+}
+.cooking-lobby-plan {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  padding: 14px;
+}
+
+.cooking-lobby-plan p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+.cooking-lobby-plan[role="alert"] {
+  border-color: var(--destructive);
+  background: var(--destructive-soft);
+  color: var(--destructive);
+}
+
+.cooking-lobby-wait {
+  margin: 0;
+  text-align: center;
+}
+
+.cooking-lobby-member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.cooking-lobby-member:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

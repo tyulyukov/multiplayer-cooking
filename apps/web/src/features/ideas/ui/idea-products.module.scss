@@ -1,0 +1,235 @@
+@use "../../../shared/styles/typography";
+
+.idea-products {
+  display: grid;
+  gap: 10px;
+}
+
+.idea-section {
+  margin: 6px 0 0;
+  @include typography.sign-label(1rem);
+}
+
+.products {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.products li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 2px;
+  align-items: center;
+  padding-block: 8px 12px;
+  border-bottom: 2px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
+.products li[data-photo="true"] {
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+}
+
+.product-info {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.product-ingredient {
+  grid-column: 1 / -1;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.product-info .product-ingredient {
+  grid-column: auto;
+}
+
+.product-title {
+  font-weight: 600;
+}
+
+.products li[data-missing="true"] .product-title {
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+.product-link {
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+
+.product-link:hover {
+  text-decoration: underline;
+}
+
+.product-link svg {
+  display: inline;
+  margin-left: 5px;
+  vertical-align: -2px;
+  color: var(--teal-deep);
+}
+
+.product-unit {
+  color: var(--muted-foreground);
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+
+.product-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  column-gap: 6px;
+  row-gap: 2px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.product-price-sale {
+  display: contents;
+}
+
+.product-price-current {
+  color: var(--foreground);
+}
+
+.product-price-original {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.product-price-discount {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--foreground);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 5px;
+}
+
+.product-thumbnail {
+  width: 52px;
+  height: 60px;
+  border-radius: 10px;
+  background: var(--card);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--muted-foreground);
+}
+
+.product-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity var(--duration-slow) var(--ease-in-out);
+}
+
+.product-thumbnail[data-state="loading"] {
+  background: var(--muted);
+  animation: product-loading 1.8s ease-in-out infinite;
+}
+
+.product-thumbnail[data-state="loading"] img {
+  opacity: 0;
+}
+
+.products-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin: 0;
+  padding-top: 4px;
+  font-size: 1.0625rem;
+}
+
+.products-total strong {
+  font-family: var(--font-sign);
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.missing-ingredients {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--background);
+}
+
+.missing-ingredients h4 {
+  margin: 0 0 6px;
+  font-family: var(--font-sign);
+  font-size: 1.0625rem;
+}
+
+.missing-ingredients ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.missing-ingredients li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9375rem;
+}
+
+.missing-ingredients li > :last-child:not(:first-child) {
+  flex: none;
+  color: var(--muted-foreground);
+}
+
+@keyframes product-loading {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .products li[data-photo="true"] {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .product-thumbnail {
+    width: 44px;
+    height: 52px;
+    grid-row: span 2;
+  }
+
+  .products li[data-photo="true"] .product-price {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+
+  .product-price {
+    font-size: 0.875rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-thumbnail {
+    animation: none !important;
+  }
+
+  .product-thumbnail img {
+    transition: none;
+  }
+}
