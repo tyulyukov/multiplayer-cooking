@@ -113,14 +113,6 @@
   box-shadow: var(--neon-glow);
 }
 
-.home-layout {
-  width: 100%;
-  max-width: 640px;
-  margin-inline: auto;
-  padding-left: max(20px, env(safe-area-inset-left));
-  padding-right: max(20px, env(safe-area-inset-right));
-}
-
 /* Every screen puts the topbar in the same 1200px frame so the brand and menu never move between screens. */
 .page-frame {
   width: 100%;
@@ -205,15 +197,6 @@
   box-shadow:
     inset 0 0 0 2px var(--accent-highlight),
     inset 0 -4px 0 var(--accent-deep);
-}
-
-.generate-button {
-  --press-rotate: -0.3deg;
-  flex: none;
-}
-
-.generate-button[aria-busy="true"] {
-  pointer-events: none;
 }
 
 .kitchen-illustration {
@@ -389,11 +372,6 @@
 }
 
 @media (min-width: 640px) {
-  .home-layout {
-    padding-left: max(24px, env(safe-area-inset-left));
-    padding-right: max(24px, env(safe-area-inset-right));
-  }
-
   .topbar {
     margin-top: 28px;
   }

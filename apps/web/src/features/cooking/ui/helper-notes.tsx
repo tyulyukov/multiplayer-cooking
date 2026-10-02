@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import styles from "@/features/cooking/ui/cooking-helper.module.scss";
+import styles from "@/features/cooking/ui/helper-notes.module.scss";
 import { Button } from "@/shared/ui/button";
 import { Textarea } from "@/shared/ui/textarea";
 

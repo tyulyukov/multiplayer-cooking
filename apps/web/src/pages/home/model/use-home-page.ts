@@ -1,3 +1,6 @@
+import { useHomeChatActions } from "./use-home-chat-actions";
+import { useHomeIdeaActions } from "./use-home-idea-actions";
+import { createHomeHistoryActions } from "./home-history-actions";
 import { useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
 import { useQuery } from "convex/react";
@@ -6,10 +9,7 @@ import { useState } from "react";
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import { useChat } from "@/features/chat/api/use-chat";
 import { useComposerDraft } from "@/features/chat/model/use-composer-draft";
-import { useDraftSync } from "@/features/chat/model/use-draft-sync";
-import type { QuestionSubmit } from "@/features/chat/model/types";
 import { useCreateCookingRoom } from "@/features/cooking/api/use-create-cooking-room";
-import type { CookingSetup } from "@/features/cooking/model/types";
 import { useHistory } from "@/features/history/api/use-history";
 import { useIdeas } from "@/features/ideas/api/use-ideas";
 import { usePersonalization } from "@/features/personalization/api/use-personalization";
@@ -32,137 +32,35 @@ export const useHomePageModel = () => {
   const draft = useComposerDraft();
   const attachments = useAttachments(sessionId ? chat.uploadAttachment : null);
 
-  const draftSync = useDraftSync({
-    threadId: chat.active === undefined ? undefined : threadId,
-    remote: chat.remoteDraft,
-    text: draft.request,
-    imageIds: attachments.storageIds,
-    adopt: (saved) => {
-      draft.change(saved.text);
-      attachments.restore(saved.images);
-    },
-    save: chat.saveDraft,
+  const [personalTab, setPersonalTab] = useState<"memories" | "settings" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const { sending, answering, submit, startNew, answer } = useHomeChatActions({
+    sessionId,
+    chat,
+    draft,
+    attachments,
+    resetVersion,
+    setError,
   });
 
-  const [personalTab, setPersonalTab] = useState<"memories" | "settings" | null>(null);
-  const [sending, setSending] = useState(false);
-  const [answering, setAnswering] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [addressError, setAddressError] = useState<string | null>(null);
+  const { addressError, submitAddress, submitCart, cookCount } = useHomeIdeaActions({
+    sessionId,
+    silpo,
+    ideaState,
+    createCookingRoom,
+    setError,
+  });
+
+  const { openFromHistory, removeFromHistory } = createHomeHistoryActions({
+    sessionId,
+    history,
+    resetVersion,
+    setError,
+  });
 
   const working = sending || answering || chat.agentWorking;
   const backendReady = status?.ready === true;
-
-  const submit = async (text: string) => {
-    if (!sessionId) return;
-    setSending(true);
-    setError(null);
-    draftSync.beginSend();
-    const submittedRevision = draft.revision.current;
-    let sentThreadId: string | undefined;
-
-    try {
-      const result = await chat.sendMessage(text, attachments.storageIds);
-
-      if (!result) return;
-
-      if (result.ok) {
-        sentThreadId = result.threadId;
-
-        if (draft.revision.current === submittedRevision) draft.change("");
-        attachments.clear();
-      } else {
-        setError(result.message);
-      }
-    } catch {
-      setError("Не вдалося надіслати. Спробуй ще раз.");
-    } finally {
-      draftSync.endSend(sentThreadId);
-      setSending(false);
-    }
-  };
-
-  const submitAddress = async (address: string) => {
-    if (!sessionId) return;
-    setAddressError(null);
-
-    try {
-      const result = await silpo.saveAddress(address);
-
-      if (result && !result.ok) setAddressError(result.message);
-    } catch {
-      setAddressError("Не вдалося зберегти адресу. Спробуй ще раз.");
-    }
-  };
-
-  const cookCount = async (setup: CookingSetup) => {
-    if (sessionId && idea) await createCookingRoom(idea._id, setup);
-  };
-
-  const submitCart = async () => {
-    if (!sessionId || !idea) return;
-    setError(null);
-
-    try {
-      const result = await ideaState.addToCart();
-
-      if (result && !result.ok) setError(result.message);
-    } catch {
-      setError("Не вдалося додати в кошик. Спробуй ще раз.");
-    }
-  };
-
-  const startNew = async () => {
-    if (!sessionId) return;
-    setError(null);
-
-    try {
-      await chat.createThread();
-      draft.reset();
-      resetVersion();
-    } catch {
-      setError("Не вдалося створити нову розмову. Спробуй ще раз.");
-    }
-  };
-
-  const answer = async (toolCallId: string, value: Parameters<QuestionSubmit>[1]) => {
-    if (!sessionId || !threadId) return;
-    setAnswering(true);
-    setError(null);
-
-    try {
-      const result = await chat.answerQuestion(toolCallId, value);
-
-      if (result && !result.ok) setError(result.message);
-    } catch {
-      setError("Не вдалося надіслати відповідь. Спробуй ще раз.");
-    } finally {
-      setAnswering(false);
-    }
-  };
-
-  const openFromHistory = async (target: string) => {
-    if (!sessionId) return;
-    setError(null);
-
-    try {
-      await history.openThread(target);
-      resetVersion();
-    } catch {
-      setError("Не вдалося відкрити розмову. Спробуй ще раз.");
-    }
-  };
-
-  const removeFromHistory = async (target: string) => {
-    if (!sessionId) return;
-    setError(null);
-
-    try {
-      await history.deleteThread(target);
-    } catch {
-      setError("Не вдалося видалити розмову. Спробуй ще раз.");
-    }
-  };
 
   if (silpo.connection === undefined) {
     return { screen: "loading", backendReady } as const;

@@ -1,0 +1,143 @@
+@use "./helper-feedback" as feedback;
+
+.helper-context {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: none;
+  padding: 10px 18px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.helper-context > span {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.helper-context select {
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  border-radius: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: 600 14px/1.4 var(--font-sans);
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.helper-context select:focus-visible,
+.helper-conversation:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.helper-conversation {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 18px 14px;
+  scroll-padding-bottom: 18px;
+}
+
+.helper-conversation > * + * {
+  margin-top: 14px;
+}
+
+.helper-welcome {
+  padding: 4px;
+}
+
+.helper-welcome p {
+  margin: 0 0 18px;
+}
+
+.helper-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.helper-suggestions button {
+  min-height: 40px;
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+}
+
+.helper-footer {
+  position: relative;
+  flex: none;
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--background);
+}
+
+.helper-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  padding-inline: 4px;
+  font-size: 12px;
+  color: var(--teal-deep);
+}
+
+.helper-error {
+  @include feedback.helper-error;
+}
+
+.helper-latest {
+  position: absolute;
+  left: 50%;
+  top: -44px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  font-size: 12px;
+}
+
+.helper-retry {
+  margin-bottom: 8px;
+}
+
+.helper-footer [data-mode] {
+  flex: none;
+  margin: 0;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 18px;
+}
+
+.helper-footer [name="request"] {
+  min-height: 42px;
+  max-height: min(100px, 18dvh);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.helper-footer [data-composer-actions] {
+  gap: 8px;
+}
+
+.helper-footer [data-composer-attachments] {
+  margin: 4px 0;
+}
+
+.helper-footer [data-composer-attachments] [data-slot="attachment"] {
+  width: 56px;
+  height: 56px;
+}
+
+.helper-muted {
+  @include feedback.helper-muted;
+}
+
+@media (max-width: 639px) {
+  .helper-footer {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+}

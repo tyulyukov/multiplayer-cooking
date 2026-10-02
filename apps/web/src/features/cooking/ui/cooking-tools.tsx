@@ -1,8 +1,12 @@
+import { CookingToolMenu, type CookingTool } from "./cooking-tool-menu";
+import { CookingServings } from "./cooking-servings";
+import { CookingManualTimer } from "./cooking-manual-timer";
+import { CookingConverter } from "./cooking-converter";
+import { CookingIngredients } from "./cooking-ingredients";
 import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking-drawers.module.scss";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
 import {
   Drawer,
   DrawerContent,
@@ -11,12 +15,7 @@ import {
   DrawerDescription,
   DrawerTrigger,
 } from "@/shared/ui/drawer";
-import {
-  convertCookingQuantity,
-  cookingUnits,
-  isCookingUnit,
-  parseCookingQuantity,
-} from "@/features/cooking/lib/cooking-units";
+import type { cookingUnits } from "../lib/cooking-units";
 import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
 
 type CookingToolsProps = {
@@ -28,7 +27,7 @@ type CookingToolsProps = {
 
 export const CookingTools: FC<CookingToolsProps> = ({ data, actions, sound, onSound }) => {
   const [open, setOpen] = useState(false);
-  const [tool, setTool] = useState<"ingredients" | "convert" | "timer" | "servings" | null>(null);
+  const [tool, setTool] = useState<CookingTool | null>(null);
   const [amount, setAmount] = useState("1");
   const [from, setFrom] = useState<keyof typeof cookingUnits>("g");
   const [to, setTo] = useState<keyof typeof cookingUnits>("oz");
@@ -36,26 +35,6 @@ export const CookingTools: FC<CookingToolsProps> = ({ data, actions, sound, onSo
   const [label, setLabel] = useState("");
   const [stepKey, setStepKey] = useState("");
   const [servings, setServings] = useState(String(data.room.requestedServings));
-  let result: number | null = null;
-
-  try {
-    const value = parseCookingQuantity(amount);
-
-    if (value !== null) result = convertCookingQuantity(value, from, to);
-  } catch {
-    /* Incompatible units stay unconverted. */
-  }
-
-  const allowedSteps = data.steps.filter(
-    (step) =>
-      step.startedAt &&
-      step.status !== "done" &&
-      (data.me.role === "host" || step.slots.some((slot) => data.me.slots.includes(slot))),
-  );
-
-  const selectedStep = stepKey || allowedSteps[0]?.stepKey;
-  const duration = parseCookingQuantity(minutes);
-  const validDuration = duration !== null && duration > 0 && duration <= 10080;
 
   const ask = (prompt?: string) => {
     setOpen(false);
@@ -98,187 +77,50 @@ export const CookingTools: FC<CookingToolsProps> = ({ data, actions, sound, onSo
             </Button>
           )}
           {!tool && (
-            <div className={cookingStyles["cooking-tool-menu"]}>
-              <Button variant="outline" size="xl" onClick={() => setTool("ingredients")}>
-                Інгредієнти
-              </Button>
-              <Button variant="outline" size="xl" onClick={() => setTool("timer")}>
-                Додати таймер
-              </Button>
-              <Button variant="outline" size="xl" onClick={() => setTool("convert")}>
-                Перевести одиниці
-              </Button>
-              <Button variant="outline" size="xl" onClick={() => setTool("servings")}>
-                {data.room.requestedServings} порцій
-              </Button>
-              <Button variant="outline" size="xl" onClick={() => ask()}>
-                Відкрити помічника
-              </Button>
-              <Button
-                variant="outline"
-                size="xl"
-                onClick={() => {
-                  setOpen(false);
-                  actions.managePeople();
-                }}
-              >
-                Кухарі та запрошення
-              </Button>
-              <Button variant="outline" size="xl" aria-pressed={sound} onClick={onSound}>
-                {sound ? "Вимкнути звук таймерів" : "Увімкнути звук таймерів"}
-              </Button>
-              <p>Звук працює, поки застосунок відкритий.</p>
-            </div>
+            <CookingToolMenu
+              setTool={setTool}
+              servings={data.room.requestedServings}
+              ask={ask}
+              onManagePeople={() => {
+                setOpen(false);
+                actions.managePeople();
+              }}
+              sound={sound}
+              onSound={onSound}
+            />
           )}
-          {tool === "ingredients" && (
-            <div className={cookingStyles["cooking-tool-panel"]}>
-              {data.room.plan?.ingredients.map((ingredient) => (
-                <label key={ingredient.id}>
-                  <input
-                    type="checkbox"
-                    checked={data.room.checkedIngredientIds.includes(ingredient.id)}
-                    disabled={!actions.online || actions.busy || data.room.state === "done"}
-                    onChange={(event) =>
-                      actions.toggleIngredient(ingredient.id, event.target.checked)
-                    }
-                  />
-                  <span>
-                    {ingredient.name} · <strong>{ingredient.amount}</strong>
-                  </span>
-                </label>
-              )) ?? <p>Інгредієнти з’являться разом із планом.</p>}
-            </div>
-          )}
+          {tool === "ingredients" && <CookingIngredients data={data} actions={actions} />}
           {tool === "convert" && (
-            <div className={cookingStyles["cooking-tool-panel"]}>
-              <label htmlFor="cooking-amount">Кількість</label>
-              <Input
-                id="cooking-amount"
-                inputMode="decimal"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-              />
-              <div className={cookingStyles["cooking-unit-row"]}>
-                <label>
-                  З
-                  <select
-                    value={from}
-                    onChange={(event) => {
-                      if (isCookingUnit(event.target.value)) setFrom(event.target.value);
-                    }}
-                  >
-                    {Object.entries(cookingUnits).map(([unit, definition]) => (
-                      <option key={unit} value={unit}>
-                        {definition.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  У
-                  <select
-                    value={to}
-                    onChange={(event) => {
-                      if (isCookingUnit(event.target.value)) setTo(event.target.value);
-                    }}
-                  >
-                    {Object.entries(cookingUnits).map(([unit, definition]) => (
-                      <option key={unit} value={unit}>
-                        {definition.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <output aria-live="polite">
-                {result === null
-                  ? "Введи кількість та обери сумісні одиниці."
-                  : `${new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 3 }).format(result)} ${cookingUnits[to].label}`}
-              </output>
-              <p>Об’єм у масу залежить від інгредієнта. Для такої заміни запитай помічника.</p>
-            </div>
+            <CookingConverter
+              amount={amount}
+              setAmount={setAmount}
+              from={from}
+              setFrom={setFrom}
+              to={to}
+              setTo={setTo}
+            />
           )}
           {tool === "timer" && (
-            <div className={cookingStyles["cooking-tool-panel"]}>
-              {allowedSteps.length ? (
-                <>
-                  <label htmlFor="manual-timer-step">Для якого кроку</label>
-                  <select
-                    id="manual-timer-step"
-                    value={selectedStep}
-                    onChange={(event) => setStepKey(event.target.value)}
-                  >
-                    {allowedSteps.map((step) => (
-                      <option key={step.stepKey} value={step.stepKey}>
-                        {data.room.plan?.steps.find((item) => item.id === step.stepKey)?.title}
-                      </option>
-                    ))}
-                  </select>
-                  <label htmlFor="manual-timer-label">Назва</label>
-                  <Input
-                    id="manual-timer-label"
-                    value={label}
-                    maxLength={140}
-                    placeholder="Наприклад, перевірити тісто"
-                    onChange={(event) => setLabel(event.target.value)}
-                  />
-                  <label htmlFor="manual-timer-minutes">Хвилини</label>
-                  <Input
-                    id="manual-timer-minutes"
-                    inputMode="decimal"
-                    value={minutes}
-                    onChange={(event) => setMinutes(event.target.value)}
-                  />
-                  <Button
-                    size="xl"
-                    disabled={!actions.online || actions.busy || !validDuration || !label.trim()}
-                    onClick={() => {
-                      if (selectedStep && duration) {
-                        actions.createTimer(selectedStep, label.trim(), Math.round(duration * 60));
-                        setOpen(false);
-                      }
-                    }}
-                  >
-                    Додати таймер
-                  </Button>
-                </>
-              ) : (
-                <p>Спочатку почни крок, для якого потрібен таймер.</p>
-              )}
-            </div>
+            <CookingManualTimer
+              data={data}
+              actions={actions}
+              stepKey={stepKey}
+              setStepKey={setStepKey}
+              label={label}
+              setLabel={setLabel}
+              minutes={minutes}
+              setMinutes={setMinutes}
+              onClose={() => setOpen(false)}
+            />
           )}
           {tool === "servings" && (
-            <div className={cookingStyles["cooking-tool-panel"]}>
-              <label htmlFor="cooking-servings">Нова кількість порцій</label>
-              <Input
-                id="cooking-servings"
-                type="number"
-                min={1}
-                max={24}
-                value={servings}
-                onChange={(event) => setServings(event.target.value)}
-              />
-              <p>
-                Помічник запропонує зміни з урахуванням уже виконаної роботи. Переглянь їх перед
-                підтвердженням.
-              </p>
-              <Button
-                size="xl"
-                disabled={
-                  !actions.online ||
-                  actions.busy ||
-                  data.room.state === "done" ||
-                  !Number.isInteger(Number(servings)) ||
-                  Number(servings) < 1 ||
-                  Number(servings) > 24
-                }
-                onClick={() =>
-                  ask(`Запропонуй зміну на ${servings} порцій. Урахуй уже використані продукти.`)
-                }
-              >
-                Переглянути зміну порцій
-              </Button>
-            </div>
+            <CookingServings
+              data={data}
+              actions={actions}
+              servings={servings}
+              setServings={setServings}
+              ask={ask}
+            />
           )}
           <Button variant="ghost" size="chip" onClick={() => setOpen(false)}>
             Закрити

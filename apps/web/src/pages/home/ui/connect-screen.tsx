@@ -3,6 +3,8 @@ import { cn } from "@/shared/lib/utils";
 import styles from "@/features/silpo/ui/silpo-connect.module.scss";
 import { ConnectCard } from "@/features/silpo/ui/silpo-connect";
 
+import homeStyles from "@/pages/home/home-page.module.scss";
+
 import { Brand, SendError } from "./home-shell";
 
 type ConnectScreenProps = {
@@ -21,7 +23,7 @@ export const ConnectScreen: FC<ConnectScreenProps> = ({ backendReady, busy, erro
           <Brand ready={backendReady} />
         </header>
       </div>
-      <div className="home-layout">
+      <div className={homeStyles["home-layout"]} data-home-layout>
         <ConnectCard busy={busy} onConnect={onConnect} />
 
         {error && <SendError message={error} />}

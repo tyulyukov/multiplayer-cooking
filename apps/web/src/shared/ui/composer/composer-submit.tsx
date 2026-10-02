@@ -47,7 +47,7 @@ export const ComposerSubmit: FC<SubmitProps> = ({
               size="xl"
               disabled={busy || overLimit || uploading}
               aria-busy={busy}
-              className="generate-button"
+              className={styles["generate-button"]}
             >
               <HugeiconsIcon
                 icon={CookingPotIcon}

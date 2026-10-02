@@ -40,7 +40,7 @@ export const HomeScreen: FC<HomeScreenProps> = ({
           {menu && <div className={styles["topbar-actions"]}>{menu}</div>}
         </header>
       </div>
-      <div className="home-layout">
+      <div className={styles["home-layout"]}>
         <div className="sign">
           <h1>Що готуємо сьогодні?</h1>
         </div>

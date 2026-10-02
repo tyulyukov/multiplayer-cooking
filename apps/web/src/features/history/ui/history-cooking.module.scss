@@ -1,0 +1,27 @@
+.history-cooking-menu {
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  border: 2px solid var(--foreground);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.history-cooking-menu [data-slot="dropdown-menu-item"] {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+}
+
+.history-cooking-menu [data-slot="dropdown-menu-item"]:focus {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.history-cooking-menu [data-slot="dropdown-menu-item"]:focus > span {
+  color: var(--foreground);
+}
+
+.history-cooking-state {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}

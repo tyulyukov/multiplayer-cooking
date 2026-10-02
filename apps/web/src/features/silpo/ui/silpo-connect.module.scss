@@ -39,7 +39,7 @@
   background-size: 28px 28px;
 }
 
-.starter-screen :global(.home-layout) {
+.starter-screen [data-home-layout] {
   max-width: 680px;
 }
 

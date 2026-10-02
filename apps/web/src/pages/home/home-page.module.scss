@@ -191,3 +191,18 @@
     filter: none;
   }
 }
+
+.home-layout {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+}
+
+@media (min-width: 640px) {
+  .home-layout {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+}

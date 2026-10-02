@@ -1,13 +1,11 @@
 import type { FC } from "react";
-import styles from "@/features/cooking/ui/cooking-helper.module.scss";
-import { cn } from "@/shared/lib/utils";
+import styles from "@/features/cooking/ui/helper-chat.module.scss";
 import ArrowDown02Icon from "@hugeicons/core-free-icons/ArrowDown02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Composer } from "@/shared/ui/composer/composer";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
-import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
-import { CookingMarkdown } from "./cooking-markdown";
+import { HelperMessage } from "./helper-message";
 import { HelperProposalCard } from "./helper-proposal";
 
 import type { CookingHelperProps } from "../model/helper-types";
@@ -134,38 +132,13 @@ export const HelperChat: FC<HelperChatProps> = ({
         )}
         {entries.map((entry) =>
           entry.kind === "message" ? (
-            <div
+            <HelperMessage
               key={entry.value._id}
-              className={cn(styles["helper-message"], styles[`helper-message-${entry.value.role}`])}
-            >
-              <span className={styles["helper-message-author"]}>
-                {entry.value.role === "assistant"
-                  ? "Помічник"
-                  : (entry.value.authorName ?? "Кухар")}
-              </span>
-              {entry.value.attachmentUrls && entry.value.attachmentUrls.length > 0 && (
-                <div className={styles["helper-message-photos"]}>
-                  {entry.value.attachmentUrls.map((url) => (
-                    <a
-                      key={url}
-                      href={proxyConvexStorageUrl(url)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Відкрити фото"
-                    >
-                      <img
-                        src={proxyConvexStorageUrl(url)}
-                        alt="Фото з кухні"
-                        onLoad={() => {
-                          if (nearBottom) scrollToLatest();
-                        }}
-                      />
-                    </a>
-                  ))}
-                </div>
-              )}
-              {entry.value.text && <CookingMarkdown text={entry.value.text} />}
-            </div>
+              message={entry.value}
+              onPhotoLoad={() => {
+                if (nearBottom) scrollToLatest();
+              }}
+            />
           ) : (
             <HelperProposalCard
               key={entry.value._id}

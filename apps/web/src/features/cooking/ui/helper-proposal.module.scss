@@ -1,0 +1,65 @@
+.helper-proposal summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.helper-proposal {
+  padding: 14px;
+  border: 2px solid var(--foreground);
+  border-radius: 14px;
+  background: var(--card);
+  overflow-wrap: anywhere;
+}
+
+.helper-proposal > strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.helper-proposal summary {
+  padding: 12px 0;
+  color: var(--teal-deep);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.helper-proposal-details {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 14px;
+  font-size: 14px;
+}
+
+.helper-proposal-details p,
+.helper-proposal-details h3 {
+  margin: 0;
+}
+
+.helper-proposal-details ul {
+  padding-left: 18px;
+}
+
+.helper-proposal-details h3 {
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+
+.helper-proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.helper-proposal-actions button {
+  min-height: 44px;
+  font-size: 14px;
+}
+
+.helper-receipt {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--teal-deep);
+}

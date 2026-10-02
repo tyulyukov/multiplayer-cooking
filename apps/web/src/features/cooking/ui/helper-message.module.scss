@@ -1,0 +1,48 @@
+.helper-message {
+  width: fit-content;
+  max-width: 94%;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: 14px 14px 14px 4px;
+  background: var(--card);
+  overflow-wrap: anywhere;
+}
+
+.helper-message-user {
+  max-width: 88%;
+  margin-left: auto;
+  border-color: var(--foreground);
+  border-radius: 14px 14px 4px 14px;
+  background: var(--foreground);
+  color: var(--card);
+}
+
+.helper-message-author {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.helper-message-user .helper-message-author {
+  color: var(--teal);
+}
+
+.helper-message-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.helper-message-photos a {
+  width: min(140px, 100%);
+}
+
+.helper-message-photos img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+}

@@ -1,0 +1,13 @@
+@mixin helper-error {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--destructive-soft);
+  color: var(--destructive);
+  font-size: 13px;
+}
+
+@mixin helper-muted {
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
