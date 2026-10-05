@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { expect, fireEvent, fn, waitFor } from "storybook/test";
 
 import type { QuestionInput } from "@/features/chat/lib/question";
 
-import { QuestionCard, QuestionSummary } from "./question-card";
+import { QuestionCard } from "./question-card";
+import { QuestionSummary } from "./question-summary";
 
 const input = {
   questions: [
@@ -75,4 +76,42 @@ export const Answered: Story = {
       />
     </div>
   ),
+};
+
+export const CustomAndMultipleAnswers: Story = {
+  play: async ({ args, canvas, userEvent }) => {
+    fireEvent.input(canvas.getByRole("textbox", { name: /Свій варіант/ }), {
+      target: { value: "  Без перцю  " },
+    });
+    await userEvent.click(canvas.getByRole("button", { name: "Далі" }));
+    await userEvent.click(canvas.getByRole("checkbox", { name: /Помідори/ }));
+    await userEvent.click(canvas.getByRole("checkbox", { name: /Перець/ }));
+    await userEvent.click(canvas.getByRole("button", { name: "Назад" }));
+    await expect(canvas.getByRole("textbox", { name: /Свій варіант/ })).toHaveValue(
+      "  Без перцю  ",
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "Далі" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Надіслати" }));
+    await waitFor(() =>
+      expect(args.onSubmit).toHaveBeenCalledWith({
+        answers: [
+          { questionId: "spicy", optionIds: [], custom: "Без перцю" },
+          { questionId: "ingredients", optionIds: ["tomatoes", "pepper"], custom: undefined },
+        ],
+      }),
+    );
+  },
+};
+
+export const AutoSubmitSingleChoice: Story = {
+  args: { input: { questions: [input.questions[0]] } },
+  play: async ({ args, canvas }) => {
+    // A pointer click has detail > 0; keyboard selection deliberately does not auto-advance.
+    fireEvent.click(canvas.getByRole("radio", { name: /Не гостра/ }), { detail: 1 });
+    await waitFor(() =>
+      expect(args.onSubmit).toHaveBeenCalledWith({
+        answers: [{ questionId: "spicy", optionIds: ["mild"], custom: undefined }],
+      }),
+    );
+  },
 };

@@ -1,3 +1,4 @@
+import errorStyles from "@/shared/ui/inline-error.module.scss";
 import type { FC } from "react";
 import styles from "@/features/cooking/ui/cook-together.module.scss";
 import MinusSignIcon from "@hugeicons/core-free-icons/MinusSignIcon";
@@ -136,7 +137,7 @@ export const CooksForm: FC<CooksFormProps> = ({
         </label>
       ) : null}
       {error && (
-        <p role="alert" className="address-error">
+        <p role="alert" className={errorStyles.error}>
           {error}
         </p>
       )}

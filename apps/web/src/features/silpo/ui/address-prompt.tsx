@@ -1,3 +1,4 @@
+import errorStyles from "@/shared/ui/inline-error.module.scss";
 import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/silpo/ui/address-prompt.module.scss";
@@ -61,7 +62,7 @@ export const AddressPrompt: FC<AddressPromptProps> = ({ pending, error, onSubmit
           onChange={(event) => setValue(event.target.value)}
         />
       </div>
-      {error && <p className="address-error">{error}</p>}
+      {error && <p className={errorStyles.error}>{error}</p>}
       {pending ? (
         <p className={cn(styles["thinking"], "t-shimmer")}>Готуємо кошик Сільпо</p>
       ) : (

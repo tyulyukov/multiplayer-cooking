@@ -7,30 +7,12 @@
   border-radius: 18px;
 }
 
-.question-card[data-answered] {
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-}
-.question-card[data-answered] > div {
-  display: grid;
-  gap: 4px;
-  border-left: 2px solid var(--border);
-  padding-left: 14px;
-}
-
 .question-title {
   margin: 0;
   font-family: var(--font-sign);
   font-weight: 600;
   font-size: 1.0625rem;
   letter-spacing: 0.02em;
-}
-
-.question-answer {
-  margin: 0;
-  color: var(--teal-deep);
-  font-weight: 600;
 }
 
 .question-card [data-slot="questionnaire-choice"] {

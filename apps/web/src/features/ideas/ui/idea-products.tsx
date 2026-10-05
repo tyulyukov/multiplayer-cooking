@@ -1,3 +1,4 @@
+import errorStyles from "@/shared/ui/inline-error.module.scss";
 import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/ideas/ui/idea-products.module.scss";
@@ -152,7 +153,7 @@ export const IdeaProducts: FC<IdeaProductsProps> = ({ idea, canAddToCart, onAddT
       {matched.some((product) => product.price === undefined) && (
         <p className={cartStyles["cart-note"]}>Товари без ціни в суму не входять.</p>
       )}
-      {idea.cartError && <p className="address-error">{idea.cartError}</p>}
+      {idea.cartError && <p className={errorStyles.error}>{idea.cartError}</p>}
       <IdeaCart
         idea={idea}
         canAddToCart={canAddToCart}

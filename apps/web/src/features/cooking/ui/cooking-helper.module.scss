@@ -95,31 +95,31 @@ body:has([data-timer-dock]) .helper-launcher {
   color: var(--muted-foreground);
 }
 
-.helper-window :global(.markdown) {
+.helper-window [data-slot="markdown"] {
   font-size: 15px;
   line-height: 1.6;
 }
 
-.helper-window :global(.markdown) > :first-child {
+.helper-window [data-slot="markdown"] > :first-child {
   margin-top: 0;
 }
 
-.helper-window :global(.markdown) > :last-child {
+.helper-window [data-slot="markdown"] > :last-child {
   margin-bottom: 0;
 }
 
-.helper-window :global(.markdown) h1,
-.helper-window :global(.markdown) h2,
-.helper-window :global(.markdown) h3 {
+.helper-window [data-slot="markdown"] h1,
+.helper-window [data-slot="markdown"] h2,
+.helper-window [data-slot="markdown"] h3 {
   font: 600 17px/1.4 var(--font-sans);
 }
 
-.helper-window :global(.markdown) pre {
+.helper-window [data-slot="markdown"] pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.helper-window :global(.markdown) table {
+.helper-window [data-slot="markdown"] table {
   display: block;
   max-width: 100%;
   overflow-x: auto;

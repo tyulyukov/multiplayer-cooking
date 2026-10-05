@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { isMemoryEvent } from "@/features/personalization/lib/memory-event";
 import { Markdown } from "@/shared/ui/markdown";
 import { PhotoStrip } from "@/shared/ui/photo-lightbox";
-import { QuestionSummary } from "@/features/chat/ui/question-card";
+import { QuestionSummary } from "./question-summary";
 import { questionInputSchema, type QuestionAnswer } from "@/features/chat/lib/question";
 
 const imageUrls = (message: UIMessage) => {

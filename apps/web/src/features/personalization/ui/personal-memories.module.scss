@@ -1,0 +1,68 @@
+.personal-settings__memories {
+  display: grid;
+  gap: 10px;
+}
+.personal-settings__memories:has(> .personal-settings__empty) {
+  min-height: 100%;
+  align-content: center;
+}
+.personal-settings__memory {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  padding: 12px;
+}
+.personal-settings__memory > div {
+  min-width: 0;
+}
+.personal-settings__memory p {
+  margin: 7px 0 4px;
+  overflow-wrap: anywhere;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.personal-settings__memory time {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+.personal-settings__memory-kind {
+  display: inline-flex;
+  border-radius: 999px;
+  background: var(--muted);
+  padding: 2px 7px;
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.personal-settings__memory-kind--allergy {
+  background: var(--destructive-soft);
+  color: var(--destructive);
+}
+.personal-settings__memory-kind--preference {
+  background: color-mix(in oklch, var(--teal) 28%, var(--card));
+  color: var(--teal-deep);
+}
+.personal-settings__quiet,
+.personal-settings__empty {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+.personal-settings__error {
+  margin: 0;
+  color: var(--destructive);
+  font-size: 0.875rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .personal-settings__memory {
+    transition:
+      border-color 150ms ease,
+      transform 150ms ease;
+  }
+  .personal-settings__memory:has(button:hover) {
+    border-color: var(--foreground);
+  }
+}

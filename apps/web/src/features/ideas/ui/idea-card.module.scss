@@ -148,8 +148,8 @@
 }
 
 @media (min-width: 640px) {
-  :global(.markdown) p,
-  :global(.markdown) li,
+  [data-slot="markdown"] p,
+  [data-slot="markdown"] li,
   .idea-summary {
     font-size: 1rem;
     line-height: 1.6;

@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
-import styles from "@/features/personalization/ui/personal-settings.module.scss";
+import styles from "@/features/personalization/ui/personal-memories.module.scss";
 import Delete01Icon from "@hugeicons/core-free-icons/Delete01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 

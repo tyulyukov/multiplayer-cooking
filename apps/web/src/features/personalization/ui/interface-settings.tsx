@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import styles from "@/features/personalization/ui/personal-settings.module.scss";
+import styles from "@/features/personalization/ui/settings-form.module.scss";
 import type { usePersonalSettings } from "../model/use-personal-settings";
 
 type Props = Pick<ReturnType<typeof usePersonalSettings>, "shortcut" | "setShortcut">;

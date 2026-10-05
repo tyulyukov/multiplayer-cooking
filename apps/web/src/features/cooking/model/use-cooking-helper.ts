@@ -1,3 +1,4 @@
+import { useHelperScroll } from "./use-helper-scroll";
 import { useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
@@ -29,15 +30,11 @@ export const useCookingHelper = ({
 
   const tab = tabSelection.requestKey === chatRequestKey ? tabSelection.tab : "chat";
   const setTab = (tab: "chat" | "notes") => setTabSelection({ requestKey: chatRequestKey, tab });
-  const previousChatRequest = useRef(chatRequestKey);
   const [note, setNote] = useState("");
   const [pending, setPending] = useState(false);
   const pendingRef = useRef(false);
   const [error, setError] = useState<string>();
-  const [nearBottom, setNearBottom] = useState(true);
   const [seenAt, setSeenAt] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const currentPrompt = useRef(prompt);
   const currentNote = useRef(note);
@@ -50,6 +47,17 @@ export const useCookingHelper = ({
 
   const unread = latestReplyAt > seenAt;
   const busy = helperBusy || pending;
+
+  const { nearBottom, setNearBottom, scrollRef, contentRef, scrollToLatest } = useHelperScroll({
+    open,
+    tab,
+    chatRequestKey,
+    mobile,
+    messages,
+    proposals,
+    busy,
+  });
+
   const disabled = !online || pending;
   const context = plan.steps.find((step) => step.id === contextStepKey);
   const attachmentError = attachments.items.some((item) => item.state === "error");
@@ -74,67 +82,6 @@ export const useCookingHelper = ({
   useEffect(() => {
     currentNote.current = note;
   }, [note]);
-  useEffect(() => {
-    if (!open || tab !== "chat") return;
-    const requested = previousChatRequest.current !== chatRequestKey;
-    previousChatRequest.current = chatRequestKey;
-
-    const frame = requestAnimationFrame(() => {
-      const scroll = scrollRef.current;
-
-      if (scroll && (nearBottom || requested)) scroll.scrollTop = scroll.scrollHeight;
-
-      if (requested) {
-        setNearBottom(true);
-
-        if (!mobile) contentRef.current?.querySelector("textarea")?.focus({ preventScroll: true });
-      }
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [open, tab, messages, proposals, busy, nearBottom, chatRequestKey, mobile]);
-  useEffect(() => {
-    const scroll = scrollRef.current;
-
-    if (!open || tab !== "chat" || !scroll) return;
-
-    const observer = new ResizeObserver(() => {
-      if (nearBottom) scroll.scrollTop = scroll.scrollHeight;
-    });
-
-    observer.observe(scroll);
-
-    return () => observer.disconnect();
-  }, [open, tab, nearBottom]);
-  useEffect(() => {
-    if (!open || !mobile || !window.visualViewport) return;
-    const viewport = window.visualViewport;
-    const content = contentRef.current;
-
-    const update = () => {
-      const content = contentRef.current;
-      content?.style.setProperty("--helper-viewport-height", `${viewport.height}px`);
-      content?.style.setProperty("--helper-viewport-top", `${viewport.offsetTop}px`);
-    };
-
-    update();
-    viewport.addEventListener("resize", update);
-    viewport.addEventListener("scroll", update);
-
-    return () => {
-      viewport.removeEventListener("resize", update);
-      viewport.removeEventListener("scroll", update);
-      content?.style.removeProperty("--helper-viewport-height");
-      content?.style.removeProperty("--helper-viewport-top");
-    };
-  }, [open, mobile]);
-
-  const scrollToLatest = () => {
-    const scroll = scrollRef.current;
-
-    if (scroll) scroll.scrollTop = scroll.scrollHeight;
-    setNearBottom(true);
-  };
 
   const run = async <T>(call: () => Promise<T>, failure: string) => {
     if (pendingRef.current || !online) return false;

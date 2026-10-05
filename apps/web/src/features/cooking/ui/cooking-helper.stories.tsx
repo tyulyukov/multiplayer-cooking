@@ -2,7 +2,7 @@ import type { FC } from "react";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { fn, screen } from "storybook/test";
+import { expect, fireEvent, fn, screen, waitFor } from "storybook/test";
 
 import { useAttachments } from "@/shared/hooks/use-attachments";
 
@@ -150,3 +150,28 @@ export const Notes: Story = {
 };
 
 export const Closed: Story = { args: { open: false } };
+
+export const ScrollConversation: Story = {
+  args: {
+    messages: Array.from({ length: 24 }, (_, index) => ({
+      ...reply,
+      _id: `story-reply-${index}`,
+      text: `Підказка ${index + 1}. ${reply.text}`,
+      createdAt: reply.createdAt + index,
+    })),
+  },
+  play: async ({ userEvent }) => {
+    const conversation = await screen.findByRole("log", { name: "Розмова з помічником" });
+
+    const atBottom = () =>
+      conversation.scrollHeight - conversation.scrollTop - conversation.clientHeight < 2;
+
+    await waitFor(() => expect(atBottom()).toBe(true));
+    conversation.scrollTop = 0;
+    fireEvent.scroll(conversation);
+    const latest = await screen.findByRole("button", { name: "До останнього повідомлення" });
+    await userEvent.click(latest);
+    await waitFor(() => expect(atBottom()).toBe(true));
+    expect(screen.queryByRole("button", { name: "До останнього повідомлення" })).toBeNull();
+  },
+};

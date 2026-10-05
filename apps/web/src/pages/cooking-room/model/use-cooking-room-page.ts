@@ -1,3 +1,4 @@
+import { useRoomInvite } from "./use-room-invite";
 import { ConvexError } from "convex/values";
 import { useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
@@ -30,8 +31,6 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
   const pendingOperations = useRef(new Set<string>());
   const [pendingKeys, setPendingKeys] = useState<string[]>([]);
   const [againOpen, setAgainOpen] = useState(false);
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [inviteCopyState, setInviteCopyState] = useState<"copied" | "manual" | null>(null);
   const roomApi = useCookingRoom(roomId, credential);
   const read = roomApi.room;
   const online = roomApi.online;
@@ -65,55 +64,16 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
     }
   };
 
-  const rotateInviteLink = async () => {
-    if (!credential || !online || pending) return;
-    const inviteToken = createCookingCredential().participantToken;
-    setError(null);
-    setPending(true);
-
-    try {
-      if (
-        !(await roomApi.rotateInvite({
-          roomId,
-          participantToken: credential.participantToken,
-          inviteToken,
-        }))
-      ) {
-        setError("Не вдалося створити запрошення. Спробуй ще раз.");
-
-        return;
-      }
-
-      const saved = { ...credential, inviteToken };
-      saveCookingCredential(roomId, saved);
-      setCredential(saved);
-      setInviteCopyState(null);
-    } catch (failure) {
-      setError(
-        failure instanceof ConvexError && isString(failure.data)
-          ? failure.data
-          : "Не вдалося створити запрошення. Спробуй ще раз.",
-      );
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const inviteUrl = credential?.inviteToken
-    ? `${window.location.origin}/cook/${roomId}#invite=${credential.inviteToken}`
-    : null;
-
-  const copyInvite = async () => {
-    if (!inviteUrl) return;
-
-    try {
-      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
-      await navigator.clipboard.writeText(inviteUrl);
-      setInviteCopyState("copied");
-    } catch {
-      setInviteCopyState("manual");
-    }
-  };
+  const invite = useRoomInvite({
+    roomId,
+    credential,
+    setCredential,
+    roomApi,
+    online,
+    pending,
+    setPending,
+    setError,
+  });
 
   const [peopleOpen, setPeopleOpen] = useState(false);
   const { assistance, ask, helperProps } = useRoomHelper(roomId, credential, roomApi);
@@ -129,7 +89,7 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
     invoke,
     ask,
     setAgainOpen,
-    setInviteOpen,
+    setInviteOpen: invite.setInviteOpen,
     setPeopleOpen,
   });
 
@@ -182,7 +142,7 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
       invoke(() => roomApi.closeInvite({ roomId, participantToken: credential.participantToken })),
     onRotateInvite: () => {
       setPeopleOpen(false);
-      setInviteOpen(true);
+      invite.setInviteOpen(true);
     },
     onRemove: (memberId) =>
       invoke(() =>
@@ -223,16 +183,12 @@ export const useCookingRoomPage = (roomId: Id<"cookingRooms">) => {
     online,
     pending,
     error,
-    inviteOpen,
-    inviteUrl,
-    inviteCopyState,
-    copyInvite,
-    rotateInviteLink,
-    onOpenChange: (open: boolean) => {
-      setInviteOpen(open);
-
-      if (!open) setInviteCopyState(null);
-    },
+    inviteOpen: invite.inviteOpen,
+    inviteUrl: invite.inviteUrl,
+    inviteCopyState: invite.inviteCopyState,
+    copyInvite: invite.copyInvite,
+    rotateInviteLink: invite.rotateInviteLink,
+    onOpenChange: invite.onOpenChange,
   };
 
   return {

@@ -270,13 +270,6 @@
   }
 }
 
-.address-error {
-  margin: 0;
-  color: var(--destructive);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
 /* Dialog, sheet, and drawer titles stand alone: Oswald, no description line under them. */
 [data-slot="dialog-title"],
 [data-slot="sheet-title"],
@@ -286,89 +279,6 @@
   font-size: 1.5rem;
   line-height: 1.1;
   letter-spacing: 0.02em;
-}
-
-/* Markdown from the agent. */
-.markdown > :first-child {
-  margin-top: 0;
-}
-
-.markdown > :last-child {
-  margin-bottom: 0;
-}
-
-.markdown p,
-.markdown li {
-  font-size: 1.0625rem;
-  line-height: 1.5;
-}
-
-.markdown p {
-  margin: 8px 0;
-}
-
-.markdown h1,
-.markdown h2,
-.markdown h3,
-.markdown h4 {
-  margin: 14px 0 6px;
-  font-family: var(--font-sign);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: 0.01em;
-}
-
-.markdown h1,
-.markdown h2 {
-  font-size: 1.25rem;
-}
-
-.markdown h3,
-.markdown h4 {
-  font-size: 1.125rem;
-}
-
-.markdown ul,
-.markdown ol {
-  margin: 6px 0;
-  padding-left: 1.25em;
-}
-
-.markdown ul {
-  list-style: disc;
-}
-
-.markdown ol {
-  list-style: decimal;
-}
-
-.markdown li + li {
-  margin-top: 4px;
-}
-
-.markdown a {
-  color: var(--teal-deep);
-  text-decoration: underline;
-}
-
-.markdown code {
-  padding: 1px 4px;
-  border-radius: 4px;
-  background: var(--muted);
-  font-size: 0.9em;
-}
-
-.markdown table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9375rem;
-}
-
-.markdown th,
-.markdown td {
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  text-align: left;
 }
 
 @media (min-width: 640px) {

@@ -1,54 +1,20 @@
+import { useQuestionCard } from "../model/use-question-card";
+import { QuestionItem } from "./question-item";
 import type { FC } from "react";
 import { cn } from "@/shared/lib/utils";
 import styles from "@/features/chat/ui/question-card.module.scss";
-import { useEffect, useRef, useState, type FormEvent } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
-import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
-import type { QuestionAnswer, QuestionInput } from "@/features/chat/lib/question";
+import type { QuestionInput } from "@/features/chat/lib/question";
 import type { QuestionResponse } from "@/features/chat/model/types";
 import {
   Questionnaire,
   QuestionnaireActions,
-  QuestionnaireChoice,
-  QuestionnaireChoices,
-  QuestionnaireDescription,
-  QuestionnaireError,
-  QuestionnaireInput,
-  QuestionnaireItem,
   QuestionnaireNext,
   QuestionnairePrevious,
   QuestionnaireSubmit,
-  QuestionnaireTitle,
 } from "@/shared/ui/questionnaire";
-
-type QuestionSummaryProps = {
-  input: QuestionInput;
-  answer: QuestionAnswer;
-};
-
-export const QuestionSummary: FC<QuestionSummaryProps> = ({ input, answer }) => {
-  return (
-    <section className={styles["question-card"]} data-answered aria-label="Твої відповіді">
-      {input.questions.map((question) => {
-        const value = answer.answers.find((item) => item.questionId === question.id);
-
-        if (!value) return null;
-
-        return (
-          <div key={question.id}>
-            <p className={styles["question-title"]}>{question.question}</p>
-            <p className={styles["question-answer"]}>
-              {[...value.selected, ...(value.custom ? [value.custom] : [])].join(", ")}
-            </p>
-          </div>
-        );
-      })}
-    </section>
-  );
-};
 
 type QuestionCardProps = {
   input: QuestionInput;
@@ -57,75 +23,18 @@ type QuestionCardProps = {
 };
 
 export const QuestionCard: FC<QuestionCardProps> = ({ input, pending, onSubmit }) => {
-  const [current, setCurrent] = useState(input.questions[0]?.id);
-  const [collapsed, setCollapsed] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const desktopKeyboard = useMediaQuery("(min-width: 1024px) and (pointer: fine)");
-
-  useEffect(
-    () => () => {
-      if (advanceTimer.current !== null) clearTimeout(advanceTimer.current);
-    },
-    [current, pending, collapsed],
-  );
-
-  const cancelAdvance = () => {
-    if (advanceTimer.current !== null) clearTimeout(advanceTimer.current);
-    advanceTimer.current = null;
-  };
-
-  const advanceSingleChoice = () => {
-    cancelAdvance();
-    advanceTimer.current = setTimeout(() => {
-      advanceTimer.current = null;
-      const form = formRef.current;
-
-      if (!form) return;
-
-      const next = form.querySelector<HTMLButtonElement>(
-        '[data-slot="questionnaire-next"]:not([hidden])',
-      );
-
-      if (next) next.click();
-      else form.requestSubmit();
-    }, 200);
-  };
-
-  const currentIndex = input.questions.findIndex((question) => question.id === current);
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    cancelAdvance();
-
-    if (pending) return;
-
-    const checked = Array.from(
-      event.currentTarget.querySelectorAll<HTMLInputElement>(
-        'input[type="radio"]:checked, input[type="checkbox"]:checked',
-      ),
-    );
-
-    const customInputs = Array.from(
-      event.currentTarget.querySelectorAll<HTMLInputElement>('[data-slot="questionnaire-input"]'),
-    );
-
-    const answers = input.questions.map((question) => ({
-      questionId: question.id,
-      optionIds: checked.filter((field) => field.name === question.id).map((field) => field.value),
-      custom: customInputs.find((field) => field.name === question.id)?.value.trim() || undefined,
-    }));
-
-    const missing = answers.find((answer) => !answer.optionIds.length && !answer.custom);
-
-    if (missing) {
-      setCurrent(missing.questionId);
-
-      return;
-    }
-
-    onSubmit({ answers });
-  };
+  const {
+    current,
+    setCurrent,
+    collapsed,
+    setCollapsed,
+    formRef,
+    desktopKeyboard,
+    currentIndex,
+    cancelAdvance,
+    advanceSingleChoice,
+    handleSubmit,
+  } = useQuestionCard({ input, pending, onSubmit });
 
   return (
     <Questionnaire
@@ -164,53 +73,13 @@ export const QuestionCard: FC<QuestionCardProps> = ({ input, pending, onSubmit }
       </button>
       <div className={styles["question-viewport"]} hidden={collapsed}>
         {input.questions.map((question) => (
-          <QuestionnaireItem
+          <QuestionItem
             key={question.id}
-            name={question.id}
-            multiple={question.allowMultiple}
-            required
-            disabled={pending}
-          >
-            <QuestionnaireTitle className={styles["question-title"]}>
-              {question.question}
-            </QuestionnaireTitle>
-            <QuestionnaireDescription>
-              {question.allowMultiple ? "Обери всі варіанти, які підходять" : "Обери один варіант"}
-            </QuestionnaireDescription>
-            <QuestionnaireChoices>
-              {question.options.map((option, index) => (
-                <QuestionnaireChoice
-                  key={option.id}
-                  value={option.id}
-                  disabled={pending}
-                  onClick={(event) => {
-                    if (!question.allowMultiple && event.detail > 0) advanceSingleChoice();
-                  }}
-                >
-                  {option.label}
-                  <span className={styles["question-option-marker"]} aria-hidden>
-                    <span>{index + 1}</span>
-                    <HugeiconsIcon icon={Tick02Icon} size={16} strokeWidth={2} />
-                  </span>
-                </QuestionnaireChoice>
-              ))}
-            </QuestionnaireChoices>
-            {question.allowCustom && (
-              <QuestionnaireInput
-                onFocus={cancelAdvance}
-                onChange={cancelAdvance}
-                placeholder="Або напиши свій варіант"
-                maxLength={200}
-                disabled={pending}
-                aria-label={`Свій варіант: ${question.question}`}
-              />
-            )}
-            <QuestionnaireError>
-              {question.allowCustom
-                ? "Обери варіант або напиши свою відповідь."
-                : "Обери варіант відповіді."}
-            </QuestionnaireError>
-          </QuestionnaireItem>
+            question={question}
+            pending={pending}
+            advanceSingleChoice={advanceSingleChoice}
+            cancelAdvance={cancelAdvance}
+          />
         ))}
       </div>
       <QuestionnaireActions>

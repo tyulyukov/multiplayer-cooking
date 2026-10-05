@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import styles from "@/features/personalization/ui/personal-settings.module.scss";
+import styles from "@/features/personalization/ui/settings-form.module.scss";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
 import type { AgentSettings } from "@/features/personalization/model/types";
