@@ -4,7 +4,7 @@ import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
-import type { Idea } from "@/features/ideas/model/types";
+import type { Idea } from "@multiplayer-cooking/core/ideas/types";
 import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 
 type IdeaCompactProps = { idea: Idea; onOpen: () => void };

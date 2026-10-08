@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 
-import type { QuestionInput } from "@/features/chat/lib/question";
+import type { QuestionInput } from "@multiplayer-cooking/core/chat/question";
 
 import { QuestionCard, QuestionSummary } from "./question-card";
 

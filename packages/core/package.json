@@ -1,0 +1,20 @@
+{
+  "name": "@multiplayer-cooking/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@convex-dev/agent": "^0.7.3",
+    "@hugeicons/core-free-icons": "^4.3.5",
+    "@multiplayer-cooking/backend": "workspace:*",
+    "ai": "^7.0.113",
+    "convex": "^1.46.0"
+  }
+}

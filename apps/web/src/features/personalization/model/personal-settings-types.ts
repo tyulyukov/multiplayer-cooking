@@ -1,4 +1,4 @@
-import type { AgentSettings, Memory } from "@/features/personalization/model/types";
+import type { AgentSettings, Memory } from "@multiplayer-cooking/core/personalization/types";
 
 export type Tab = "memories" | "settings" | "interface";
 

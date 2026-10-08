@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 
 import { useComposerDraft } from "@/features/chat/model/use-composer-draft";
-import type { ChatMessage, QuestionSubmit } from "@/features/chat/model/types";
-import type { CookingSetup } from "@/features/cooking/model/types";
-import type { Idea, IdeaVersions } from "@/features/ideas/model/types";
-import type { SilpoConnection } from "@/features/silpo/model/types";
+import type { ChatMessage, QuestionSubmit } from "@multiplayer-cooking/core/chat/types";
+import type { CookingSetup } from "@multiplayer-cooking/core/cooking/types";
+import type { Idea, IdeaVersions } from "@multiplayer-cooking/core/ideas/types";
+import type { SilpoConnection } from "@multiplayer-cooking/core/silpo/types";
 import { useAttachments } from "@/shared/hooks/use-attachments";
 
 type AttachmentsState = ReturnType<typeof useAttachments>;

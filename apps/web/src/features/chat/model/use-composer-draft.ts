@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import { pickQuickPrompts, type QuickPrompt } from "@/features/chat/lib/quick-prompts";
+import { pickQuickPrompts, type QuickPrompt } from "@multiplayer-cooking/core/chat/quick-prompts";
 
 type PromptSelection = Readonly<{
   promptId: string;

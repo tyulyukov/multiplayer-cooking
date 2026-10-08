@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: var(--font-sans, system-ui);
+        color: var(--foreground);
+        margin: 0;
+      }
+      h2 {
+        font-size: 20px;
+        margin: 0 0 12px;
+      }
+      p {
+        line-height: 1.45;
+        font-size: 14px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+      figure {
+        margin: 0;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        min-width: 0;
+      }
+      .large {
+        width: 100%;
+        max-width: 180px;
+        display: block;
+        margin: auto;
+      }
+      .small {
+        width: 60px;
+        height: 60px;
+        display: block;
+        margin: 12px auto;
+      }
+      figcaption {
+        font-size: 13px;
+        text-align: center;
+      }
+      .exports {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .exports figure {
+        background: #f3eee4;
+        color: #16191d;
+      }
+      .exports figure:last-child {
+        background: #0e7c77;
+        color: white;
+      }
+      .status {
+        font-size: 13px;
+        color: var(--muted-foreground);
+      }
+      @media (max-width: 480px) {
+        .grid {
+          gap: 6px;
+        }
+        figure {
+          padding: 10px;
+        }
+        .exports {
+          gap: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Selected: B, magenta diner</h2>
+    <p>
+      The magenta backdrop keeps both cream handles visible at 60px. Teal remains the main shape;
+      the checker floor supplies the diner cue.
+    </p>
+    <div class="grid">
+      <figure>
+        <img
+          class="large"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/icon-candidates/candidate-a-cream-180.png"
+        /><img
+          class="small"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/icon-candidates/candidate-a-cream-60.png"
+        />
+        <figcaption>A · Cream<br />180px and 60px exports</figcaption>
+      </figure>
+      <figure>
+        <img
+          class="large"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/icon-candidates/candidate-b-magenta-180.png"
+        /><img
+          class="small"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/icon-candidates/candidate-b-magenta-60.png"
+        />
+        <figcaption>B · Selected<br />180px and 60px exports</figcaption>
+      </figure>
+      <figure>
+        <img
+          class="large"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/icon-candidates/candidate-c-ink-180.png"
+        /><img
+          class="small"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/icon-candidates/candidate-c-ink-60.png"
+        />
+        <figcaption>C · Night diner<br />180px and 60px exports</figcaption>
+      </figure>
+    </div>
+    <div class="exports">
+      <figure>
+        <img
+          class="large"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/splash-icon-180-on-cream.png"
+        /><img
+          class="small"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/splash-icon-60-on-cream.png"
+        />
+        <figcaption>Splash on cream<br />512 × 512 · transparent PNG</figcaption>
+      </figure>
+      <figure>
+        <img
+          class="large"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/android-icon-foreground-180-on-android-bg.png"
+        /><img
+          class="small"
+          src="/Users/tyulyukov/code/personal/multiplayer-cooking-production/apps/mobile/design/assets-src/android-icon-foreground-60-on-android-bg.png"
+        />
+        <figcaption>Android on existing teal<br />1024 × 1024 · transparent PNG</figcaption>
+      </figure>
+    </div>
+    <p class="status">
+      iOS: 1024 × 1024 RGB, opaque, unmasked corners. Transparent exports: alpha 0–255, clear
+      corners. Android artwork fits entirely inside the inner 66% square.
+    </p>
+  </body>
+</html>

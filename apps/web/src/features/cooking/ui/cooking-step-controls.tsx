@@ -9,11 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
-import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
+import type { CookingActions, CookingRoomData } from "@multiplayer-cooking/core/cooking/types";
 
-import type { PlanStep, RuntimeStep } from "../model/types";
+import type { PlanStep, RuntimeStep } from "@multiplayer-cooking/core/cooking/types";
 
-import type { getCookingStepState } from "../lib/cooking-step-state";
+import type { getCookingStepState } from "@multiplayer-cooking/core/cooking/cooking-step-state";
 
 type StepControlsProps = Pick<
   ReturnType<typeof getCookingStepState>,

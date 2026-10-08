@@ -11,6 +11,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { action, internalAction } from "./_generated/server";
 import { parseVerifiedSilpoProfile, withSilpoClient } from "./lib/silpo_client";
+import { SILPO_APP_STATE_PREFIX } from "./lib/silpo_app_return";
 import { createSilpoAuthProvider, SILPO_ISSUER, SILPO_MCP_URL } from "./lib/silpo_oauth";
 
 function storedTokens(tokens: OAuthTokens) {
@@ -29,13 +30,14 @@ function storedTokens(tokens: OAuthTokens) {
 
 // Returns the Сільпо authorization URL; the browser navigates there.
 export const startConnect = action({
-  args: SessionIdArg,
+  args: { ...SessionIdArg, client: v.optional(v.literal("app")) },
   returns: v.object({ url: v.string() }),
-  handler: async (ctx, { sessionId }) => {
+  handler: async (ctx, { sessionId, client }) => {
     const previousUserId = await ctx.runMutation(internal.silpo.ensureUser, { sessionId });
     await ctx.runAction(internal.silpoAuth.verifyExistingConnection, { userId: previousUserId });
     const connecting = await ctx.runMutation(internal.accounts.beginConnect, { sessionId });
-    const state = randomBytes(32).toString("base64url");
+    const prefix = client === "app" ? SILPO_APP_STATE_PREFIX : "";
+    const state = `${prefix}${randomBytes(32).toString("base64url")}`;
     let redirectUrl: URL | null = null;
 
     const provider = createSilpoAuthProvider(ctx, {

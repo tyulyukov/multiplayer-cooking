@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
-import type { Idea, IdeaVersions } from "@/features/ideas/model/types";
+import type { Idea, IdeaVersions } from "@multiplayer-cooking/core/ideas/types";
 
 export const useIdeaVersions = (
   sessionId: SessionId | undefined,

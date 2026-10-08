@@ -541,3 +541,35 @@ test("a preserved helper draft can be sent after a shared proposal removes its s
     ).toBe(draft);
   });
 });
+
+test("any cook can retry the shared failed helper question without sending it again", async () => {
+  const fixture = await cookingHelperFixture();
+  await withoutScheduledHelper(async () => {
+    expect(await fixture.t.mutation(api.cookingAssistance.retryHelper, fixture.host)).toBe(false);
+
+    const failed = await fixture.t.mutation(api.cookingAssistance.askHelper, {
+      ...fixture.guest,
+      prompt: "Як перевірити соус?",
+      stepKey: "sauce",
+    });
+
+    if (!failed) throw new Error("Expected a question");
+    await fixture.t.mutation(internal.cookingAssistance.finishHelper, {
+      roomId: fixture.roomId,
+      promptMessageId: failed.promptMessageId,
+      error: "Спробуйте ще раз.",
+    });
+
+    expect(await fixture.t.mutation(api.cookingAssistance.retryHelper, fixture.host)).toBe(true);
+
+    const { room } = (await fixture.t.query(api.cookingRooms.read, fixture.host)) ?? {};
+    expect(room?.helperBusy).toBe(true);
+    expect(room?.helperFailedPromptMessageId).toBeUndefined();
+    expect(
+      await fixture.t.query(internal.cookingAssistance.helperData, {
+        roomId: fixture.roomId,
+        promptMessageId: failed.promptMessageId,
+      }),
+    ).toMatchObject({ promptText: "Як перевірити соус?", currentStep: { id: "sauce" } });
+  });
+});

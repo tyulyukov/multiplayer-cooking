@@ -1,7 +1,7 @@
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import { fn } from "storybook/test";
 
-import type { Idea, IdeaVersions } from "../model/types";
+import type { Idea, IdeaVersions } from "@multiplayer-cooking/core/ideas/types";
 
 // SAFETY: these IDs identify local Storybook fixtures, not Convex records.
 export const storyIdea = {

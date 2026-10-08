@@ -3,8 +3,8 @@ import type { SessionId } from "convex-helpers/server/sessions";
 import { useMutation } from "convex/react";
 
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
-import type { CookingSetup } from "@/features/cooking/model/types";
-import type { Idea } from "@/features/ideas/model/types";
+import type { CookingSetup } from "@multiplayer-cooking/core/cooking/types";
+import type { Idea } from "@multiplayer-cooking/core/ideas/types";
 import {
   createCookingCredential,
   saveCookingCredential,

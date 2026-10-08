@@ -6,14 +6,14 @@ import UserGroupIcon from "@hugeicons/core-free-icons/UserGroupIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CookingTools } from "./cooking-tools";
 import { Button } from "@/shared/ui/button";
-import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
+import type { CookingActions, CookingRoomData } from "@multiplayer-cooking/core/cooking/types";
 import { CookingLobby } from "./cooking-lobby";
 import { CookingCompletion } from "./cooking-completion";
 
 import { useCookingSession } from "../model/use-cooking-session";
 import { StepCard } from "./cooking-step-card";
 import { CookingStatus } from "./cooking-status";
-import { timerLabel } from "../lib/timer-label";
+import { timerLabel } from "@multiplayer-cooking/core/cooking/timer-label";
 
 export { Timer } from "./cooking-timer";
 
