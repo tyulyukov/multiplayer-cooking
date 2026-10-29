@@ -9,9 +9,9 @@ import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import StopIcon from "@hugeicons/core-free-icons/StopIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/shared/ui/button";
-import type { CookingActions, RoomTimer } from "@/features/cooking/model/types";
+import type { CookingActions, RoomTimer } from "@multiplayer-cooking/core/cooking/types";
 
-import { timerLabel } from "../lib/timer-label";
+import { timerLabel } from "@multiplayer-cooking/core/cooking/timer-label";
 
 type TimerProps = {
   timer: RoomTimer;

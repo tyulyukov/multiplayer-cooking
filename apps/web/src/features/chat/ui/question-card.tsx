@@ -7,8 +7,8 @@ import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
-import type { QuestionAnswer, QuestionInput } from "@/features/chat/lib/question";
-import type { QuestionResponse } from "@/features/chat/model/types";
+import type { QuestionAnswer, QuestionInput } from "@multiplayer-cooking/core/chat/question";
+import type { QuestionResponse } from "@multiplayer-cooking/core/chat/types";
 import {
   Questionnaire,
   QuestionnaireActions,

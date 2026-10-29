@@ -1,17 +1,17 @@
 import type { FC } from "react";
 import styles from "@/features/chat/ui/chat-thread.module.scss";
-import { generationStatus } from "@/features/chat/lib/generation-status";
-import { collectAnswers, isToolPart } from "@/features/chat/lib/question-messages";
+import { generationStatus } from "@multiplayer-cooking/core/chat/generation-status";
+import { collectAnswers, isToolPart } from "@multiplayer-cooking/core/chat/question-messages";
 import type { UIMessage } from "@convex-dev/agent";
 import { useSmoothText } from "@convex-dev/agent/react";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
-import { isMemoryEvent } from "@/features/personalization/lib/memory-event";
+import { isMemoryEvent } from "@multiplayer-cooking/core/personalization/memory-event";
 import { Markdown } from "@/shared/ui/markdown";
 import { PhotoStrip } from "@/shared/ui/photo-lightbox";
 import { QuestionSummary } from "@/features/chat/ui/question-card";
-import { questionInputSchema, type QuestionAnswer } from "@/features/chat/lib/question";
+import { questionInputSchema, type QuestionAnswer } from "@multiplayer-cooking/core/chat/question";
 
 const imageUrls = (message: UIMessage) => {
   return message.parts.flatMap((part) =>

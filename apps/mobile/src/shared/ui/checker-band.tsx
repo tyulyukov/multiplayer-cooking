@@ -3,15 +3,22 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, Pattern, Rect } from "react-native-svg";
 
-// Whole tile rows end at the band's bottom edge; the band grows upward by the top inset.
-export function CheckerBand({ height = 48 }: { height?: number }) {
-  const bandHeight = height + useSafeAreaInsets().top;
+import { NeonLine } from "@/shared/ui/neon-line";
+
+type CheckerBandProps = { height?: number; underStatusBar?: boolean };
+
+// Root screens put it first in their scroll content, under the glass header. Screens without
+// a header pass `underStatusBar`: the band grows upward by the top inset and whole tile rows
+// still end at its bottom edge.
+export function CheckerBand({ height = 24, underStatusBar = false }: CheckerBandProps) {
+  const topInset = useSafeAreaInsets().top;
+  const bandHeight = height + (underStatusBar ? topInset : 0);
   const tilesHeight = Math.ceil(bandHeight / height) * height;
   const square = height / 2;
 
   return (
-    <View style={{ height: bandHeight, zIndex: 1 }}>
-      <View style={{ flex: 1, overflow: "hidden" }}>
+    <View accessible={false} importantForAccessibility="no-hide-descendants">
+      <View style={{ height: bandHeight, overflow: "hidden" }}>
         <Svg
           width="100%"
           height={tilesHeight}
@@ -27,17 +34,7 @@ export function CheckerBand({ height = 48 }: { height?: number }) {
           <Rect width="100%" height="100%" fill="url(#checker)" />
         </Svg>
       </View>
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: -3,
-          height: 3,
-          backgroundColor: colors.neonBlue,
-          boxShadow: `0 0 8px ${colors.neonBlue}, 0 2px 14px ${colors.neonBlue}80`,
-        }}
-      />
+      <NeonLine />
     </View>
   );
 }

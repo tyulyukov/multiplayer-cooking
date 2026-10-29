@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { HomePage } from "@/pages/home/home-page";
-import { isString } from "@/shared/lib/type-guards";
+import { isString } from "@multiplayer-cooking/core/shared/type-guards";
 
 type HomeSearch = { silpo?: "callback" | "connected" | "error"; code?: string; state?: string };
 

@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSessionId } from "convex-helpers/react/sessions";
 import { useRef, useState } from "react";
 
-import { isString } from "@/shared/lib/type-guards";
+import { isString } from "@multiplayer-cooking/core/shared/type-guards";
 import { useCookingRoom } from "@/features/cooking/api/use-cooking-room";
 import type {
   CooksFormProps,

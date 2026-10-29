@@ -2,7 +2,7 @@ import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataMode
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 
-import type { CookingHistoryItem, HistoryItem } from "../model/types";
+import type { CookingHistoryItem, HistoryItem } from "@multiplayer-cooking/core/history/types";
 import { HistoryPanel } from "./history-panel";
 
 const createdAt = Date.UTC(2026, 8, 23, 11, 0, 0);

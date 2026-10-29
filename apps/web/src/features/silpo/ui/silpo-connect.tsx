@@ -10,7 +10,7 @@ import * as React from "react";
 
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Button } from "@/shared/ui/button";
-import type { SilpoConnection } from "@/features/silpo/model/types";
+import type { SilpoConnection } from "@multiplayer-cooking/core/silpo/types";
 import {
   DropdownMenu,
   DropdownMenuContent,

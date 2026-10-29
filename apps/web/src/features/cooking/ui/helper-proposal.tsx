@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import styles from "@/features/cooking/ui/cooking-helper.module.scss";
-import type { CookingRoomData, HelperProposal } from "@/features/cooking/model/types";
+import type { CookingRoomData, HelperProposal } from "@multiplayer-cooking/core/cooking/types";
 import { Button } from "@/shared/ui/button";
 import { CookingMarkdown } from "./cooking-markdown";
 

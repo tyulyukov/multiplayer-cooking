@@ -35,6 +35,7 @@ export async function cookingFixture(
     "../convex/cookingSteps.ts": () => import("../convex/cookingSteps"),
     "../convex/cookingTimers.ts": () => import("../convex/cookingTimers"),
     "../convex/cookingAssistance.ts": () => import("../convex/cookingAssistance"),
+    "../convex/chat.ts": () => import("../convex/chat"),
   });
 
   const plan = validateCookingPlan(

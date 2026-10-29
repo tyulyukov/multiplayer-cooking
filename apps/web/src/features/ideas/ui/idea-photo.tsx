@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
-import type { Idea } from "@/features/ideas/model/types";
+import type { Idea } from "@multiplayer-cooking/core/ideas/types";
 import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 
 type IdeaPhotoProps = { idea: Idea };

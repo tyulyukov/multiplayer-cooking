@@ -3,14 +3,18 @@ import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { cn } from "@/shared/lib/utils";
 import { Fragment, useState } from "react";
 import { CookingMarkdown } from "./cooking-markdown";
-import type { CookingActions, CookingRoomData, RoomTimer } from "@/features/cooking/model/types";
+import type {
+  CookingActions,
+  CookingRoomData,
+  RoomTimer,
+} from "@multiplayer-cooking/core/cooking/types";
 import { CookingReference } from "./cooking-reference";
 
 import { Timer } from "./cooking-timer";
-import { timerLabel } from "../lib/timer-label";
-import type { PlanStep, RuntimeStep } from "../model/types";
+import { timerLabel } from "@multiplayer-cooking/core/cooking/timer-label";
+import type { PlanStep, RuntimeStep } from "@multiplayer-cooking/core/cooking/types";
 
-import { getCookingStepState } from "../lib/cooking-step-state";
+import { getCookingStepState } from "@multiplayer-cooking/core/cooking/cooking-step-state";
 import { StepControls } from "./cooking-step-controls";
 
 type StepCardProps = {

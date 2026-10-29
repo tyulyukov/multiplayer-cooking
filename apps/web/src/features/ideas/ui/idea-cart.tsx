@@ -7,9 +7,9 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Button } from "@/shared/ui/button";
-import type { Idea } from "@/features/ideas/model/types";
+import type { Idea } from "@multiplayer-cooking/core/ideas/types";
 
-import { formatPrice, itemsLabel } from "../lib/idea-format";
+import { formatPrice, itemsLabel } from "@multiplayer-cooking/core/ideas/idea-format";
 
 type IdeaCartProps = {
   idea: Idea;

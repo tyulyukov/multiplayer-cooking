@@ -3,8 +3,8 @@ import type { FunctionReturnType } from "convex/server";
 
 import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
-import type { CookingCredential } from "../lib/cooking-session";
-import type { CookingRoomData, CookingSetup } from "./types";
+import type { CookingCredential } from "@multiplayer-cooking/core/cooking/cooking-session";
+import type { CookingRoomData, CookingSetup } from "@multiplayer-cooking/core/cooking/types";
 
 export type CooksFormProps = {
   initial: number;

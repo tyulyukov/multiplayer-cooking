@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { pendingQuestion } from "@/features/chat/lib/question-messages";
+import { pendingQuestion } from "@multiplayer-cooking/core/chat/question-messages";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 import type { ChatScreenProps } from "./chat-screen-types";

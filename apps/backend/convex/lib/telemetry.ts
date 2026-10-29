@@ -45,10 +45,7 @@ function reportAxiomFailure(cause: unknown) {
 }
 
 function createAxiomFetch() {
-  const fetchWithTimeout = (
-    input: Parameters<typeof fetch>[0],
-    init?: Parameters<typeof fetch>[1],
-  ) => {
+  const fetchWithTimeout = (input: string | URL | Request, init?: Parameters<typeof fetch>[1]) => {
     const timeout = AbortSignal.timeout(AXIOM_REQUEST_TIMEOUT_MS);
     const signal = init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
 

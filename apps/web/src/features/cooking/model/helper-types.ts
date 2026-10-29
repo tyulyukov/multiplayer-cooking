@@ -2,7 +2,7 @@ import type { FunctionReturnType } from "convex/server";
 import type { api } from "@multiplayer-cooking/backend/convex/_generated/api";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import type { useAttachments } from "@/shared/hooks/use-attachments";
-import type { CookingRoomData, HelperProposal } from "@/features/cooking/model/types";
+import type { CookingRoomData, HelperProposal } from "@multiplayer-cooking/core/cooking/types";
 
 type HelperMessage = FunctionReturnType<typeof api.cookingAssistance.listMessages>[number];
 
