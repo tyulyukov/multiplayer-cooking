@@ -19,6 +19,7 @@
     "@hugeicons/core-free-icons": "^4.3.5",
     "@hugeicons/react": "^1.1.10",
     "@multiplayer-cooking/backend": "workspace:*",
+    "@multiplayer-cooking/core": "workspace:*",
     "@multiplayer-cooking/theme": "workspace:*",
     "@shadcn/react": "^0.3.1",
     "@tanstack/react-router": "^1.170.39",

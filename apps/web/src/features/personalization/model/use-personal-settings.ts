@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { AgentSettings, Memory } from "@/features/personalization/model/types";
+import type { AgentSettings, Memory } from "@multiplayer-cooking/core/personalization/types";
 import {
   clearSavedCookName,
-  normalizeCookName,
   readSavedCookName,
   saveCookName,
 } from "@/features/cooking/lib/cook-name";
+import { normalizeCookName } from "@multiplayer-cooking/core/cooking/cook-name";
 import { useComposerShortcut } from "@/shared/hooks/use-composer-shortcut";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 

@@ -23,13 +23,9 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/shared/ui/drawer";
-import {
-  normalizeCookName,
-  readSavedCookName,
-  resolveCookName,
-  saveCookName,
-} from "@/features/cooking/lib/cook-name";
-import type { CookingSetup } from "@/features/cooking/model/types";
+import { readSavedCookName, saveCookName } from "@/features/cooking/lib/cook-name";
+import { normalizeCookName, resolveCookName } from "@multiplayer-cooking/core/cooking/cook-name";
+import type { CookingSetup } from "@multiplayer-cooking/core/cooking/types";
 import type { CooksFormProps } from "@/features/cooking/model/component-props";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 

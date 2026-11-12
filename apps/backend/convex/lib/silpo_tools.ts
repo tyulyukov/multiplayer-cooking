@@ -37,9 +37,12 @@ export function recordProductCandidates(
   }
 }
 
-export function recordProductFailure(registry: ProductRegistry) {
+export function recordProductFailure(
+  registry: ProductRegistry,
+  status: "unavailable" | "not_connected" = "unavailable",
+) {
   if (![...registry.candidates.values()].some((candidates) => candidates.length > 0)) {
-    registry.status = "unavailable";
+    registry.status = status;
   }
 }
 
@@ -100,11 +103,13 @@ export function createSilpoTools(
       } catch (error) {
         console.error("silpo_find_products failed", error);
 
-        const note = isReauthRequired(error)
+        const reauth = isReauthRequired(error);
+
+        const note = reauth
           ? "Сесія Сільпо закінчилась. Попроси людину натиснути «Перепідключити» в меню."
           : "Сільпо не відповіло. Скажи, що ціни зараз недоступні, і запропонуй спробувати пізніше.";
 
-        recordProductFailure(registry);
+        recordProductFailure(registry, reauth ? "not_connected" : "unavailable");
 
         return {
           needsAddress: false,

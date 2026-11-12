@@ -6,7 +6,7 @@ import UndoIcon from "@hugeicons/core-free-icons/UndoIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Button } from "@/shared/ui/button";
-import type { IdeaVersions } from "@/features/ideas/model/types";
+import type { IdeaVersions } from "@multiplayer-cooking/core/ideas/types";
 
 // "Версія N з M": older versions are read-only until restored.
 type VersionNavProps = { versions: IdeaVersions };

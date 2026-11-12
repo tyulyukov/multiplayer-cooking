@@ -369,27 +369,76 @@ export const askHelper = mutation({
       stepKey: args.stepKey,
       attachmentStorageIds,
     });
-    await ctx.db.patch(args.roomId, {
-      helperThreadId: threadId,
-      helperBusy: true,
-      helperError: undefined,
-      helperFailedPromptMessageId: undefined,
-      helperPromptMessageId: messageId,
-      helperStartedAt: Date.now(),
-    });
-    await ctx.scheduler.runAfter(0, internal.cookingGeneration.respond, {
-      roomId: args.roomId,
-      promptMessageId: messageId,
-    });
-    await ctx.scheduler.runAfter(HELPER_TIMEOUT_MS, internal.cookingAssistance.finishHelper, {
-      roomId: args.roomId,
-      promptMessageId: messageId,
-      error: "Помічник не відповів вчасно. Спробуйте ще раз.",
-    });
+    await startHelperRun(ctx, args.roomId, threadId, messageId);
 
     return { threadId, promptMessageId: messageId };
   },
 });
+
+// Reruns the room's failed helper question with its text, photos and step, so any cook can retry
+// it after reopening the helper.
+export const retryHelper = mutation({
+  args: { roomId: v.id("cookingRooms"), participantToken: tokenValidator },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    await requireActiveMember(ctx, args.roomId, args.participantToken);
+    const room = await ctx.db.get(args.roomId);
+    const promptMessageId = room?.helperFailedPromptMessageId;
+
+    if (
+      !room?.plan ||
+      !room.helperThreadId ||
+      !promptMessageId ||
+      !["ready", "cooking"].includes(room.state)
+    )
+      return false;
+
+    if (room.helperBusy) throw new ConvexError("Помічник уже відповідає.");
+
+    const metadata = await ctx.db
+      .query("cookingHelperMessages")
+      .withIndex("by_room_message", (q) =>
+        q.eq("roomId", args.roomId).eq("messageId", promptMessageId),
+      )
+      .unique();
+
+    const author = metadata && (await ctx.db.get(metadata.authorMemberId));
+
+    if (author?.status !== "active") return false;
+
+    const admitted = await admitAiGeneration({
+      limit: (name, options) => rateLimiter.limit(ctx, name, { ...options, key: room.hostUserId }),
+    });
+
+    if (!admitted) throw new ConvexError("Забагато запитів. Спробуйте трохи пізніше.");
+
+    await startHelperRun(ctx, args.roomId, room.helperThreadId, promptMessageId);
+
+    return true;
+  },
+});
+
+async function startHelperRun(
+  ctx: MutationCtx,
+  roomId: Id<"cookingRooms">,
+  threadId: string,
+  promptMessageId: string,
+) {
+  await ctx.db.patch(roomId, {
+    helperThreadId: threadId,
+    helperBusy: true,
+    helperError: undefined,
+    helperFailedPromptMessageId: undefined,
+    helperPromptMessageId: promptMessageId,
+    helperStartedAt: Date.now(),
+  });
+  await ctx.scheduler.runAfter(0, internal.cookingGeneration.respond, { roomId, promptMessageId });
+  await ctx.scheduler.runAfter(HELPER_TIMEOUT_MS, internal.cookingAssistance.finishHelper, {
+    roomId,
+    promptMessageId,
+    error: "Помічник не відповів вчасно. Спробуйте ще раз.",
+  });
+}
 
 export const listMessages = query({
   args: { roomId: v.id("cookingRooms"), participantToken: tokenValidator },

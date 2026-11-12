@@ -38,6 +38,7 @@ import type * as lib_http from "../lib/http.js";
 import type * as lib_idea_products from "../lib/idea_products.js";
 import type * as lib_ingredient from "../lib/ingredient.js";
 import type * as lib_questions from "../lib/questions.js";
+import type * as lib_silpo_app_return from "../lib/silpo_app_return.js";
 import type * as lib_silpo_client from "../lib/silpo_client.js";
 import type * as lib_silpo_oauth from "../lib/silpo_oauth.js";
 import type * as lib_silpo_products from "../lib/silpo_products.js";
@@ -90,6 +91,7 @@ declare const fullApi: ApiFromModules<{
   "lib/idea_products": typeof lib_idea_products;
   "lib/ingredient": typeof lib_ingredient;
   "lib/questions": typeof lib_questions;
+  "lib/silpo_app_return": typeof lib_silpo_app_return;
   "lib/silpo_client": typeof lib_silpo_client;
   "lib/silpo_oauth": typeof lib_silpo_oauth;
   "lib/silpo_products": typeof lib_silpo_products;

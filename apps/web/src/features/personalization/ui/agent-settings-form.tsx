@@ -2,7 +2,7 @@ import type { FC } from "react";
 import styles from "@/features/personalization/ui/personal-settings.module.scss";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
-import type { AgentSettings } from "@/features/personalization/model/types";
+import type { AgentSettings } from "@multiplayer-cooking/core/personalization/types";
 
 import type { usePersonalSettings } from "../model/use-personal-settings";
 

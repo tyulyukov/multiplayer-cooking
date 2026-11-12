@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import type { CookingRoomData, RoomTimer } from "@/features/cooking/model/types";
+import type { CookingRoomData, RoomTimer } from "@multiplayer-cooking/core/cooking/types";
 import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 import { preloadImages } from "@/shared/lib/images";
 
-import type { PlanStep } from "./types";
+import type { PlanStep } from "@multiplayer-cooking/core/cooking/types";
 
 export const useCookingSession = (data: CookingRoomData) => {
   const [now, setNow] = useState(Date.now);

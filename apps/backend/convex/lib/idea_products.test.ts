@@ -89,6 +89,12 @@ test("a failure after verified matches keeps products available", () => {
   expect(productsStatus(retry)).toBeUndefined();
 });
 
+test("an expired Сільпо session asks to reconnect instead of retrying later", () => {
+  const expired = createProductRegistry();
+  recordProductFailure(expired, "not_connected");
+  expect(productsStatus(expired)).toBe("not_connected");
+});
+
 test("reports connection and address prerequisites separately", () => {
   expect(productsStatus({ attempted: true, status: "not_connected", candidates: new Map() })).toBe(
     "not_connected",

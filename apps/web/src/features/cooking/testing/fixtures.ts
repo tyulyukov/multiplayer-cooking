@@ -1,7 +1,11 @@
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 import { fn } from "storybook/test";
 
-import type { CookingActions, CookingRoomData, RoomTimer } from "../model/types";
+import type {
+  CookingActions,
+  CookingRoomData,
+  RoomTimer,
+} from "@multiplayer-cooking/core/cooking/types";
 
 export const storyNow = Date.UTC(2026, 8, 23, 12, 0, 0);
 

@@ -1,6 +1,9 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import {
+  StreamableHTTPClientTransport,
+  StreamableHTTPError,
+} from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
@@ -108,6 +111,7 @@ export async function withSilpoClient<T>(
 export function isReauthRequired(cause: unknown) {
   return (
     cause instanceof SilpoReauthRequiredError ||
+    (cause instanceof StreamableHTTPError && cause.code === 401) ||
     (cause instanceof Error && cause.name === "UnauthorizedError")
   );
 }

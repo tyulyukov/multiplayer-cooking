@@ -8,7 +8,7 @@ import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Button } from "@/shared/ui/button";
 import { proxyConvexStorageUrl } from "@/shared/lib/convex-url";
 import { CompletionConfetti } from "./completion-confetti";
-import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
+import type { CookingActions, CookingRoomData } from "@multiplayer-cooking/core/cooking/types";
 
 type CookingCompletionProps = {
   data: CookingRoomData;

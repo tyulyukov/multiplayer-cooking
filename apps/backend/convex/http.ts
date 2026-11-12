@@ -1,10 +1,17 @@
 import { httpRouter } from "convex/server";
 
 import { httpAction } from "./_generated/server";
+import { SILPO_APP_RETURN_URL, SILPO_APP_STATE_PREFIX } from "./lib/silpo_app_return";
 
-// The redirect target comes only from configuration, never from the request.
-function backToApp(outcome: "callback" | "error", callback?: { code: string; state: string }) {
-  const appUrl = process.env.APP_URL;
+// The redirect target comes only from code or configuration, never from the request.
+function backToApp(
+  state: string | null,
+  outcome: "callback" | "error",
+  callback?: { code: string; state: string },
+) {
+  const appUrl = state?.startsWith(SILPO_APP_STATE_PREFIX)
+    ? SILPO_APP_RETURN_URL
+    : process.env.APP_URL;
 
   if (!appUrl) {
     const text =
@@ -49,10 +56,10 @@ http.route({
     if (!code || !state) {
       console.warn("Silpo callback without code", params.get("error") ?? "");
 
-      return backToApp("error");
+      return backToApp(state, "error");
     }
 
-    return backToApp("callback", { state, code });
+    return backToApp(state, "callback", { state, code });
   }),
 });
 

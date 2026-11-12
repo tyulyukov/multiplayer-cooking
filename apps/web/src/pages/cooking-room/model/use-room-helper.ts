@@ -2,11 +2,11 @@ import { useState } from "react";
 
 import { useCookingAssistance } from "@/features/cooking/api/use-cooking-assistance";
 import type { useCookingRoom } from "@/features/cooking/api/use-cooking-room";
-import { helperContextStep } from "@/features/cooking/lib/cooking-helper";
+import { helperContextStep } from "@multiplayer-cooking/core/cooking/cooking-helper";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 
-import type { CookingCredential } from "@/features/cooking/lib/cooking-session";
-import type { CookingActions } from "@/features/cooking/model/types";
+import type { CookingCredential } from "@multiplayer-cooking/core/cooking/cooking-session";
+import type { CookingActions } from "@multiplayer-cooking/core/cooking/types";
 import type { CookingHelperProps } from "@/features/cooking/model/helper-types";
 
 export const useRoomHelper = (

@@ -7,10 +7,10 @@ import ShoppingBasketAdd01Icon from "@hugeicons/core-free-icons/ShoppingBasketAd
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
-import type { Idea } from "@/features/ideas/model/types";
+import type { Idea } from "@multiplayer-cooking/core/ideas/types";
 
-import { formatPrice, formatQuantity } from "../lib/idea-format";
-import { getIdeaProducts } from "../lib/idea-products";
+import { formatPrice, formatQuantity } from "@multiplayer-cooking/core/ideas/idea-format";
+import { getIdeaProducts } from "@multiplayer-cooking/core/ideas/idea-products";
 import { IdeaCart } from "./idea-cart";
 
 type ProductThumbnailProps = { url: string };

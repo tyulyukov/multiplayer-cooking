@@ -1,6 +1,7 @@
+import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { describe, expect, test } from "bun:test";
 
-import { parseVerifiedSilpoProfile } from "./silpo_client";
+import { isReauthRequired, parseVerifiedSilpoProfile } from "./silpo_client";
 
 describe("parseVerifiedSilpoProfile", () => {
   test("uses only a successful profile identifier as account identity", () => {
@@ -27,5 +28,19 @@ describe("parseVerifiedSilpoProfile", () => {
     expect(
       parseVerifiedSilpoProfile({ success: false, profile: { id: "customer-42" } }),
     ).toBeNull();
+  });
+});
+
+describe("isReauthRequired", () => {
+  test("treats a 401 that survives a token refresh as an expired session", () => {
+    expect(
+      isReauthRequired(
+        new StreamableHTTPError(401, "Server returned 401 after successful authentication"),
+      ),
+    ).toBe(true);
+  });
+
+  test("leaves other transport failures retryable", () => {
+    expect(isReauthRequired(new StreamableHTTPError(503, "Service Unavailable"))).toBe(false);
   });
 });

@@ -4,8 +4,8 @@ import { useCookingSteps } from "@/features/cooking/api/use-cooking-steps";
 import { useCookingTimers } from "@/features/cooking/api/use-cooking-timers";
 import type { Id } from "@multiplayer-cooking/backend/convex/_generated/dataModel";
 
-import type { CookingCredential } from "@/features/cooking/lib/cooking-session";
-import type { CookingActions } from "@/features/cooking/model/types";
+import type { CookingCredential } from "@multiplayer-cooking/core/cooking/cooking-session";
+import type { CookingActions } from "@multiplayer-cooking/core/cooking/types";
 
 type ActionContext = {
   roomId: Id<"cookingRooms">;

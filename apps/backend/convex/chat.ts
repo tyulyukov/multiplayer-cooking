@@ -10,7 +10,7 @@ import {
 import { RateLimiter } from "@convex-dev/rate-limiter";
 import { SessionIdArg } from "convex-helpers/server/sessions";
 import { paginationOptsValidator } from "convex/server";
-import { v } from "convex/values";
+import { v, type Infer } from "convex/values";
 
 import { components, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -262,6 +262,55 @@ export const newThread = mutation({
   },
 });
 
+// Reruns the agent for the latest prompt when its reply failed. The prompt message, with its photos,
+// is reused; the failed reply is removed so the new one takes its place.
+export const retry = mutation({
+  args: { ...SessionIdArg, threadId: v.string() },
+  returns: v.union(
+    v.object({ ok: v.literal(true) }),
+    v.object({ ok: v.literal(false), message: v.string() }),
+  ),
+  handler: async (ctx, { sessionId, threadId }) => {
+    const user = await findUser(ctx, sessionId);
+
+    if (!user || !(await ownsThread(ctx, user, threadId))) {
+      return { ok: false as const, message: "Ця розмова недоступна. Почни нову." };
+    }
+
+    const { page } = await listThreadMessages(ctx, components.agent, {
+      threadId,
+      paginationOpts: { cursor: null, numItems: 20 },
+    });
+
+    const latestOrder = Math.max(...page.map((doc) => doc.order));
+    const turn = page.filter((doc) => doc.order === latestOrder);
+    const prompt = turn.find((doc) => doc.message?.role === "user");
+
+    if (!prompt || !turn.some((doc) => doc.status === "failed")) {
+      return { ok: false as const, message: "Цей запит уже не повторити. Надішли його ще раз." };
+    }
+
+    const admitted = await admitAiGeneration({
+      limit: (name, options) => rateLimiter.limit(ctx, name, { ...options, key: user._id }),
+    });
+
+    if (!admitted) {
+      return { ok: false as const, message: "Забагато запитів. Спробуй трохи пізніше." };
+    }
+
+    await ctx.runMutation(components.agent.messages.deleteByIds, {
+      messageIds: turn.filter((doc) => doc.stepOrder > prompt.stepOrder).map((doc) => doc._id),
+    });
+    await ctx.scheduler.runAfter(0, internal.cookingAgent.respond, {
+      threadId,
+      promptMessageId: prompt._id,
+      userId: user._id,
+    });
+
+    return { ok: true as const };
+  },
+});
+
 // Continues a thread after a server-side step (for example the cart is ready).
 export const followUp = internalMutation({
   args: { userId: v.id("users"), threadId: v.string(), text: v.string() },
@@ -399,7 +448,28 @@ const historyItemValidator = v.object({
   createdAt: v.number(),
   active: v.boolean(),
   photos: v.array(v.string()),
+  prompt: v.optional(v.string()),
+  failed: v.optional(v.boolean()),
 });
+
+// An untitled thread has no saved idea yet: show its first request and whether the last reply failed.
+async function untitledSummary(ctx: QueryCtx, threadId: string) {
+  const page = (order: "asc" | "desc", numItems: number) =>
+    ctx.runQuery(components.agent.messages.listMessagesByThreadId, {
+      threadId,
+      order,
+      excludeToolMessages: true,
+      paginationOpts: { cursor: null, numItems },
+    });
+
+  const [first, last] = await Promise.all([page("asc", 1), page("desc", 4)]);
+  const lastOrder = last.page[0]?.order;
+
+  return {
+    prompt: first.page[0]?.text?.trim().slice(0, 120) || undefined,
+    failed: last.page.some((doc) => doc.order === lastOrder && doc.status === "failed"),
+  };
+}
 
 async function threadPhotos(ctx: QueryCtx, threadId: string) {
   const ideas = await ctx.db
@@ -447,13 +517,19 @@ export const history = query({
     });
 
     return Promise.all(
-      threads.page.map(async (thread) => ({
-        threadId: thread._id,
-        title: thread.title,
-        createdAt: thread._creationTime,
-        active: thread._id === activeThreadId,
-        photos: await threadPhotos(ctx, thread._id),
-      })),
+      threads.page.map(async (thread) => {
+        const item: Infer<typeof historyItemValidator> = {
+          threadId: thread._id,
+          title: thread.title,
+          createdAt: thread._creationTime,
+          active: thread._id === activeThreadId,
+          photos: await threadPhotos(ctx, thread._id),
+        };
+
+        if (!thread.title) Object.assign(item, await untitledSummary(ctx, thread._id));
+
+        return item;
+      }),
     );
   },
 });

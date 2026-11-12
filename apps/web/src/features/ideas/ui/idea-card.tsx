@@ -9,10 +9,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { CookTogether } from "@/features/cooking/ui/cook-together";
 import { Markdown } from "@/shared/ui/markdown";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
-import type { Idea, IdeaVersions } from "@/features/ideas/model/types";
-import type { CookingSetup } from "@/features/cooking/model/types";
+import type { Idea, IdeaVersions } from "@multiplayer-cooking/core/ideas/types";
+import type { CookingSetup } from "@multiplayer-cooking/core/cooking/types";
 
-import { servingsLabel } from "../lib/idea-format";
+import { servingsLabel } from "@multiplayer-cooking/core/ideas/idea-format";
 import { IdeaPhoto } from "./idea-photo";
 import { IdeaProducts } from "./idea-products";
 import { VersionNav } from "./idea-version-nav";

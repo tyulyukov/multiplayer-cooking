@@ -2,7 +2,7 @@ import type { SessionId } from "convex-helpers/server/sessions";
 import { useMutation, useQuery } from "convex/react";
 
 import { api } from "@multiplayer-cooking/backend/convex/_generated/api";
-import type { AgentSettings, Memory } from "@/features/personalization/model/types";
+import type { AgentSettings, Memory } from "@multiplayer-cooking/core/personalization/types";
 
 const defaultAgentSettings: AgentSettings = {
   tone: "friendly",

@@ -8,14 +8,16 @@
     "scheme": "multiplayer-cooking",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.multiplayer-cooking"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0e7c77",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["android.permission.MODIFY_AUDIO_SETTINGS"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -37,7 +39,27 @@
             "enableSceneSupport": true
           }
         }
-      ]
+      ],
+      "expo-web-browser",
+      "expo-secure-store",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Дозволь доступ до фото, щоб додати знімок страви чи продуктів до розмови.",
+          "cameraPermission": "Дозволь доступ до камери, щоб сфотографувати страву чи продукти для розмови.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-notifications",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

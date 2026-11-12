@@ -2,7 +2,7 @@ import type { FC } from "react";
 import cookingStyles from "@/features/cooking/ui/cooking.module.scss";
 import { Button } from "@/shared/ui/button";
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
-import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
+import type { CookingActions, CookingRoomData } from "@multiplayer-cooking/core/cooking/types";
 
 type CookingLobbyProps = {
   data: CookingRoomData;

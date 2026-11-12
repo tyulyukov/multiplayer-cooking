@@ -2,7 +2,7 @@ import {
   IMAGE_UPLOAD_MAX_BYTES,
   IMAGE_UPLOAD_MAX_EDGE,
 } from "@multiplayer-cooking/backend/convex/lib/ai_config";
-import { isPlainObject, isString } from "@/shared/lib/type-guards";
+import { isPlainObject, isString } from "@multiplayer-cooking/core/shared/type-guards";
 
 function isUploadResponse(value: unknown): value is { storageId: string } {
   return isPlainObject(value) && "storageId" in value && isString(value.storageId);

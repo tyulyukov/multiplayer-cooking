@@ -6,7 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 import { KitchenIllustration } from "@/shared/ui/kitchen-illustration";
 import { Button } from "@/shared/ui/button";
-import type { Memory } from "@/features/personalization/model/types";
+import type { Memory } from "@multiplayer-cooking/core/personalization/types";
 
 import type { usePersonalSettings } from "../model/use-personal-settings";
 

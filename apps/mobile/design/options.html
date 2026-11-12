@@ -1,0 +1,3469 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Multiplayer Cooking · iOS design options</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Golos+Text:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f3eee4;
+        --ink: #16191d;
+        --card: #fff;
+        --muted: #e9e3d7;
+        --mutedfg: #666d74;
+        --border: #ddd6c9;
+        --lime: #c8e63c;
+        --limefg: #1f2a00;
+        --mag: #e5127f;
+        --magdeep: #b40d63;
+        --maghi: #ff8fcb;
+        --teal: #3ec1be;
+        --tealdeep: #147d7b;
+        --blue: #3f7dff;
+        --cherry: #b5223b;
+        --cherrysoft: #fbe9ea;
+        --chrome: linear-gradient(160deg, #f2f4f6, #a7b0ba 40%, #6d7883 70%, #f2f4f6);
+        --sign: "Oswald", sans-serif;
+        --sans: "Golos Text", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.5 var(--sans);
+      }
+      a {
+        color: var(--tealdeep);
+      }
+      .page {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 32px;
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      @media (max-width: 900px) {
+        .page {
+          grid-template-columns: 1fr;
+        }
+        .toc {
+          position: static;
+        }
+      }
+      .toc {
+        position: sticky;
+        top: 16px;
+        align-self: start;
+        background: var(--card);
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        padding: 14px 16px;
+        max-height: calc(100vh - 32px);
+        overflow: auto;
+      }
+      .toc h2 {
+        font: 600 13px var(--sign);
+        color: var(--mutedfg);
+        margin: 0 0 8px;
+        letter-spacing: 0.02em;
+      }
+      .toc ol {
+        margin: 0;
+        padding: 0 0 0 18px;
+        font-size: 14px;
+      }
+      .toc li {
+        margin: 4px 0;
+      }
+      .toc a {
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .toc a:hover {
+        text-decoration: underline;
+      }
+      .toc .pick {
+        display: block;
+        font-size: 12px;
+        color: var(--tealdeep);
+      }
+      header.hero {
+        grid-column: 1/-1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .band {
+        height: 36px;
+        background: repeating-conic-gradient(var(--ink) 0 25%, var(--card) 0 50%) 0 0/36px 36px;
+        border-bottom: 3px solid var(--blue);
+        box-shadow: 0 3px 10px rgba(63, 125, 255, 0.5);
+        border-radius: 14px 14px 0 0;
+      }
+      .plate {
+        display: inline-block;
+        border: 3px solid transparent;
+        border-radius: 18px;
+        background:
+          linear-gradient(var(--mag), var(--mag)) padding-box,
+          var(--chrome) border-box;
+        box-shadow:
+          inset 0 0 0 2px var(--maghi),
+          inset 0 -6px 0 var(--magdeep);
+        color: #fff;
+        font: 700 34px/1 var(--sign);
+        padding: 10px 18px 12px;
+      }
+      .hero p {
+        max-width: 72ch;
+        margin: 0;
+      }
+      .legend {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        color: var(--mutedfg);
+      }
+      .legend span {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 2px 8px;
+        background: var(--card);
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        gap: 48px;
+      }
+      .topic h2 {
+        font: 600 26px/1.1 var(--sign);
+        margin: 0 0 6px;
+      }
+      .topic .q {
+        margin: 0 0 16px;
+        color: var(--mutedfg);
+        max-width: 80ch;
+      }
+      .opts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .opt {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .opt.picked {
+        border-color: var(--ink);
+      }
+      .opt h3 {
+        font: 600 17px/1.2 var(--sans);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .badge {
+        font: 600 12px var(--sans);
+        background: var(--lime);
+        color: var(--limefg);
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        padding: 1px 8px;
+      }
+      .opt p {
+        margin: 0;
+        font-size: 14px;
+      }
+      .opt .why {
+        color: var(--ink);
+      }
+      .opt .trade {
+        color: var(--mutedfg);
+      }
+      .opt .trade b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .hig {
+        font-size: 12px;
+        color: var(--tealdeep);
+      }
+      /* phone */
+      .frame {
+        width: 215px;
+        height: 445px;
+        margin: 0 auto;
+        position: relative;
+      }
+      .phone {
+        width: 390px;
+        height: 808px;
+        transform: scale(0.55);
+        transform-origin: top left;
+        background: var(--bg);
+        border: 6px solid var(--ink);
+        border-radius: 46px;
+        overflow: hidden;
+        position: relative;
+        font-size: 17px;
+        line-height: 1.35;
+      }
+      .phone * {
+        box-sizing: border-box;
+      }
+      .sb {
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 600 15px var(--sans);
+      }
+      .hdr {
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px;
+        position: relative;
+        z-index: 3;
+      }
+      .hdr .l,
+      .hdr .r {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .gl {
+        height: 34px;
+        min-width: 34px;
+        padding: 0 10px;
+        border-radius: 17px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(12px) saturate(1.4);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        font: 600 15px var(--sans);
+        color: var(--ink);
+        gap: 6px;
+        position: relative;
+      }
+      .gl .dot {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--mag);
+      }
+      .gl .n {
+        font: 700 13px var(--sans);
+      }
+      .hdr .title {
+        font: 600 17px var(--sans);
+      }
+      .chk {
+        height: 24px;
+        background: repeating-conic-gradient(var(--ink) 0 25%, var(--card) 0 50%) 0 0/24px 24px;
+        border-bottom: 2px solid var(--blue);
+        box-shadow: 0 2px 6px rgba(63, 125, 255, 0.5);
+      }
+      .chk.sm {
+        height: 12px;
+        background-size: 12px 12px;
+      }
+      .body {
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .sign {
+        display: inline-block;
+        align-self: flex-start;
+        border: 2px solid transparent;
+        border-radius: 18px;
+        background:
+          linear-gradient(var(--mag), var(--mag)) padding-box,
+          var(--chrome) border-box;
+        box-shadow:
+          inset 0 0 0 2px var(--maghi),
+          inset 0 -5px 0 var(--magdeep);
+        color: #fff;
+        font: 700 28px/1.05 var(--sign);
+        padding: 8px 16px 10px;
+      }
+      .sign.sm {
+        font-size: 20px;
+        border-radius: 14px;
+        padding: 6px 12px 8px;
+        box-shadow:
+          inset 0 0 0 2px var(--maghi),
+          inset 0 -4px 0 var(--magdeep);
+      }
+      .sign.center {
+        align-self: center;
+      }
+      .chrome {
+        border: 2px solid transparent;
+        border-radius: 22px;
+        background:
+          linear-gradient(var(--card), var(--card)) padding-box,
+          var(--chrome) border-box;
+        padding: 14px;
+      }
+      .chrome.r14 {
+        border-radius: 14px;
+      }
+      .ph {
+        color: var(--mutedfg);
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .row.sb2 {
+        justify-content: space-between;
+      }
+      .lime {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 52px;
+        padding: 0 18px;
+        border-radius: 12px;
+        background: var(--lime);
+        color: var(--limefg);
+        font: 700 16px var(--sans);
+        box-shadow:
+          0 0 0 2px var(--ink),
+          inset 0 -3px 0 rgba(0, 0, 0, 0.15);
+      }
+      .lime.full {
+        width: 100%;
+      }
+      .lime.dis {
+        opacity: 0.45;
+      }
+      .ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 48px;
+        padding: 0 16px;
+        border-radius: 12px;
+        background: var(--card);
+        border: 2px solid var(--ink);
+        font: 600 15px var(--sans);
+      }
+      .ghost.full {
+        width: 100%;
+      }
+      .txt {
+        font: 600 15px var(--sans);
+        color: var(--ink);
+        padding: 0 8px;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 10px;
+        border: 2px solid var(--ink);
+        background: var(--card);
+        font: 600 14px var(--sans);
+      }
+      .tag i {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        border: 2px solid var(--tealdeep);
+        display: inline-block;
+      }
+      .tag.on {
+        background: var(--ink);
+        color: #fff;
+      }
+      .tag.on i {
+        border-color: var(--lime);
+      }
+      .tag.col {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .tag.col b {
+        color: var(--tealdeep);
+        font: 600 13px var(--sign);
+        width: 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+      .card.now {
+        border-color: var(--ink);
+      }
+      .card.done {
+        opacity: 0.5;
+        text-decoration: line-through;
+      }
+      .eyebrow {
+        font: 600 13px var(--sign);
+        color: var(--tealdeep);
+        letter-spacing: 0.02em;
+      }
+      .eyebrow.mu {
+        color: var(--mutedfg);
+      }
+      .h24 {
+        font: 600 24px/1.05 var(--sign);
+      }
+      .h22 {
+        font: 600 22px/1.1 var(--sign);
+      }
+      .h17 {
+        font: 600 17px/1.2 var(--sans);
+      }
+      .meta {
+        font: 400 13px var(--sans);
+        color: var(--mutedfg);
+      }
+      .small {
+        font-size: 15px;
+      }
+      .bb {
+        border: 2px solid transparent;
+        border-radius: 22px;
+        background:
+          linear-gradient(var(--ink), var(--ink)) padding-box,
+          var(--chrome) border-box;
+        color: #fff;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .bb .num {
+        font: 700 44px/1 var(--sign);
+        color: var(--lime);
+        text-shadow: 0 0 10px rgba(200, 230, 60, 0.6);
+        font-variant-numeric: tabular-nums;
+      }
+      .bb .lbl {
+        font: 600 15px var(--sans);
+      }
+      .bb .sub {
+        font: 400 13px var(--sans);
+        color: #d4dae0;
+      }
+      .tile {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        border: 2px solid transparent;
+        background:
+          linear-gradient(var(--teal), var(--teal)) padding-box,
+          var(--chrome) border-box;
+        box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.15);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: 700 20px var(--sign);
+      }
+      .tile.done {
+        background:
+          linear-gradient(var(--ink), var(--ink)) padding-box,
+          var(--chrome) border-box;
+        color: var(--lime);
+      }
+      .av {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: 700 12px var(--sans);
+        border: 2px solid var(--bg);
+        flex: none;
+      }
+      .av.me {
+        background: var(--teal);
+        color: var(--ink);
+      }
+      .av.ot {
+        background: var(--mag);
+        color: #fff;
+      }
+      .av.all {
+        background: var(--lime);
+        color: var(--limefg);
+      }
+      .av.em {
+        background: var(--muted);
+        color: var(--ink);
+      }
+      .av.big {
+        width: 56px;
+        height: 56px;
+        font-size: 20px;
+      }
+      .pic {
+        background: linear-gradient(135deg, #e7c9a9, #b86b4b 55%, #6e3b2a);
+        border: 2px solid var(--border);
+        border-radius: 14px;
+      }
+      .pic.r10 {
+        border-radius: 10px;
+      }
+      .bub {
+        max-width: 88%;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 17px;
+      }
+      .bub.me {
+        align-self: flex-end;
+        background: var(--ink);
+        color: #fff;
+        border-bottom-right-radius: 4px;
+      }
+      .bub.ai {
+        align-self: flex-start;
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-bottom-left-radius: 4px;
+      }
+      .bub.ai .fade {
+        opacity: 0.35;
+      }
+      .feed {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .shim {
+        font: 400 13px var(--sans);
+        color: var(--mutedfg);
+        background: linear-gradient(90deg, var(--mutedfg) 30%, #b9bec4 50%, var(--mutedfg) 70%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .glass {
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(14px) saturate(1.4);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+      }
+      .glass.chr {
+        border: 2px solid transparent;
+        background:
+          linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)) padding-box,
+          var(--chrome) border-box;
+      }
+      .comp {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 30px;
+        border-radius: 22px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--mutedfg);
+      }
+      .comp .send {
+        margin-left: auto;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--ink);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        flex: none;
+      }
+      .comp .att {
+        width: 24px;
+        height: 24px;
+        border: 2px solid var(--tealdeep);
+        border-radius: 6px;
+        flex: none;
+      }
+      .dock {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 30px;
+        height: 64px;
+        border-radius: 22px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 0 10px;
+        overflow: hidden;
+      }
+      .chip {
+        background: var(--ink);
+        color: #fff;
+        border-radius: 14px;
+        padding: 6px 10px;
+        display: flex;
+        flex-direction: column;
+        flex: none;
+      }
+      .chip .n {
+        font: 700 20px/1 var(--sign);
+        color: var(--lime);
+      }
+      .chip .l {
+        font: 600 12px var(--sans);
+      }
+      .chip .e {
+        font: 600 10px var(--sans);
+        color: var(--teal);
+      }
+      .peek {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 96px;
+        background: var(--card);
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .peek .meta {
+        color: var(--tealdeep);
+      }
+      .dim {
+        position: absolute;
+        inset: 0;
+        background: rgba(22, 25, 29, 0.35);
+      }
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--card);
+        border-radius: 22px 22px 0 0;
+        padding: 8px 16px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .sheet .grab {
+        width: 36px;
+        height: 5px;
+        border-radius: 3px;
+        background: #c7c7cc;
+        margin: 0 auto;
+      }
+      .sheet .shead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .sheet .x {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #ececec;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+      }
+      .sheet .seg {
+        display: flex;
+        background: #eeeeef;
+        border-radius: 10px;
+        padding: 2px;
+        font: 600 14px var(--sans);
+      }
+      .sheet .seg span {
+        flex: 1;
+        text-align: center;
+        padding: 6px;
+        border-radius: 8px;
+      }
+      .sheet .seg .on {
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      }
+      .neon {
+        height: 2px;
+        background: var(--blue);
+        box-shadow: 0 0 6px var(--blue);
+      }
+      .foot {
+        margin: 0 -16px -24px;
+        padding: 12px 16px 28px;
+        border-top: 2px solid var(--blue);
+        box-shadow: 0 -2px 6px rgba(63, 125, 255, 0.4);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: var(--card);
+      }
+      .list .li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 56px;
+        border-bottom: 1px solid var(--border);
+      }
+      .list .li:last-child {
+        border-bottom: 0;
+      }
+      .tabbar {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 24px;
+        height: 64px;
+        border-radius: 32px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        font: 600 11px var(--sans);
+      }
+      .tabbar div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+      }
+      .tabbar i {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: var(--mutedfg);
+        display: block;
+      }
+      .tabbar .on i {
+        background: var(--ink);
+      }
+      .tabbar .on {
+        color: var(--ink);
+      }
+      .tabbar div {
+        color: var(--mutedfg);
+      }
+      .illus {
+        display: block;
+        margin: 0 auto;
+      }
+      .alert {
+        background: var(--cherrysoft);
+        border: 2px solid rgba(181, 34, 59, 0.3);
+        border-radius: 14px;
+        padding: 10px 12px;
+        color: var(--cherry);
+        font-size: 14px;
+      }
+      .ban {
+        background: var(--ink);
+        color: #fff;
+        font: 600 14px var(--sans);
+        padding: 8px 16px;
+      }
+      .rail {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font: 600 13px var(--sign);
+        color: var(--mutedfg);
+      }
+      .rail:before,
+      .rail:after {
+        content: "";
+        flex: 1;
+        height: 2px;
+        background: rgba(22, 25, 29, 0.15);
+      }
+      .chk-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 40px;
+        font-size: 16px;
+      }
+      .box {
+        width: 22px;
+        height: 22px;
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+      .box.on {
+        background: var(--teal);
+        border-color: var(--teal);
+      }
+      .prog {
+        height: 6px;
+        background: var(--muted);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .prog i {
+        display: block;
+        height: 100%;
+        width: 30%;
+        background: var(--teal);
+      }
+      .ticket {
+        background: var(--card);
+        border: 2px solid var(--ink);
+        border-radius: 18px 18px 0 0;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+        text-align: center;
+        position: relative;
+      }
+      .ticket:after {
+        content: "";
+        position: absolute;
+        left: -2px;
+        right: -2px;
+        bottom: -12px;
+        height: 12px;
+        background: radial-gradient(
+            circle at 10px -2px,
+            transparent 10px,
+            var(--ink) 10px,
+            var(--ink) 12px,
+            transparent 12px
+          )
+          0 0/22px 12px;
+      }
+      .tear {
+        width: 100%;
+        border-top: 2px dashed var(--border);
+      }
+      .scallop {
+        height: 14px;
+        background: radial-gradient(circle at 11px 0, var(--card) 10px, transparent 11px) 0 0/22px
+          14px;
+        position: relative;
+        top: -2px;
+      }
+      .stepper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        font: 700 28px var(--sign);
+      }
+      .stepper b {
+        width: 44px;
+        height: 44px;
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: 700 22px var(--sans);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 17px;
+        padding: 0 12px;
+        height: 34px;
+        background: var(--ink);
+        color: #fff;
+        font: 700 15px var(--sign);
+      }
+      .pill .n {
+        color: var(--lime);
+      }
+      .di {
+        position: absolute;
+        left: 50%;
+        top: 14px;
+        transform: translateX(-50%);
+        height: 36px;
+        border-radius: 18px;
+        background: #000;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 0 16px;
+        font: 700 15px var(--sign);
+        z-index: 5;
+      }
+      .di .n {
+        color: var(--lime);
+      }
+      .note {
+        font-size: 13px;
+        color: var(--mutedfg);
+        text-align: center;
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .seat {
+        height: 64px;
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 700 22px var(--sign);
+      }
+      .seat.on {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+      .ring {
+        position: relative;
+        width: 260px;
+        height: 200px;
+        margin: 0 auto;
+      }
+      .ring .av {
+        position: absolute;
+      }
+      .ring .table {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 150px;
+        height: 96px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: var(--card);
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 600 14px var(--sans);
+        color: var(--mutedfg);
+        text-align: center;
+        padding: 12px;
+      }
+      .qr {
+        width: 120px;
+        height: 120px;
+        background: repeating-conic-gradient(var(--ink) 0 25%, var(--card) 0 50%) 0 0/16px 16px;
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        margin: 0 auto;
+      }
+      .stamp {
+        position: absolute;
+        right: 18px;
+        top: 18px;
+        transform: rotate(-8deg);
+      }
+      .linebox {
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        color: var(--mutedfg);
+        font-size: 14px;
+      }
+      .lineicon {
+        width: 56px;
+        height: 56px;
+        border: 2px solid var(--mutedfg);
+        border-radius: 12px;
+      }
+      .scene {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 300px;
+        background: linear-gradient(#e9d7bf, #dcc8aa 50%, #3ec1be 50%, #3ec1be 62%, #f1e8d6 62%);
+      }
+      .dots {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+      }
+      .dots i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--teal);
+      }
+      .dots i:nth-child(2) {
+        opacity: 0.7;
+      }
+      .dots i:nth-child(3) {
+        opacity: 0.45;
+      }
+      .dither {
+        aspect-ratio: 3/2;
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        background:
+          radial-gradient(circle, var(--ink) 1px, transparent 1.5px) 0 0/8px 8px,
+          var(--bg);
+        display: flex;
+        align-items: flex-end;
+        padding: 8px;
+        font-size: 13px;
+        color: var(--tealdeep);
+      }
+      .drawer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: var(--card);
+        border-right: 2px solid var(--ink);
+        padding: 70px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        font: 600 17px var(--sans);
+        z-index: 4;
+      }
+      .menu {
+        position: absolute;
+        right: 12px;
+        top: 100px;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(20px);
+        border-radius: 14px;
+        padding: 6px 0;
+        width: 230px;
+        font: 400 16px var(--sans);
+        z-index: 6;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+      }
+      .menu div {
+        padding: 10px 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      .menu div:last-child {
+        border: 0;
+        color: var(--cherry);
+      }
+      footer {
+        grid-column: 1/-1;
+        color: var(--mutedfg);
+        font-size: 13px;
+        padding: 24px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="band"></div>
+        <div><span class="plate">iOS: варіанти рішень</span></div>
+        <p>
+          Кожна тема нижче має три справді різні рішення. Макети намальовані у реальній палітрі на
+          кадрі 390pt. Варіант із позначкою <span class="badge">Picked</span> іде в збірку; решта
+          лишаються для перегляду власником. Специфікація обраних рішень — у
+          <code>MOBILE_DESIGN.md</code>.
+        </p>
+        <div class="legend">
+          <span>‹ назад</span><span>⟲ історія</span><span>⚉ профіль</span><span>⚇ кухарі</span
+          ><span>✎ помічник</span><span>⋯ меню</span
+          ><span>Скляні капсули = Liquid Glass (тільки плаваючий шар)</span>
+        </div>
+      </header>
+
+      <nav class="toc">
+        <h2>Теми</h2>
+        <ol>
+          <li><a href="#nav">Структура навігації</a><span class="pick">Stack + toolbar</span></li>
+          <li>
+            <a href="#checker">Де живе шахівниця</a><span class="pick">Смуга 24pt у контенті</span>
+          </li>
+          <li>
+            <a href="#home">Головна: герой і порожній композер</a
+            ><span class="pick">Табличка + хромований композер</span>
+          </li>
+          <li>
+            <a href="#composer">Стиль композера</a
+            ><span class="pick">Гібрид: хром удома, скло в чаті</span>
+          </li>
+          <li>
+            <a href="#stream">Поява тексту агента</a><span class="pick">Абзацами з fade</span>
+          </li>
+          <li>
+            <a href="#working">Індикатор «агент працює»</a><span class="pick">Рядок у стрічці</span>
+          </li>
+          <li>
+            <a href="#quest">Уточнювальні питання</a><span class="pick">Картка у стрічці</span>
+          </li>
+          <li>
+            <a href="#idea">Пік ідеї та аркуш ідеї</a
+            ><span class="pick">Peek + formSheet 0.6/1</span>
+          </li>
+          <li><a href="#cart">Кошик</a><span class="pick">Липкий футер</span></li>
+          <li>
+            <a href="#setup">Налаштування «Готуємо разом»</a
+            ><span class="pick">Аркуш зі степером</span>
+          </li>
+          <li><a href="#lobby">Лобі</a><span class="pick">Список із порожніми місцями</span></li>
+          <li>
+            <a href="#timeline">Таймлайн і поточний крок</a
+            ><span class="pick">Вертикальний таймлайн</span>
+          </li>
+          <li>
+            <a href="#timer">Док таймерів</a
+            ><span class="pick">Скляний док + Live Activity далі</span>
+          </li>
+          <li>
+            <a href="#helper">Вхід у помічника</a
+            ><span class="pick">Кнопка в хедері + «Є питання?»</span>
+          </li>
+          <li>
+            <a href="#done">Момент завершення</a><span class="pick">Квиток на весь екран</span>
+          </li>
+          <li>
+            <a href="#empty">Ілюстрації порожніх станів</a
+            ><span class="pick">Сімейство soft-3D 80–112pt</span>
+          </li>
+          <li>
+            <a href="#address">Запит адреси</a><span class="pick">Захищена картка у стрічці</span>
+          </li>
+          <li><a href="#history">Історія</a><span class="pick">formSheet 0.6/1</span></li>
+        </ol>
+      </nav>
+
+      <main>
+        <!-- 1 NAV -->
+        <section class="topic" id="nav">
+          <h2>1. Структура навігації</h2>
+          <p class="q">
+            Продукт — лінійний потік «ідея → рецепт → кошик → кухня». Історія і профіль вторинні.
+            Куди покласти верхній рівень?
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body">
+                    <span class="sign">Що готуємо сьогодні?</span>
+                    <div class="chrome">
+                      <div class="ph">Опиши страву або напиши, що є вдома</div>
+                      <div style="height: 70px"></div>
+                      <div class="row sb2">
+                        <span class="meta">&nbsp;</span><span class="lime">Згенерувати</span>
+                      </div>
+                    </div>
+                    <div class="tags">
+                      <span class="tag"><i></i>Паста на двох</span
+                      ><span class="tag"><i></i>Щось із куркою</span
+                      ><span class="tag"><i></i>Не знаю, здивуй мене</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Один Stack + toolbar <span class="badge">Picked</span></h3>
+              <p class="why">
+                Головна — корінь. Чат — push. Кухня — push. Історія, налаштування, ідея — formSheet.
+                Історія та профіль живуть у правій частині хедера й не рухаються між головною і
+                чатом.
+              </p>
+              <p class="trade">
+                <b>+</b> ніщо не відволікає від композера; кухня не мусить ховати таб-бар; найменше
+                коду. <b>−</b> історія на один тап далі, ніж у табі.
+              </p>
+              <p class="hig">
+                tab-bars.md › Best practices: «Use a tab bar to support navigation, not to provide
+                actions»; toolbars.md › Phone (iOS): «Prioritize only the most important items».
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body">
+                    <span class="sign">Що готуємо сьогодні?</span>
+                    <div class="chrome">
+                      <div class="ph">Опиши страву або напиши, що є вдома</div>
+                      <div style="height: 60px"></div>
+                      <div class="row sb2"><span></span><span class="lime">Згенерувати</span></div>
+                    </div>
+                    <div class="tags">
+                      <span class="tag"><i></i>Паста на двох</span
+                      ><span class="tag"><i></i>Щось із куркою</span>
+                    </div>
+                  </div>
+                  <div class="tabbar glass">
+                    <div class="on"><i></i>Кухня</div>
+                    <div><i></i>Історія</div>
+                    <div><i></i>Профіль</div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · NativeTabs: Кухня · Історія · Профіль</h3>
+              <p class="why">
+                Три системні таби зі скла. Історія стає повноцінним списком, профіль — екраном.
+              </p>
+              <p class="trade">
+                <b>+</b> найзвичніша iOS-структура, історія в один тап. <b>−</b> два з трьох табів —
+                рідкі екрани; кухня на весь екран має ховати таб-бар (HIG дозволяє лише для
+                модалок); таб-бар з'їдає 64pt над композером.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">☰</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body">
+                    <span class="sign">Що готуємо сьогодні?</span>
+                    <div class="chrome">
+                      <div class="ph">Опиши страву…</div>
+                      <div style="height: 60px"></div>
+                    </div>
+                  </div>
+                  <div class="dim"></div>
+                  <div class="drawer">
+                    <span>Нова розмова</span><span>Історія</span><span>Спогади</span
+                    ><span>Налаштування</span><span style="color: var(--cherry)">Вийти</span>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Бічне меню («гамбургер»)</h3>
+              <p class="why">Усе вторинне — у висувній панелі зліва.</p>
+              <p class="trade">
+                <b>+</b> необмежено пунктів. <b>−</b> не iOS-патерн, ховає розташування користувача,
+                конфліктує зі swipe-back у стеку.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 2 CHECKER -->
+        <section class="topic" id="checker">
+          <h2>2. Де живе шахівниця і неон</h2>
+          <p class="q">
+            На вебі смуга 48px стоїть над усім. На iOS хедер прозорий і скляний, а зверху — safe
+            area. Куди дівати підлогу дайнера?
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body">
+                    <span class="sign">Паста з креветками</span>
+                    <div class="meta">Ти й Аня · 2 порції</div>
+                    <div class="card"><div class="h17">Поставити воду</div></div>
+                    <div class="card now">
+                      <div class="eyebrow">Твій крок</div>
+                      <div class="h24">Дрібно наріж часник</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Смуга 24pt — перший елемент контенту <span class="badge">Picked</span></h3>
+              <p class="why">
+                Стоїть одразу під хедером і прокручується під скло. У стані спокою хедер лежить на
+                кремі, кнопки читаються. Тільки на кореневих екранах; аркуші отримують лише неон як
+                верх липкого футера.
+              </p>
+              <p class="trade">
+                <b>+</b> ідентичність є, кнопки хедера монохромні й читабельні. <b>−</b> підлога «на
+                стелі»; забирає 26pt, доки не прокрутив.
+              </p>
+              <p class="hig">
+                liquid-glass.md › Color on glass: «the resting state… must keep controls legible».
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div
+                    class="chk"
+                    style="
+                      height: 102px;
+                      background-size: 24px 24px;
+                      position: absolute;
+                      left: 0;
+                      right: 0;
+                      top: 0;
+                    "
+                  ></div>
+                  <div
+                    class="sb"
+                    style="position: relative; color: #fff; mix-blend-mode: difference"
+                  >
+                    9:41
+                  </div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="body" style="padding-top: 20px">
+                    <span class="sign">Паста з креветками</span>
+                    <div class="card"><div class="h17">Поставити воду</div></div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Шахівниця за скляним хедером</h3>
+              <p class="why">Смуга закріплена у зоні статус-бару і хедера; скло її розмиває.</p>
+              <p class="trade">
+                <b>+</b> підлога завжди на місці, навіть при прокрутці. <b>−</b> контрастна
+                шахівниця під склом робить кнопки хедера і час нечитабельними; Reduce Transparency
+                дає суцільну сіру смугу.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="body">
+                    <span class="sign">Паста з креветками</span>
+                    <div class="card"><div class="h17">Поставити воду</div></div>
+                    <div class="card now">
+                      <div class="eyebrow">Твій крок</div>
+                      <div class="h24">Дрібно наріж часник</div>
+                    </div>
+                  </div>
+                  <div
+                    class="chk"
+                    style="
+                      position: absolute;
+                      left: 0;
+                      right: 0;
+                      bottom: 0;
+                      height: 34px;
+                      border-bottom: 0;
+                      border-top: 2px solid var(--blue);
+                    "
+                  ></div>
+                </div>
+              </div>
+              <h3>C · Підлога внизу, над home indicator</h3>
+              <p class="why">Семантично точно: шахівниця — підлога. Неон — її верхній край.</p>
+              <p class="trade">
+                <b>+</b> красива метафора. <b>−</b> саме внизу живуть композер, док і CTA; скло над
+                шахівницею мерехтить і бореться з home indicator.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 3 HOME -->
+        <section class="topic" id="home">
+          <h2>3. Головна: герой і порожній композер</h2>
+          <p class="q">
+            Порожній стан головної — єдине місце, де продукт представляє себе. Що є героєм?
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body">
+                    <span class="sign">Що готуємо сьогодні?</span>
+                    <div class="chrome">
+                      <div class="ph">Опиши страву або напиши, що є вдома</div>
+                      <div style="height: 80px"></div>
+                      <div class="row sb2">
+                        <span class="row"
+                          ><span
+                            class="att"
+                            style="
+                              width: 24px;
+                              height: 24px;
+                              border: 2px solid var(--tealdeep);
+                              border-radius: 6px;
+                            "
+                          ></span></span
+                        ><span class="lime">Згенерувати</span>
+                      </div>
+                    </div>
+                    <div class="tags">
+                      <span class="tag"><i></i>Паста на двох</span
+                      ><span class="tag"><i></i>Щось із куркою</span
+                      ><span class="tag"><i></i>Вечеря за 30 хв</span
+                      ><span class="tag"><i></i>Не знаю, здивуй мене</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Табличка + хромований композер + теги <span class="badge">Picked</span></h3>
+              <p class="why">
+                Пряме перенесення веб-героя. Композер і є порожнім станом; підказки — ink-теги.
+                Рейку «Ідея з'явиться тут» прибрано.
+              </p>
+              <p class="trade">
+                <b>+</b> максимальна впізнаваність; завдання видно одразу. <b>−</b> клавіатура ховає
+                теги — тому екран keyboard-aware, CTA лишається над клавіатурою.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body">
+                    <span class="sign">Меню дня</span>
+                    <div class="bb" style="flex-direction: column; align-items: stretch; gap: 10px">
+                      <div class="row sb2">
+                        <span class="lbl">Паста на двох</span><span class="sub">25 хв</span>
+                      </div>
+                      <div class="row sb2">
+                        <span class="lbl">Щось із куркою</span><span class="sub">40 хв</span>
+                      </div>
+                      <div class="row sb2">
+                        <span class="lbl">Не знаю, здивуй мене</span><span class="sub">?</span>
+                      </div>
+                    </div>
+                    <div class="chrome"><div class="ph">Або опиши своє…</div></div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Чорна дошка меню, композер під нею</h3>
+              <p class="why">
+                Швидкі підказки як дайнерівське меню на чорній дошці з лаймовими літерами; поле
+                вводу другорядне.
+              </p>
+              <p class="trade">
+                <b>+</b> сильний, запам'ятовуваний образ. <b>−</b> підказки — випадкові й не є меню;
+                чорна дошка зарезервована під таймери (один колір — одне значення).
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="scene"></div>
+                  <div class="body" style="position: relative">
+                    <span class="sign center">Що готуємо сьогодні?</span>
+                    <div class="chrome" style="margin-top: 220px">
+                      <div class="ph">Опиши страву або напиши, що є вдома</div>
+                      <div class="row sb2" style="margin-top: 12px">
+                        <span></span><span class="lime">Згенерувати</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Кухонна сцена з екрана підключення</h3>
+              <p class="why">Той самий фон, що й на Connect; композер плаває над стільницею.</p>
+              <p class="trade">
+                <b>+</b> безшовний перехід від підключення. <b>−</b> сцена під клавіатурою зникає,
+                теги нема куди ставити, у чаті фон все одно кремовий — розрив.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 4 COMPOSER -->
+        <section class="topic" id="composer">
+          <h2>4. Стиль композера</h2>
+          <p class="q">
+            Один композер працює на головній, у чаті та в помічнику. На головній він — контент; у
+            чаті — плаває над стрічкою.
+          </p>
+          <div class="opts">
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">
+                      Легка паста з часником і лимоном. Почнімо з інгредієнтів…
+                    </div>
+                    <div class="bub ai">Є два варіанти соусу…</div>
+                  </div>
+                  <div
+                    class="comp chrome"
+                    style="
+                      background:
+                        linear-gradient(var(--card), var(--card)) padding-box,
+                        var(--chrome) border-box;
+                    "
+                  >
+                    <span class="att"></span>Уточни або попроси інше<span class="send">↑</span>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Хромована картка всюди</h3>
+              <p class="why">Непрозорий хром і на головній, і в чаті.</p>
+              <p class="trade">
+                <b>+</b> одна форма. <b>−</b> непрозорий блок на стрічці ріже контент; стрічка не
+                просвічує, скроловий край виглядає «веб».
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">
+                      Легка паста з часником і лимоном. Почнімо з інгредієнтів…
+                    </div>
+                    <div class="bub ai">Є два варіанти соусу…</div>
+                  </div>
+                  <div class="comp glass">
+                    <span class="att"></span>Уточни або попроси інше<span class="send">↑</span>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Скляна капсула всюди (t3)</h3>
+              <p class="why">
+                GlassView-капсула, що розгортається у картку при фокусі; така сама на головній.
+              </p>
+              <p class="trade">
+                <b>+</b> найнативніше. <b>−</b> на головній композер — герой і контент, а скло в
+                контенті HIG забороняє; губиться хром як знак «це наш продукт».
+              </p>
+            </article>
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">
+                      Легка паста з часником і лимоном. Почнімо з інгредієнтів…
+                    </div>
+                    <div class="bub ai">Є два варіанти соусу…</div>
+                  </div>
+                  <div class="comp glass chr">
+                    <span class="att"></span>Уточни або попроси інше<span class="send">↑</span>
+                  </div>
+                </div>
+              </div>
+              <h3>
+                C · Гібрид: хром удома, скло з хромованим кантом у чаті
+                <span class="badge">Picked</span>
+              </h3>
+              <p class="why">
+                На головній — непрозора хромована картка з лаймовим CTA всередині (контент-шар). У
+                чаті й помічнику — скляна капсула з 2pt хромованим кантом, що розгортається на 220ms
+                при фокусі; кнопка «надіслати» — чорне коло 32pt.
+              </p>
+              <p class="trade">
+                <b>+</b> шар контенту/функцій дотримано, хром лишається підписом. <b>−</b> дві
+                оболонки для одного тіла; скло поверх хрому треба перевірити на Reduce Transparency
+                (стає білим).
+              </p>
+              <p class="hig">
+                liquid-glass.md › Where the material belongs: «Don't use Liquid Glass in the content
+                layer».
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 5 STREAM -->
+        <section class="topic" id="stream">
+          <h2>5. Поява тексту агента</h2>
+          <p class="q">
+            Відповідь приходить стрімом. Як її показувати, щоб частковий markdown ніколи не ламався
+            і стрічка не стрибала?
+          </p>
+          <div class="opts">
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">
+                      Легка паста з часником і лимоном. Почнімо з інгре<span
+                        style="border-right: 2px solid var(--ink)"
+                        >&nbsp;</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Посимвольно (useSmoothText)</h3>
+              <p class="why">Текст друкується, як на вебі.</p>
+              <p class="trade">
+                <b>+</b> відчуття живого друку. <b>−</b> частковий markdown (`**жирн`) миготить;
+                висота рядка змінюється щокадру; хаптика на кожен символ неможлива.
+              </p>
+            </article>
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">
+                      <div>Легка паста з часником і лимоном. Почнімо з інгредієнтів.</div>
+                      <div style="margin-top: 8px">
+                        Для двох вистачить 250 г спагеті і 300 г креветок.
+                      </div>
+                      <div class="fade" style="margin-top: 8px">Соус зберемо з оливкової олії…</div>
+                    </div>
+                    <div class="row">
+                      <span
+                        style="
+                          width: 20px;
+                          height: 20px;
+                          border: 2px solid var(--tealdeep);
+                          border-radius: 50%;
+                        "
+                      ></span
+                      ><span class="shim">Пишу відповідь…</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Абзацами з fade-in <span class="badge">Picked</span></h3>
+              <p class="why">
+                Буфер показує тільки завершені абзаци і списки (`splitBufferedAssistantText`), не
+                частіше 400ms; новий блок входить FadeIn 220ms; `selectionAsync` на блок (≤
+                1/320ms). Після завершення — повний текст.
+              </p>
+              <p class="trade">
+                <b>+</b> рендер завжди валідний, стрічка рухається великими спокійними кроками,
+                хаптика відчувається як «пульс». <b>−</b> перший блок з'являється пізніше (до 1–2
+                с), тому рядок статусу обов'язковий.
+              </p>
+              <p class="hig">
+                generative-ai.md › Outputs: «Factor processing time into your design».
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai" style="width: 88%">
+                      <div
+                        style="
+                          height: 14px;
+                          background: var(--muted);
+                          border-radius: 6px;
+                          width: 90%;
+                        "
+                      ></div>
+                      <div
+                        style="
+                          height: 14px;
+                          background: var(--muted);
+                          border-radius: 6px;
+                          width: 70%;
+                          margin-top: 8px;
+                        "
+                      ></div>
+                      <div
+                        style="
+                          height: 14px;
+                          background: var(--muted);
+                          border-radius: 6px;
+                          width: 80%;
+                          margin-top: 8px;
+                        "
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Скелет, потім уся відповідь</h3>
+              <p class="why">Поки стрім іде — скелет; текст показуємо одним разом по завершенні.</p>
+              <p class="trade">
+                <b>+</b> нуль миготіння. <b>−</b> 10–20 с без змісту при довгих відповідях;
+                втрачається перевага стріму.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 6 WORKING -->
+        <section class="topic" id="working">
+          <h2>6. Індикатор «агент працює»</h2>
+          <p class="q">
+            Агент шукає рецепти, читає сторінки, підбирає товари в Сільпо. Де показувати конкретну
+            активність?
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">Легка паста з часником і лимоном.</div>
+                    <div class="row" style="padding-left: 6px">
+                      <span
+                        style="
+                          width: 20px;
+                          height: 16px;
+                          border: 2px solid var(--tealdeep);
+                          border-radius: 0 0 8px 8px;
+                          border-top-width: 3px;
+                        "
+                      ></span
+                      ><span class="shim">Підбираю товари в Сільпо…</span>
+                    </div>
+                  </div>
+                  <div class="comp glass chr">
+                    <span class="att"></span>Уточни або попроси інше<span class="send">↑</span>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Рядок у стрічці: каструля + shimmer <span class="badge">Picked</span></h3>
+              <p class="why">
+                Останній елемент стрічки: каструля 20pt (гойдається, поки йде запит) і shimmer-напис
+                з конкретною дією: «Шукаю рецепти…», «Читаю сторінку…», «Підбираю товари в Сільпо…».
+              </p>
+              <p class="trade">
+                <b>+</b> там, куди дивиться око; прокручується разом із контентом; дешево.
+                <b>−</b> при прокрутці вгору його не видно — тому є скляна кнопка «вниз».
+              </p>
+              <p class="hig">
+                generative-ai.md › Outputs: «Consider giving specific, reassuring feedback during
+                generation».
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">Легка паста з часником і лимоном.</div>
+                  </div>
+                  <span
+                    class="gl"
+                    style="
+                      position: absolute;
+                      left: 50%;
+                      transform: translateX(-50%);
+                      bottom: 106px;
+                      height: 38px;
+                      border-radius: 19px;
+                      padding: 0 14px;
+                    "
+                    ><span class="shim">Підбираю товари в Сільпо…</span></span
+                  >
+                  <div class="comp glass chr">
+                    <span class="att"></span>Уточни або попроси інше<span class="send">↑</span>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Плаваюча скляна капсула над композером (t3)</h3>
+              <p class="why">Завжди видно, навіть якщо прокрутив.</p>
+              <p class="trade">
+                <b>+</b> помітно. <b>−</b> третя скляна поверхня на екрані; перекриває останні рядки
+                відповіді; конкурує з пік-баром ідеї.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="title">
+                      <span class="shim" style="font-size: 15px">Підбираю товари…</span>
+                    </div>
+                    <div class="r"><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">Легка паста з часником і лимоном.</div>
+                  </div>
+                  <div class="comp glass chr">
+                    <span class="att"></span>Уточни або попроси інше<span class="send">↑</span>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Статус у заголовку хедера</h3>
+              <p class="why">
+                Заголовок навігації стає рядком статусу (як «Підключення…» у Messages).
+              </p>
+              <p class="trade">
+                <b>+</b> нуль місця в контенті. <b>−</b> далеко від відповіді; shimmer у системному
+                хедері виглядає чужорідно; заголовок у нас порожній навмисно.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 7 QUESTIONNAIRE -->
+        <section class="topic" id="quest">
+          <h2>7. Уточнювальні питання (1–4 питання, 2–5 варіантів)</h2>
+          <p class="q">
+            `ask_user` зупиняє агента, доки людина не відповість. Як подати форму, щоб не вибивати з
+            розмови?
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="card now" style="display: flex; flex-direction: column; gap: 10px">
+                      <div class="row sb2">
+                        <span class="eyebrow">Уточнення до страви</span
+                        ><span class="eyebrow mu">1 з 2</span>
+                      </div>
+                      <div class="h17">Який соус?</div>
+                      <div class="meta">Обери один варіант</div>
+                      <span class="tag col"><b>1</b>Вершковий</span
+                      ><span class="tag col on"><b>2</b>Томатний</span
+                      ><span class="tag col"><b>3</b>Часник і олія</span>
+                      <div class="card" style="padding: 8px 12px; color: var(--mutedfg)">
+                        Або напиши свій варіант
+                      </div>
+                      <div class="row sb2">
+                        <span class="txt">Назад</span><span class="ghost">Далі</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="comp glass chr">
+                    <span class="att"></span>Або напиши відповідь…<span class="send">↑</span>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Картка у стрічці, одне питання за раз <span class="badge">Picked</span></h3>
+              <p class="why">
+                Питання — повідомлення агента з ink-тегами в стовпчик. Одиничний вибір
+                авто-переходить через 200ms. Композер лишається: написати текстом — теж відповідь.
+              </p>
+              <p class="trade">
+                <b>+</b> контекст розмови видно, нічого не відкривається; відповідь згортається у
+                «Твої відповіді». <b>−</b> довгі варіанти займають екран — тому не більше одного
+                питання одночасно.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">Маю два уточнення.</div>
+                  </div>
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 55%">
+                    <div class="grab"></div>
+                    <div class="shead">
+                      <span class="h22">Який соус?</span><span class="x">✕</span>
+                    </div>
+                    <div class="meta">1 з 2 · Обери один варіант</div>
+                    <span class="tag col"><b>1</b>Вершковий</span
+                    ><span class="tag col"><b>2</b>Томатний</span
+                    ><span class="tag col"><b>3</b>Часник і олія</span>
+                    <div class="row sb2">
+                      <span class="txt">Назад</span><span class="lime">Далі</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · formSheet (0.55), одне питання на сторінку</h3>
+              <p class="why">Модальний аркуш із кроками й лаймовим «Далі».</p>
+              <p class="trade">
+                <b>+</b> великі цілі, системний жест. <b>−</b> модалка ховає розмову і забороняє
+                відповісти текстом; закрив аркуш — питання «зникло»; аркуш над чатом, що й так має
+                композер.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">Маю два уточнення.</div>
+                  </div>
+                  <div
+                    class="chrome"
+                    style="
+                      position: absolute;
+                      left: 16px;
+                      right: 16px;
+                      bottom: 30px;
+                      display: flex;
+                      flex-direction: column;
+                      gap: 8px;
+                    "
+                  >
+                    <div class="row sb2">
+                      <span class="eyebrow">Який соус?</span><span class="eyebrow mu">1 / 2</span>
+                    </div>
+                    <div class="tags">
+                      <span class="tag">Вершковий</span><span class="tag">Томатний</span
+                      ><span class="tag">Часник і олія</span>
+                    </div>
+                    <div class="row sb2">
+                      <span class="txt">Написати повідомлення</span><span class="ghost">Далі</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Композер перетворюється на форму (веб)</h3>
+              <p class="why">
+                Поле вводу замінюється карткою питань; кнопка «Написати повідомлення» повертає поле.
+              </p>
+              <p class="trade">
+                <b>+</b> точна копія вебу. <b>−</b> на 390pt форма внизу перекриває пів екрана і
+                стрибає з клавіатурою; плаваючий шар не має містити форму.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 8 IDEA -->
+        <section class="topic" id="idea">
+          <h2>8. Пік ідеї та аркуш ідеї</h2>
+          <p class="q">
+            Ідея зберігається у фоні, поки людина читає чат. Як оголосити й відкрити рецепт, товари
+            та кошик?
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"><span class="gl">⟲</span><span class="gl">⚉</span></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">
+                      Зберіг рецепт і підібрав 6 товарів у Сільпо. Відкрий ідею, щоб перевірити.
+                    </div>
+                  </div>
+                  <div class="peek">
+                    <span class="pic r10" style="width: 40px; height: 40px"></span>
+                    <div>
+                      <div class="meta">Ідея готова</div>
+                      <div class="h17">Паста з креветками</div>
+                    </div>
+                    <span style="margin-left: auto">›</span>
+                  </div>
+                  <div class="comp glass chr">
+                    <span class="att"></span>Уточни або попроси інше<span class="send">↑</span>
+                  </div>
+                </div>
+              </div>
+              <h3>
+                A · Peek-бар над композером → formSheet 0.6 / 1 <span class="badge">Picked</span>
+              </h3>
+              <p class="why">
+                Картка 56pt з мініатюрою, «Ідея готова» і назвою входить через morph 220ms. Тап
+                відкриває formSheet із детентами 0.6 і 1, grabber, липким футером кошика. На 0.6
+                видно фото, табличку й початок рецепта.
+              </p>
+              <p class="trade">
+                <b>+</b> розмова не переривається; аркуш — природне місце для «переглянь і
+                повернись». <b>−</b> ще один шар над композером; при клавіатурі пік ховається.
+              </p>
+              <p class="hig">
+                sheets.md › Mobile: «consider supporting the medium detent to allow progressive
+                disclosure».
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub me">Паста з креветками на двох</div>
+                    <div class="bub ai">Зберіг рецепт і підібрав 6 товарів.</div>
+                  </div>
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 42%">
+                    <div class="grab"></div>
+                    <div class="row">
+                      <span class="pic r10" style="width: 72px; height: 72px"></span>
+                      <div>
+                        <span class="sign sm">Паста з креветками</span>
+                        <div class="meta" style="margin-top: 6px">25 хв · 2 порції · 6 товарів</div>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <span class="tag">Готуємо разом</span><span class="tag">Товари</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Аркуш відкривається сам на 0.4, щойно ідея готова</h3>
+              <p class="why">Без піку: аркуш вискакує на низький детент і чекає.</p>
+              <p class="trade">
+                <b>+</b> нуль тапів до рецепта. <b>−</b> переривання: людина може саме друкувати;
+                аркуш закриває стрім і композер; HIG: модалка — для коротких завдань, не для
+                сповіщень.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Розмова</span></div>
+                    <div class="r"><span class="gl">⚇</span></div>
+                  </div>
+                  <div class="body">
+                    <span class="pic" style="height: 180px; display: block"></span
+                    ><span class="sign sm">Паста з креветками</span>
+                    <div class="meta">25 хв · 2 порції</div>
+                    <div class="small">Легка паста з часником і лимоном для двох.</div>
+                    <div class="rail">Продукти в Сільпо</div>
+                    <div class="card">
+                      <div class="row">
+                        <span class="pic r10" style="width: 40px; height: 40px"></span>
+                        <div>
+                          <div class="meta">Спагеті · 250 г</div>
+                          <div class="small">Barilla №5 500 г</div>
+                        </div>
+                        <b style="margin-left: auto">89 ₴</b>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Окремий екран «Ідея» (push)</h3>
+              <p class="why">Пік веде на повноекранний push з власним хедером.</p>
+              <p class="trade">
+                <b>+</b> багато місця, версії та кошик як секції. <b>−</b> втрачається паралельність
+                «читаю ідею — уточнюю в чаті»; повернення назад щоразу перемальовує стрічку.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 9 CART -->
+        <section class="topic" id="cart">
+          <h2>9. Кошик</h2>
+          <p class="q">
+            Товари, сума без доставки, одна лаймова дія «Додати N товарів у кошик», потім
+            «Перевірити й оформити». Де тримати суму й кнопку?
+          </p>
+          <div class="opts">
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 92%">
+                    <div class="grab"></div>
+                    <div class="shead">
+                      <span class="h22">Страва і товари</span><span class="x">✕</span>
+                    </div>
+                    <span class="pic" style="height: 120px; display: block"></span
+                    ><span class="sign sm">Паста з креветками</span>
+                    <div class="rail">Продукти в Сільпо</div>
+                    <div class="row">
+                      <span class="pic r10" style="width: 40px; height: 40px"></span>
+                      <div>
+                        <div class="meta">Спагеті · 250 г</div>
+                        <div class="small">Barilla №5</div>
+                      </div>
+                      <b style="margin-left: auto">89 ₴</b>
+                    </div>
+                    <div class="row">
+                      <span class="pic r10" style="width: 40px; height: 40px"></span>
+                      <div>
+                        <div class="meta">Креветки · 300 г</div>
+                        <div class="small">Не знайдено в Сільпо</div>
+                      </div>
+                    </div>
+                    <div class="row sb2" style="margin-top: 8px">
+                      <span class="small">Разом, без доставки</span><b>437 ₴</b>
+                    </div>
+                    <span class="lime full">Додати 6 товарів у кошик</span>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Секція в кінці аркуша (веб)</h3>
+              <p class="why">Сума і кнопка — після списку товарів.</p>
+              <p class="trade">
+                <b>+</b> просто, одна прокрутка. <b>−</b> головна дія захована під 10–20 рядками; на
+                детенті 0.6 її не видно взагалі.
+              </p>
+            </article>
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 92%">
+                    <div class="grab"></div>
+                    <div class="shead">
+                      <span class="h22">Страва і товари</span><span class="x">✕</span>
+                    </div>
+                    <div class="row sb2">
+                      <span class="txt">‹</span
+                      ><span class="eyebrow mu" style="font-size: 15px">Версія 2 з 3</span
+                      ><span class="txt">›</span>
+                    </div>
+                    <span class="pic" style="height: 110px; display: block"></span
+                    ><span class="sign sm">Паста з креветками</span>
+                    <div class="meta">25 хв · 2 порції</div>
+                    <div class="rail">Продукти в Сільпо</div>
+                    <div class="row">
+                      <span class="pic r10" style="width: 40px; height: 40px"></span>
+                      <div>
+                        <div class="meta">Спагеті · 250 г</div>
+                        <div class="small">Barilla №5</div>
+                      </div>
+                      <b style="margin-left: auto">89 ₴</b>
+                    </div>
+                    <div style="flex: 1"></div>
+                    <div class="foot">
+                      <div class="row sb2">
+                        <span class="small">Разом, без доставки</span
+                        ><b style="font: 600 20px var(--sign)">437 ₴</b>
+                      </div>
+                      <span class="lime full">Додати 6 товарів у кошик</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Липкий футер з неоновим краєм <span class="badge">Picked</span></h3>
+              <p class="why">
+                Сума і лаймова дія закріплені внизу аркуша на будь-якому детенті; верхній край —
+                неонова лінія (вона на вебі стоїть перед результатами). Коли кошик є — футер показує
+                «До сплати» і «Перевірити й оформити».
+              </p>
+              <p class="trade">
+                <b>+</b> дія завжди під пальцем; товари прокручуються незалежно. <b>−</b> футер
+                займає ~110pt; на 0.6 рецепта видно менше.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 60%">
+                    <div class="grab"></div>
+                    <div class="shead">
+                      <span class="h22">Кошик Сільпо</span><span class="x">✕</span>
+                    </div>
+                    <div class="row">
+                      <span class="av all big">6</span>
+                      <div>
+                        <div class="h17">Готовий до перевірки</div>
+                        <div class="meta">До сплати 1 204 ₴</div>
+                      </div>
+                    </div>
+                    <div class="card">
+                      <div class="row sb2">
+                        <span class="small">Товари</span><span>1 125 ₴</span>
+                      </div>
+                      <div class="row sb2">
+                        <span class="small">Доставка</span><span class="meta">Уточнюється</span>
+                      </div>
+                    </div>
+                    <div class="alert">Перевір товари перед замовленням: 1 товар замінено</div>
+                    <span class="lime full">Перевірити й оформити</span>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Окремий аркуш кошика з кнопки в хедері аркуша ідеї</h3>
+              <p class="why">Товари лишаються в ідеї; кошик — свій аркуш із деталями.</p>
+              <p class="trade">
+                <b>+</b> чисте розділення. <b>−</b> аркуш над аркушем (HIG: один за раз → треба
+                закривати перший); зайвий крок до головної дії.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 10 SETUP -->
+        <section class="topic" id="setup">
+          <h2>10. Налаштування «Готуємо разом»</h2>
+          <p class="q">
+            Кількість кухарів 1–12, ім'я господаря (якщо невідоме), одна дія «Створити кухню».
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="dim"></div>
+                  <div class="sheet">
+                    <div class="grab"></div>
+                    <div class="shead">
+                      <span class="h22">Скільки вас готує?</span><span class="x">✕</span>
+                    </div>
+                    <img
+                      class="illus"
+                      src="../assets/images/oven-mitts.webp"
+                      width="88"
+                      height="88"
+                      alt=""
+                    />
+                    <div class="stepper"><b>−</b>3 кухарі<b>+</b></div>
+                    <div class="meta">Твоє ім’я</div>
+                    <div class="card" style="color: var(--mutedfg)">Наприклад, Аня</div>
+                    <span class="lime full">Створити кухню</span>
+                  </div>
+                </div>
+              </div>
+              <h3>A · formSheet fitToContents зі степером <span class="badge">Picked</span></h3>
+              <p class="why">
+                Прямий перенос веб-форми: рукавиці 88pt, степер з двома ink-кнопками 44pt, поле
+                імені тільки коли ім'я не вдалося визначити, лаймова дія.
+              </p>
+              <p class="trade">
+                <b>+</b> одна дія, один аркуш, той самий компонент для «Приготувати ще раз».
+                <b>−</b> степер до 12 — це 11 тапів; довгий тап має автоповторювати.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="dim"></div>
+                  <div class="sheet">
+                    <div class="grab"></div>
+                    <div class="shead">
+                      <span class="h22">Скільки вас готує?</span><span class="x">✕</span>
+                    </div>
+                    <div class="grid4">
+                      <span class="seat on">1</span><span class="seat">2</span
+                      ><span class="seat">3</span><span class="seat">4</span
+                      ><span class="seat">5</span><span class="seat">6+</span>
+                    </div>
+                    <div class="meta">Твоє ім’я</div>
+                    <div class="card" style="color: var(--mutedfg)">Наприклад, Аня</div>
+                    <span class="lime full">Створити кухню</span>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Сітка місць 1–6, «6+» відкриває степер</h3>
+              <p class="why">Один тап для типових випадків.</p>
+              <p class="trade">
+                <b>+</b> швидше за степер для 1–6. <b>−</b> два механізми вибору; «6+» — прихований
+                режим; на великих шрифтах сітка ламається.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 80%">
+                    <div class="grab"></div>
+                    <div class="shead">
+                      <span class="h22">Страва і товари</span><span class="x">✕</span>
+                    </div>
+                    <span class="sign sm">Паста з креветками</span>
+                    <div class="meta">25 хв · 2 порції</div>
+                    <div class="card now" style="display: flex; flex-direction: column; gap: 10px">
+                      <div class="eyebrow">Готуємо разом</div>
+                      <div class="stepper"><b>−</b>2 кухарі<b>+</b></div>
+                      <span class="lime full">Створити кухню</span>
+                    </div>
+                    <div class="rail">Продукти в Сільпо</div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Розгортається прямо в аркуші ідеї</h3>
+              <p class="why">Тег «Готуємо разом» розкриває степер і кнопку на місці.</p>
+              <p class="trade">
+                <b>+</b> без другого аркуша. <b>−</b> дві лаймові кнопки в одному аркуші (кошик +
+                кухня) ламають бюджет; форма губиться серед рецепта.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 11 LOBBY -->
+        <section class="topic" id="lobby">
+          <h2>11. Лобі</h2>
+          <p class="q">
+            Господар чекає на кухарів (до 12), запрошує посиланням і стартує. Гість бачить, хто вже
+            тут.
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Головна</span></div>
+                    <div class="r">
+                      <span class="gl">⚇ <span class="n">1/3</span></span
+                      ><span class="gl">⋯</span>
+                    </div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body">
+                    <span class="sign">Томатна вечеря</span>
+                    <div class="row sb2">
+                      <div>
+                        <div class="h24">Збираємося<br />на кухні</div>
+                        <div class="meta" style="margin-top: 6px">Приєдналися 1 з 3</div>
+                      </div>
+                      <img src="../assets/images/oven-mitts.webp" width="96" height="96" alt="" />
+                    </div>
+                    <div class="list">
+                      <div class="li">
+                        <span class="av me">О</span><span class="small">Оля · ти</span
+                        ><span class="meta" style="margin-left: auto">Господар</span>
+                      </div>
+                      <div class="li">
+                        <span class="av em">+</span><span class="small ph">Чекаємо на кухаря</span>
+                      </div>
+                      <div class="li">
+                        <span class="av em">+</span><span class="small ph">Чекаємо на кухаря</span>
+                      </div>
+                    </div>
+                    <span class="ghost full">Запросити за посиланням</span
+                    ><span class="lime full dis">Почати готувати</span>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Список із порожніми місцями <span class="badge">Picked</span></h3>
+              <p class="why">
+                Той самий компактний варіант, що обрано на вебі: заголовок і лічильник зліва,
+                рукавиці 96pt справа, список кухарів і порожніх місць, запрошення і старт під
+                списком. Запрошення відкриває системний share sheet.
+              </p>
+              <p class="trade">
+                <b>+</b> масштабується до 12, читається гостем і господарем однаково. <b>−</b> менш
+                «святково», ніж коло.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Головна</span></div>
+                    <div class="r"><span class="gl">⋯</span></div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body">
+                    <span class="sign">Томатна вечеря</span>
+                    <div class="ring">
+                      <div class="table">Приєдналися 1 з 3</div>
+                      <span class="av me big" style="left: 100px; top: 0">О</span
+                      ><span class="av em big" style="left: 10px; top: 120px">+</span
+                      ><span class="av em big" style="left: 190px; top: 120px">+</span>
+                    </div>
+                    <span class="ghost full">Запросити за посиланням</span
+                    ><span class="lime full dis">Почати готувати</span>
+                  </div>
+                </div>
+              </div>
+              <h3>B · «Стіл»: аватари по колу</h3>
+              <p class="why">Кухарі сідають довкола овального столу; порожні місця — «+».</p>
+              <p class="trade">
+                <b>+</b> теплий образ зустрічі. <b>−</b> 8–12 аватарів по колу не читаються, імена
+                нема куди ставити; на Dynamic Type розвалюється.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Головна</span></div>
+                    <div class="r"><span class="gl">⋯</span></div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body">
+                    <span class="sign">Томатна вечеря</span>
+                    <div
+                      class="card"
+                      style="display: flex; flex-direction: column; gap: 10px; align-items: center"
+                    >
+                      <div class="qr"></div>
+                      <div class="meta">Покажи код або поділись посиланням</div>
+                      <span class="ghost">Поділитися</span>
+                    </div>
+                    <div class="row">
+                      <span class="av me">О</span><span class="av em">+</span
+                      ><span class="av em">+</span><span class="meta">1 з 3</span>
+                    </div>
+                    <span class="lime full dis">Почати готувати</span>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Спершу запрошення: QR + посилання</h3>
+              <p class="why">Лобі як екран запрошення; учасники — рядок аватарів унизу.</p>
+              <p class="trade">
+                <b>+</b> запрошення в одній кімнаті через QR — реально зручно. <b>−</b> гість бачить
+                QR, який йому не потрібен; QR потребує сканера у додатку, щоб мати сенс. Варто
+                додати QR як кнопку в аркуші запрошення пізніше.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 12 TIMELINE -->
+        <section class="topic" id="timeline">
+          <h2>12. Таймлайн і поточний крок</h2>
+          <p class="q">
+            Поточний крок має інструкцію, чекліст, таймер, референс і дію. Інші кроки показують
+            власника й залежності. Як це розкласти на 390pt?
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r">
+                      <span class="gl">⚇ <span class="n">2</span></span
+                      ><span class="gl">✎<span class="dot"></span></span><span class="gl">⋯</span>
+                    </div>
+                  </div>
+                  <div class="body" style="gap: 10px">
+                    <div class="row sb2"><span class="meta">1 з 7 кроків</span></div>
+                    <div class="prog"><i></i></div>
+                    <div class="row">
+                      <span class="tile done">✓</span
+                      ><span class="small card done" style="flex: 1; padding: 8px 12px"
+                        >Поставити воду</span
+                      >
+                    </div>
+                    <div class="row">
+                      <span class="tile">2</span>
+                      <div class="bb" style="flex: 1; padding: 8px 12px">
+                        <div>
+                          <div class="lbl">Паста вариться</div>
+                          <div class="sub">Твій таймер</div>
+                        </div>
+                        <span class="num" style="font-size: 32px">6:42</span>
+                      </div>
+                    </div>
+                    <div class="card now" style="display: flex; flex-direction: column; gap: 8px">
+                      <div class="row">
+                        <span class="tile">3</span><span class="eyebrow">Твій крок</span>
+                      </div>
+                      <div class="h24">Дрібно наріж часник</div>
+                      <div class="small">Наріж 2 зубчики дрібними шматочками.</div>
+                      <div class="dither">Готуємо зображення…</div>
+                      <div class="chk-row"><span class="box on">✓</span>Часник почищений</div>
+                      <div class="row sb2">
+                        <span class="ghost">Є питання?</span><span class="lime">Готово, далі</span>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <span class="tile">4</span>
+                      <div>
+                        <div class="eyebrow">Аня · готує зараз</div>
+                        <div class="small">Почистити креветки</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>
+                A · Вертикальний таймлайн, поточний крок розгорнуто
+                <span class="badge">Picked</span>
+              </h3>
+              <p class="why">
+                Один FlatList: виконані кроки — 50% і закреслені; крок із таймером показує чорну
+                дошку навіть згорнутим; поточний — картка з чорною рамкою, плиткою номера,
+                референсом, чеклістом і діями. Розгортання — LinearTransition 220ms.
+              </p>
+              <p class="trade">
+                <b>+</b> видно, що роблять інші, і що блокує; одне рішення на вебі й у додатку.
+                <b>−</b> довгий скрол на 12 кроках; тому поточний крок авто-прокручується на 24pt
+                під хедер.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="title">3 з 7</div>
+                    <div class="r"><span class="gl">⋯</span></div>
+                  </div>
+                  <div class="body">
+                    <div
+                      class="card now"
+                      style="min-height: 520px; display: flex; flex-direction: column; gap: 10px"
+                    >
+                      <div class="row">
+                        <span class="tile">3</span><span class="eyebrow">Твій крок</span>
+                      </div>
+                      <div class="h24">Дрібно наріж часник</div>
+                      <div class="small">
+                        Наріж 2 зубчики дрібними шматочками. Чим дрібніше, тим м'якший смак.
+                      </div>
+                      <div class="dither">Готуємо зображення…</div>
+                      <div class="chk-row"><span class="box on">✓</span>Часник почищений</div>
+                      <div class="chk-row"><span class="box"></span>Нарізано дрібно</div>
+                      <div style="flex: 1"></div>
+                      <span class="lime full">Готово, далі</span>
+                    </div>
+                    <div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Картки-сторінки: один крок на екран, свайп</h3>
+              <p class="why">Пейджер; крапки показують позицію.</p>
+              <p class="trade">
+                <b>+</b> великий текст, нічого зайвого — зручно з брудними руками. <b>−</b> не
+                видно, що роблять інші й чому крок чекає; спільні кроки й передачі губляться; свайп
+                конфліктує зі swipe-back.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r"><span class="gl">⋯</span></div>
+                  </div>
+                  <div class="body">
+                    <div class="card now" style="display: flex; flex-direction: column; gap: 8px">
+                      <div class="row">
+                        <span class="tile">3</span><span class="eyebrow">Зараз</span>
+                      </div>
+                      <div class="h24">Дрібно наріж часник</div>
+                      <div class="chk-row"><span class="box on">✓</span>Часник почищений</div>
+                      <span class="lime full">Готово, далі</span>
+                    </div>
+                    <div class="rail">Усі кроки</div>
+                    <div class="list">
+                      <div class="li">
+                        <span class="tile done">✓</span><span class="small">Поставити воду</span>
+                      </div>
+                      <div class="li">
+                        <span class="tile">2</span><span class="small">Паста вариться · 6:42</span>
+                      </div>
+                      <div class="li">
+                        <span class="tile">4</span
+                        ><span class="small">Аня · Почистити креветки</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · «Зараз»-картка закріплена, список під нею</h3>
+              <p class="why">Поточний крок завжди зверху; решта — компактний список.</p>
+              <p class="trade">
+                <b>+</b> дія завжди на місці. <b>−</b> два подання одного плану (веб-правило: не
+                додавати другу панель); довгий крок з референсом з'їдає весь екран і список зникає.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 13 TIMER -->
+        <section class="topic" id="timer">
+          <h2>13. Док таймерів і таймер поза додатком</h2>
+          <p class="q">
+            До 24 активних таймерів у кімнаті. Людина читає інший крок, перемикає застосунки, блокує
+            екран. Де живуть відліки?
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r">
+                      <span class="gl">⚇ <span class="n">2</span></span
+                      ><span class="gl">✎</span><span class="gl">⋯</span>
+                    </div>
+                  </div>
+                  <div class="body">
+                    <div class="card">
+                      <div class="eyebrow">Аня · готує зараз</div>
+                      <div class="h17">Почистити креветки</div>
+                    </div>
+                    <div class="card now">
+                      <div class="eyebrow">Разом · очікує</div>
+                      <div class="h24">Зібрати пасту</div>
+                      <div class="meta">Чекаємо: Соус. Готові: Аня, ще ніхто.</div>
+                    </div>
+                  </div>
+                  <div class="dock glass">
+                    <div class="chip">
+                      <span class="e">Твій таймер</span><span class="n">6:42</span
+                      ><span class="l">Паста</span>
+                    </div>
+                    <div class="chip">
+                      <span class="n" style="color: #d4dae0">12:00</span
+                      ><span class="l">Соус · Пауза</span>
+                    </div>
+                    <div class="chip">
+                      <span class="n">0:00</span><span class="l">Час перевірити</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Скляний док унизу з чорними чипами <span class="badge">Picked</span></h3>
+              <p class="why">
+                GlassView 64pt, горизонтальний скрол чипів-«дощечок»: лаймовий відлік Oswald 20,
+                назва, «Твій таймер» бірюзою. Тап — прокрутка до кроку. Док з'являється morph'ом
+                тільки коли є таймери.
+              </p>
+              <p class="trade">
+                <b>+</b> той самий образ чорної дошки, що на вебі; скло — бо док плаває над
+                контентом. <b>−</b> ховає 88pt списку; тому список має нижній відступ, а док зникає
+                без таймерів.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="title">
+                      <span class="pill">Паста <span class="n">6:42</span></span>
+                    </div>
+                    <div class="r"><span class="gl">⋯</span></div>
+                  </div>
+                  <div class="body">
+                    <div class="card">
+                      <div class="eyebrow">Аня · готує зараз</div>
+                      <div class="h17">Почистити креветки</div>
+                    </div>
+                    <div class="card now">
+                      <div class="eyebrow">Разом · очікує</div>
+                      <div class="h24">Зібрати пасту</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Таймер у центрі хедера (Stack.Toolbar центр)</h3>
+              <p class="why">
+                Найближчий таймер — чорна капсула в заголовку; тап відкриває список.
+              </p>
+              <p class="trade">
+                <b>+</b> не займає контент. <b>−</b> один таймер із 24; капсула з кольором у хедері
+                суперечить монохромним барам; хедер мерехтить кожні 500ms.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="di">🍝 Паста <span class="n">6:42</span></div>
+                  <div class="sb">&nbsp;</div>
+                  <div class="hdr">
+                    <div class="l"></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body" style="align-items: center; gap: 20px; padding-top: 120px">
+                    <div class="h24" style="font-size: 56px; color: var(--mutedfg)">9:41</div>
+                    <div class="bb" style="width: 100%">
+                      <div>
+                        <div class="lbl">Паста вариться</div>
+                        <div class="sub">Multiplayer Cooking · Твій таймер</div>
+                      </div>
+                      <span class="num">6:42</span>
+                    </div>
+                    <div class="note">Lock Screen · Live Activity</div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Live Activity + Dynamic Island (фаза 2)</h3>
+              <p class="why">
+                Запущені таймери — в Live Activity: чорна дошка з лаймовим відліком на екрані
+                блокування, компактно в Dynamic Island. Тап відкриває крок.
+              </p>
+              <p class="trade">
+                <b>+</b> саме те, для чого існують Live Activities (визначений початок і кінець, ≤ 8
+                год); таймери видно з мокрими руками через стіл. <b>−</b> потребує WidgetKit-таргета
+                (expo-apple-targets / dev build), серверних пушів для синхронізації між кухарями.
+                Плануємо після першого релізу; локальне сповіщення при спрацюванні — вже в першій
+                версії.
+              </p>
+              <p class="hig">
+                live-activities.md › Best practices: «Offer Live Activities for tasks and events
+                that have a defined beginning and end».
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 14 HELPER -->
+        <section class="topic" id="helper">
+          <h2>14. Вхід у помічника</h2>
+          <p class="q">
+            Помічник — спільний чат кухні з нотатками й пропозиціями змін. Він має бути доступний
+            завжди, але не заважати кроку.
+          </p>
+          <div class="opts">
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r">
+                      <span class="gl">⚇ <span class="n">2</span></span
+                      ><span class="gl">⋯</span>
+                    </div>
+                  </div>
+                  <div class="body">
+                    <div class="card now">
+                      <div class="eyebrow">Твій крок</div>
+                      <div class="h24">Дрібно наріж часник</div>
+                      <div class="row sb2" style="margin-top: 8px">
+                        <span class="ghost">Є питання?</span><span class="lime">Готово, далі</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="dock glass" style="bottom: 110px">
+                    <div class="chip"><span class="n">6:42</span><span class="l">Паста</span></div>
+                  </div>
+                  <span
+                    class="gl"
+                    style="
+                      position: absolute;
+                      right: 16px;
+                      bottom: 30px;
+                      height: 56px;
+                      border-radius: 28px;
+                      padding: 0 18px;
+                      font-weight: 700;
+                    "
+                    >✎ Є відповідь<span class="dot"></span
+                  ></span>
+                </div>
+              </div>
+              <h3>A · Плаваюча кнопка внизу праворуч (веб)</h3>
+              <p class="why">Скляна капсула «Помічник / Є відповідь», що піднімається над доком.</p>
+              <p class="trade">
+                <b>+</b> завжди видно. <b>−</b> FAB — патерн Android; четверта плаваюча річ над
+                контентом разом із доком і CTA; перекриває кнопку «Готово, далі».
+              </p>
+            </article>
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r">
+                      <span class="gl">⚇ <span class="n">2</span></span
+                      ><span class="gl">✎<span class="dot"></span></span><span class="gl">⋯</span>
+                    </div>
+                  </div>
+                  <div class="body">
+                    <div class="card now" style="display: flex; flex-direction: column; gap: 8px">
+                      <div class="eyebrow">Твій крок</div>
+                      <div class="h24">Дрібно наріж часник</div>
+                      <div class="small">Наріж 2 зубчики дрібними шматочками.</div>
+                      <div class="chk-row"><span class="box on">✓</span>Часник почищений</div>
+                      <div class="row sb2">
+                        <span class="ghost">Є питання?</span><span class="lime">Готово, далі</span>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <span class="tile">4</span>
+                      <div>
+                        <div class="eyebrow">Аня · готує зараз</div>
+                        <div class="small">Почистити креветки</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="dock glass">
+                    <div class="chip"><span class="n">6:42</span><span class="l">Паста</span></div>
+                  </div>
+                </div>
+              </div>
+              <h3>
+                B · Кнопка в хедері з крапкою + «Є питання?» у кроці
+                <span class="badge">Picked</span>
+              </h3>
+              <p class="why">
+                SF `bubble.left.and.text.bubble.right` у toolbar з маджентовою крапкою «Є
+                відповідь»; у кожному кроці — ghost «Є питання?», що відкриває помічника з
+                контекстом цього кроку. Помічник — formSheet 0.92.
+              </p>
+              <p class="trade">
+                <b>+</b> нічого не плаває над контентом, окрім дока; контекстний вхід там, де
+                виникає питання. <b>−</b> хедер має три кнопки — межа; «Порції» та «Кухарі» тому в
+                меню ⋯.
+              </p>
+              <p class="hig">
+                toolbars.md › Phone (iOS): «Create a More menu to include additional items».
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r"><span class="gl">⋯</span></div>
+                  </div>
+                  <div class="body">
+                    <div class="card now">
+                      <div class="eyebrow">Твій крок</div>
+                      <div class="h24">Дрібно наріж часник</div>
+                    </div>
+                    <div class="row">
+                      <span class="tile">4</span>
+                      <div class="small">Почистити креветки</div>
+                    </div>
+                  </div>
+                  <div class="tabbar glass" style="height: 56px">
+                    <div class="on"><i></i>Кроки</div>
+                    <div><i></i>Таймери</div>
+                    <div><i></i>Помічник</div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Нижні таби всередині кухні: Кроки · Таймери · Помічник</h3>
+              <p class="why">Кухня стає власним таб-контейнером.</p>
+              <p class="trade">
+                <b>+</b> помічник і таймери — повноцінні екрани. <b>−</b> таби ховають таймлайн під
+                час читання помічника, а відлік потрібен одночасно; таб-бар у push-екрані —
+                нестандартно.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 15 DONE -->
+        <section class="topic" id="done">
+          <h2>15. Момент завершення</h2>
+          <p class="q">
+            Усі кроки виконані. Один раз на кімнату — свято, фото страви, «Приготувати ще раз», шлях
+            назад до інструкцій.
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">До інструкцій</span></div>
+                    <div class="r"><span class="gl">⇧</span></div>
+                  </div>
+                  <div class="chk"></div>
+                  <div class="body" style="align-items: center; gap: 0">
+                    <span class="sign" style="position: relative; z-index: 2; margin-bottom: -14px"
+                      >Смачного!</span
+                    >
+                    <div class="ticket" style="width: 100%; padding-top: 28px">
+                      <span class="pic" style="width: 100%; height: 150px; display: block"></span>
+                      <div class="h24">Рамьон з креветками</div>
+                      <div class="meta">2 кухарі · 2 порції</div>
+                      <div class="tear"></div>
+                      <span class="lime full">Приготувати ще раз</span
+                      ><span class="ghost full">До інструкцій</span>
+                    </div>
+                    <div class="scallop" style="width: 100%"></div>
+                    <img
+                      src="../assets/images/serving-bell.webp"
+                      width="88"
+                      height="88"
+                      alt=""
+                      style="align-self: flex-end; margin-top: 4px"
+                    />
+                  </div>
+                </div>
+              </div>
+              <h3>A · Квиток дайнера на весь екран <span class="badge">Picked</span></h3>
+              <p class="why">
+                Обраний на вебі квиток: біла картка з 2pt чорним контуром, зубчастим низом (SVG),
+                фото 16:10, хромована табличка «Смачного!», дзвоник 88pt. Push з fade, без «назад»;
+                зліва «До інструкцій», справа системний Share. Конфеті 2 с,
+                `notificationAsync(Success)` один раз.
+              </p>
+              <p class="trade">
+                <b>+</b> момент, який запам'ятовується; поділитися — рідна дія. <b>−</b> ще один
+                екран у стеку; квиток не вміщується на 4.7" без прокрутки.
+              </p>
+              <p class="hig">
+                feedback.md › Best practices: «When it makes sense, confirm that a significant
+                action or task has completed».
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r"><span class="gl">⋯</span></div>
+                  </div>
+                  <div class="body">
+                    <div class="card done"><div class="h17">Зібрати пасту</div></div>
+                    <div class="card done"><div class="h17">Подати</div></div>
+                  </div>
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 70%; align-items: center; text-align: center">
+                    <div class="grab"></div>
+                    <span class="sign">Смачного!</span
+                    ><span class="pic" style="width: 100%; height: 150px; display: block"></span>
+                    <div class="h24">Рамьон з креветками</div>
+                    <div class="meta">2 кухарі · 2 порції</div>
+                    <span class="lime full">Приготувати ще раз</span>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Квиток як аркуш над таймлайном</h3>
+              <p class="why">
+                formSheet 0.7 над завершеним таймлайном; свайп униз = «До інструкцій».
+              </p>
+              <p class="trade">
+                <b>+</b> без окремого маршруту, свайп замість кнопки. <b>−</b> аркуш читається як
+                «тимчасове», а не фінал; конфеті в аркуші не вміщується; зубчастий край губиться.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">До інструкцій</span></div>
+                    <div class="r"><span class="gl">⇧</span></div>
+                  </div>
+                  <div class="body" style="gap: 14px">
+                    <div style="position: relative">
+                      <span
+                        class="pic"
+                        style="height: 380px; display: block; border-radius: 22px"
+                      ></span
+                      ><span class="sign stamp">Смачного!</span>
+                    </div>
+                    <div class="h24" style="text-align: center">Рамьон з креветками</div>
+                    <div class="meta" style="text-align: center">Оля й Аня · 2 порції · 48 хв</div>
+                    <span class="lime full">Поділитися фото</span
+                    ><span class="ghost full">Приготувати ще раз</span>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Share-card: фото на весь екран зі штампом</h3>
+              <p class="why">
+                Герой — велике фото зі штампом «Смачного!», головна дія — поділитися.
+              </p>
+              <p class="trade">
+                <b>+</b> найкраще для соцмереж. <b>−</b> фото часто згенероване, а не справжнє —
+                ділитися нічим; «Приготувати ще раз» відходить на другий план; квиток із вебу
+                зникає.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 16 EMPTY -->
+        <section class="topic" id="empty">
+          <h2>16. Підхід до ілюстрацій порожніх станів</h2>
+          <p class="q">
+            Історія, спогади, товари, нотатки, таймери, приєднання. Що показувати, коли нічого
+            немає?
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 60%; align-items: center">
+                    <div class="grab"></div>
+                    <div class="shead" style="width: 100%">
+                      <span class="h22">Історія розмов</span><span class="x">✕</span>
+                    </div>
+                    <div style="flex: 1"></div>
+                    <img src="../assets/images/recipe-box.webp" width="112" height="112" alt="" />
+                    <div class="note" style="font-size: 15px">
+                      Тут з'являться попередні розмови.
+                    </div>
+                    <div style="flex: 1"></div>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Сімейство soft-3D, 80–112pt, по центру <span class="badge">Picked</span></h3>
+              <p class="why">
+                Існуючі бірюзові об'єкти там, де вони вже є на вебі; шість нових у тому самому стилі
+                (фартух, порожня табличка, ополоник, планшет, таймер, чайник). Одне речення під
+                ілюстрацією, за потреби — ink-тег дії.
+              </p>
+              <p class="trade">
+                <b>+</b> ілюстрації — найсильніша частина ідентичності; порожній стан не схожий на
+                шаблон. <b>−</b> 6 нових ассетів треба згенерувати й перевірити на 3×.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 60%; align-items: center">
+                    <div class="grab"></div>
+                    <div class="shead" style="width: 100%">
+                      <span class="h22">Історія розмов</span><span class="x">✕</span>
+                    </div>
+                    <div style="flex: 1"></div>
+                    <span class="lineicon"></span>
+                    <div class="note" style="font-size: 15px">
+                      Тут з'являться попередні розмови.
+                    </div>
+                    <div style="flex: 1"></div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Монохромні контурні іконки (Hugeicons 56pt)</h3>
+              <p class="why">Велика контурна іконка в `mutedForeground`.</p>
+              <p class="trade">
+                <b>+</b> нуль ассетів, миттєво. <b>−</b> виглядає як будь-який інший додаток;
+                суперечить веб-рішенню про сімейство.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="scene" style="height: 460px"></div>
+                  <div
+                    class="body"
+                    style="position: relative; align-items: center; padding-top: 120px"
+                  >
+                    <div class="h24">Тут з'являться<br />попередні розмови</div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Повноекранні сцени, як на Connect</h3>
+              <p class="why">Кожен порожній стан — своя кухонна сцена.</p>
+              <p class="trade">
+                <b>+</b> ефектно. <b>−</b> аркуші не мають місця для сцени; дорого; сцена перебиває
+                завдання (HIG: branding defers to content).
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 17 ADDRESS -->
+        <section class="topic" id="address">
+          <h2>17. Запит адреси доставки</h2>
+          <p class="q">
+            Адреса потрібна Сільпо для цін і кошика. Вона зберігається тільки на сервері й ніколи не
+            потрапляє в тред чи до моделі.
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub ai">Рецепт готовий. Щоб підібрати товари, потрібна адреса.</div>
+                    <div class="card" style="display: flex; flex-direction: column; gap: 8px">
+                      <div class="h17">Адреса доставки</div>
+                      <div class="small">
+                        Потрібна, щоб Сільпо показало ціни і зібрало кошик. Зберігається лише на
+                        сервері, модель її не бачить.
+                      </div>
+                      <div class="card" style="color: var(--mutedfg)">
+                        Одеса, пров. Семафорний, 4
+                      </div>
+                      <span class="ghost full">Зберегти адресу</span>
+                    </div>
+                  </div>
+                  <div class="comp glass chr">
+                    <span class="att"></span>Уточни або попроси інше<span class="send">↑</span>
+                  </div>
+                </div>
+              </div>
+              <h3>A · Захищена картка у стрічці (веб) <span class="badge">Picked</span></h3>
+              <p class="why">
+                Остання картка стрічки з полем `textContentType="fullStreetAddress"`, ghost
+                «Зберегти адресу», shimmer «Готуємо кошик Сільпо». Окреме поле — тому текст не
+                проходить через композер і тред.
+              </p>
+              <p class="trade">
+                <b>+</b> приватність очевидна й технічно гарантована; автозаповнення адреси з iOS.
+                <b>−</b> картка може опинитися під піком ідеї — стрічка має відступ.
+              </p>
+              <p class="hig">
+                generative-ai.md › Privacy; entering-data.md: «pull from the system».
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed">
+                    <div class="bub ai">Рецепт готовий. Щоб підібрати товари, потрібна адреса.</div>
+                  </div>
+                  <div class="dim"></div>
+                  <div class="sheet">
+                    <div class="grab"></div>
+                    <div class="shead">
+                      <span class="h22">Адреса доставки</span><span class="x">✕</span>
+                    </div>
+                    <div class="small">Зберігається лише на сервері, модель її не бачить.</div>
+                    <div class="card" style="color: var(--mutedfg)">Одеса, пров. Семафорний, 4</div>
+                    <span class="lime full">Зберегти адресу</span>
+                  </div>
+                </div>
+              </div>
+              <h3>B · formSheet з полем</h3>
+              <p class="why">Аркуш піднімається з клавіатурою.</p>
+              <p class="trade">
+                <b>+</b> фокус на одному полі. <b>−</b> ще одна модалка над чатом; після закриття не
+                зрозуміло, чи стан змінився; лайм витрачається не на головну дію екрана.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹ Нова</span></div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body feed"><div class="bub ai">Рецепт готовий.</div></div>
+                  <div class="dim"></div>
+                  <div
+                    style="
+                      position: absolute;
+                      left: 50%;
+                      top: 40%;
+                      transform: translate(-50%, -50%);
+                      width: 270px;
+                      background: rgba(250, 250, 250, 0.95);
+                      border-radius: 14px;
+                      padding: 16px;
+                      text-align: center;
+                      font-family: var(--sans);
+                    "
+                  >
+                    <div style="font-weight: 600">Адреса доставки</div>
+                    <div style="font-size: 13px; margin: 6px 0 10px">
+                      Потрібна для цін і кошика Сільпо
+                    </div>
+                    <div
+                      style="
+                        border: 1px solid #ccc;
+                        border-radius: 8px;
+                        padding: 6px;
+                        font-size: 13px;
+                        color: #999;
+                        text-align: left;
+                      "
+                    >
+                      Місто, вулиця, будинок
+                    </div>
+                    <div
+                      class="row"
+                      style="
+                        justify-content: space-around;
+                        margin-top: 12px;
+                        color: #007aff;
+                        font-size: 16px;
+                      "
+                    >
+                      <span>Скасувати</span><b>Зберегти</b>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Системний Alert із полем</h3>
+              <p class="why">`Alert.prompt` з текстовим полем.</p>
+              <p class="trade">
+                <b>+</b> мінімум коду. <b>−</b> Alert — для критичної інформації, не для вводу
+                даних; немає автозаповнення адреси, довгі адреси не вміщуються, стан «готуємо кошик»
+                нема де показати.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 18 HISTORY -->
+        <section class="topic" id="history">
+          <h2>18. Історія розмов</h2>
+          <p class="q">
+            Список розмов і кухонь із фото, відносним часом, видаленням і переходом до кухні.
+          </p>
+          <div class="opts">
+            <article class="opt picked">
+              <div class="frame">
+                <div class="phone">
+                  <div class="dim"></div>
+                  <div class="sheet" style="height: 62%">
+                    <div class="grab"></div>
+                    <div class="shead">
+                      <span class="h22">Історія розмов</span><span class="x">✕</span>
+                    </div>
+                    <div class="list">
+                      <div
+                        class="li"
+                        style="
+                          background: rgba(62, 193, 190, 0.25);
+                          margin: 0 -16px;
+                          padding: 0 16px;
+                        "
+                      >
+                        <span class="pic r10" style="width: 40px; height: 40px"></span>
+                        <div>
+                          <div class="h17">Паста з креветками</div>
+                          <div class="meta">5 хвилин тому · відкрита</div>
+                        </div>
+                      </div>
+                      <div class="li">
+                        <span class="pic r10" style="width: 40px; height: 40px"></span>
+                        <div style="flex: 1">
+                          <div class="h17">Томатна вечеря</div>
+                          <div class="meta">вчора, 14:30</div>
+                        </div>
+                        <span class="gl">🍲</span>
+                      </div>
+                      <div class="li">
+                        <span
+                          class="av em"
+                          style="border-radius: 10px; width: 40px; height: 40px"
+                        ></span>
+                        <div>
+                          <div class="h17">Без назви</div>
+                          <div class="meta">3 дні тому</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>A · formSheet 0.6 / 1 з хедера <span class="badge">Picked</span></h3>
+              <p class="why">
+                Кнопка `clock.arrow.circlepath` у toolbar головної і чату. Рядки 64pt, свайп уліво —
+                «Видалити», бірюзовий фон у відкритої розмови, кнопка каструлі веде на кухню.
+              </p>
+              <p class="trade">
+                <b>+</b> історія не займає місце в структурі; свайп-видалення замість окремої
+                кнопки. <b>−</b> на один тап далі, ніж таб.
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"></div>
+                    <div class="title">Історія</div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body">
+                    <div class="list">
+                      <div class="li">
+                        <span class="pic r10" style="width: 40px; height: 40px"></span>
+                        <div>
+                          <div class="h17">Паста з креветками</div>
+                          <div class="meta">5 хвилин тому</div>
+                        </div>
+                      </div>
+                      <div class="li">
+                        <span class="pic r10" style="width: 40px; height: 40px"></span>
+                        <div>
+                          <div class="h17">Томатна вечеря</div>
+                          <div class="meta">вчора, 14:30</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tabbar glass">
+                    <div><i></i>Кухня</div>
+                    <div class="on"><i></i>Історія</div>
+                    <div><i></i>Профіль</div>
+                  </div>
+                </div>
+              </div>
+              <h3>B · Таб «Історія»</h3>
+              <p class="why">Повноекранний список із великим заголовком і пошуком.</p>
+              <p class="trade">
+                <b>+</b> пошук по історії природний. <b>−</b> тягне за собою таб-бар на головній
+                (див. тему 1).
+              </p>
+            </article>
+            <article class="opt">
+              <div class="frame">
+                <div class="phone">
+                  <div class="sb">9:41</div>
+                  <div class="hdr">
+                    <div class="l"><span class="gl">‹</span></div>
+                    <div class="title">Історія</div>
+                    <div class="r"></div>
+                  </div>
+                  <div class="body">
+                    <div class="list">
+                      <div class="li">
+                        <span class="pic r10" style="width: 40px; height: 40px"></span>
+                        <div>
+                          <div class="h17">Паста з креветками</div>
+                          <div class="meta">5 хвилин тому</div>
+                        </div>
+                      </div>
+                      <div class="li">
+                        <span class="pic r10" style="width: 40px; height: 40px"></span>
+                        <div>
+                          <div class="h17">Томатна вечеря</div>
+                          <div class="meta">вчора, 14:30</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3>C · Push-екран</h3>
+              <p class="why">Звичайний список у стеку.</p>
+              <p class="trade">
+                <b>+</b> великий заголовок, пошук. <b>−</b> відкриття розмови з історії push-ить чат
+                поверх історії — стек росте; повернення «назад» потрапляє в історію, а не додому.
+              </p>
+            </article>
+          </div>
+        </section>
+      </main>
+      <footer>
+        Макети схематичні: пропорції й кольори реальні, тексти — з веб-інвентаря. Ілюстрації
+        підтягнуті з <code>apps/web/public/images</code>; відкривайте файл із репозиторію.
+      </footer>
+    </div>
+  </body>
+</html>

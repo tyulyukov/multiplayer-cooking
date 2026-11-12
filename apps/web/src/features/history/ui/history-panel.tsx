@@ -28,9 +28,9 @@ import {
   type CookingHistoryItem,
   type HistoryEntry,
   type HistoryItem,
-} from "@/features/history/model/types";
-import { mergeHistory } from "@/features/history/lib/merge-history";
-import { formatRelativeTime } from "@/shared/lib/relative-time";
+} from "@multiplayer-cooking/core/history/types";
+import { mergeHistory } from "@multiplayer-cooking/core/history/merge-history";
+import { formatRelativeTime } from "@multiplayer-cooking/core/shared/relative-time";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 const title = "Історія";

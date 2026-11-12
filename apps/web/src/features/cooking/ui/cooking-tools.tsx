@@ -16,8 +16,8 @@ import {
   cookingUnits,
   isCookingUnit,
   parseCookingQuantity,
-} from "@/features/cooking/lib/cooking-units";
-import type { CookingActions, CookingRoomData } from "@/features/cooking/model/types";
+} from "@multiplayer-cooking/core/cooking/cooking-units";
+import type { CookingActions, CookingRoomData } from "@multiplayer-cooking/core/cooking/types";
 
 type CookingToolsProps = {
   data: CookingRoomData;
