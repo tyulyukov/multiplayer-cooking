@@ -14,6 +14,7 @@
     "build:storybook": "bun --cwd apps/web build:storybook",
     "dev:backend": "bun --cwd apps/backend dev",
     "dev:mobile": "bun --cwd apps/mobile start",
+    "emulator:android": "bun --cwd apps/mobile emulator:android",
     "build:web": "bun --cwd apps/web build",
     "typecheck": "bun --cwd packages/theme typecheck && bun --cwd packages/core typecheck && bun --cwd apps/backend typecheck && bun --cwd apps/web typecheck && bun --cwd apps/mobile typecheck",
     "lint": "oxlint --deny-warnings apps packages",

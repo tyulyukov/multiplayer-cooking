@@ -17,7 +17,8 @@
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["android.permission.MODIFY_AUDIO_SETTINGS"]
+      "permissions": ["android.permission.MODIFY_AUDIO_SETTINGS"],
+      "package": "com.anonymous.multiplayercooking"
     },
     "web": {
       "favicon": "./assets/favicon.png"

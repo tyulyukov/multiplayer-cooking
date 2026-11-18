@@ -10,6 +10,12 @@ Verify every UI change on the simulator: screenshot the state you changed and co
 
 The dev client builds its Convex URL from Metro's host. When the Mac's LAN IP changes, the app shows offline; re-point it with `xcrun simctl openurl <udid> "exp+multiplayer-cooking://expo-development-client/?url=http%3A%2F%2F<ip>%3A8081"`.
 
+## Android emulator
+
+1. Backend: `bun run dev:backend`, as above.
+2. Emulator: `bun run emulator:android` from the repo root. It opens the first AVD (or `ANDROID_AVD`) in a window, where the computer keyboard types into the app, and runs `adb reverse` for `:3210` and `:3211`. Run it again after every emulator restart: inside the emulator `127.0.0.1` is the emulator itself, so without the reverse the app shows offline and the Сільпо login ends on "connection refused".
+3. App: `bunx expo run:android` from `apps/mobile` the first time and after native changes; afterwards `bunx expo start --dev-client` and press `a`.
+
 ## Drive the device
 
 - In T3 Code, open the simulator with the `device_open` tool and drive it with the `agent-device` CLI it returns (`snapshot -i`, `click @eN --settle`, `fill`, `press x y` in points, `scroll`, `back`). Refs from `snapshot -i` beat coordinates.
