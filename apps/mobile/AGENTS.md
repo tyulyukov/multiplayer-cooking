@@ -33,7 +33,7 @@ Use the `apple-design` skill for every mobile task: screens, components, navigat
 - `design/options.html` shows the alternatives considered for each screen, with the built option marked.
 - Illustrations are one soft-3D family. Generate new ones to match: prompts and Blender scenes are in `design/assets-src/`.
 - Glass appears only on the floating layer: native headers, the chat and helper composer, the timer dock, and the scroll-to-bottom button. Content uses outlines and inset shades, never drop shadows.
-- Native bars and menus use SF Symbols; content uses Hugeicons Stroke Rounded.
+- Native bars and menus use SF Symbols on iOS and the matching Material Symbols on Android; content uses Hugeicons Stroke Rounded. Give `Stack.Toolbar` items `useBarIcon(sf, material)` (`shared/hooks/use-bar-icon.ts`): Android drops string icons. `SymbolView` takes `name={{ ios, android }}`.
 
 ## Architecture
 
@@ -73,6 +73,8 @@ Reuse these instead of writing local equivalents:
 - A `TextInput` must keep its child index when its layout changes, or it loses focus and the keyboard.
 - Uploading with RN `fetch` and a Blob gets a 400 from Convex; `uploadImage` uses `expo/fetch` with an expo-file-system `File`.
 - `react-native-enriched-markdown` draws a blank frame for an image that fails to load; pass `noImages` where images are not wanted.
+- Android ignores `contentInsetAdjustmentBehavior`, so a transparent header covers the content there. Take header and sheet options from `shared/lib/screen-options.ts` (`transparentHeader`, `formSheet`).
+- `@expo/ui/swift-ui` views crash the Android build. Pair each with a `*.android.tsx` built on `@expo/ui/jetpack-compose`, as `features/cooking/ui/step-progress` does.
 - `features/cooking/lib/timer-notifications.ts` installs the app-wide notification handler. Merge into it rather than adding a second one.
 
 ## Rules

@@ -76,7 +76,7 @@ export function AgentSettingsForm({
                 </View>
                 {selected ? (
                   <SymbolView
-                    name="checkmark"
+                    name={{ ios: "checkmark", android: "check" }}
                     size={17}
                     weight="semibold"
                     tintColor={colors.tealDeep}

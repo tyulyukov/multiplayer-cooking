@@ -28,7 +28,7 @@ export function CloseButton({
         style={[styles.circle, { width: size, height: size, borderRadius: size / 2 }]}
       >
         <SymbolView
-          name="xmark"
+          name={{ ios: "xmark", android: "close" }}
           size={size * 0.43}
           weight="semibold"
           tintColor={onDark ? colors.card : colors.foreground}

@@ -1,5 +1,3 @@
-import { Host, ProgressView } from "@expo/ui/swift-ui";
-import { tint } from "@expo/ui/swift-ui/modifiers";
 import { colors } from "@multiplayer-cooking/theme";
 import { StyleSheet, View } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
@@ -13,6 +11,7 @@ import { Text } from "@/shared/ui/text";
 import type { sessionView } from "../lib/session-view";
 import { useRoomData } from "../model/room-context";
 import { StepCard } from "./step-card";
+import { StepProgress } from "./step-progress";
 
 type TimelineProps = {
   view: ReturnType<typeof sessionView>;
@@ -52,9 +51,7 @@ export function CookingTimeline({
         <Text variant="secondary">
           {completed} з {total} кроків
         </Text>
-        <Host matchContents={{ vertical: true }} style={styles.bar}>
-          <ProgressView value={total ? completed / total : 0} modifiers={[tint(colors.teal)]} />
-        </Host>
+        <StepProgress value={total ? completed / total : 0} />
       </View>
       {error && error.scope !== expanded ? <InlineAlert message={error.message} /> : null}
       {plan.steps.map((step, index) => (
@@ -93,7 +90,6 @@ export function CookingTimeline({
 const styles = StyleSheet.create({
   timeline: { gap: 12 },
   progress: { gap: 8, paddingBottom: 4 },
-  bar: { alignSelf: "stretch" },
   finish: {
     gap: 10,
     padding: 16,
