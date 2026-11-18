@@ -2,7 +2,7 @@ import { colors } from "@multiplayer-cooking/theme";
 import { router, Stack } from "expo-router";
 import { StyleSheet } from "react-native";
 
-import { useBarIcon } from "@/shared/hooks/use-bar-icon";
+import { barIconsReady, useBarIcon } from "@/shared/hooks/use-bar-icon";
 
 import { useCookingRoom } from "../model/room-context";
 import { goHome } from "../lib/go-home";
@@ -27,12 +27,25 @@ export function RoomToolbar({ full }: RoomToolbarProps) {
   const tool = (path: "ingredients" | "timer" | "convert" | "servings") =>
     router.push({ pathname: `/cook/[roomId]/tools/${path}`, params: { roomId } });
 
+  const rightReady = barIconsReady(
+    peopleIcon,
+    helperIcon,
+    moreIcon,
+    ingredientsIcon,
+    timerIcon,
+    convertIcon,
+    servingsIcon,
+    soundIcon,
+  );
+
   return (
     <>
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon={backIcon} accessibilityLabel="Головна" onPress={goHome} />
-      </Stack.Toolbar>
-      {full && read ? (
+      {backIcon ? (
+        <Stack.Toolbar placement="left">
+          <Stack.Toolbar.Button icon={backIcon} accessibilityLabel="Головна" onPress={goHome} />
+        </Stack.Toolbar>
+      ) : null}
+      {full && read && rightReady ? (
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button
             icon={peopleIcon}

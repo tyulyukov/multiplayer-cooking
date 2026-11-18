@@ -3,7 +3,7 @@ import { useSessionId } from "convex-helpers/react/sessions";
 import { useMutation, useQuery } from "convex/react";
 import { router, Stack } from "expo-router";
 
-import { useBarIcon } from "@/shared/hooks/use-bar-icon";
+import { barIconsReady, useBarIcon } from "@/shared/hooks/use-bar-icon";
 
 // Header items shared by Home and Chat: History and the Profile menu. Glyphs stay system ink.
 export function AccountToolbar() {
@@ -16,6 +16,8 @@ export function AccountToolbar() {
   const settingsIcon = useBarIcon("gearshape", "settings");
   const forgetIcon = useBarIcon("mappin.slash", "location_off");
   const logoutIcon = useBarIcon("rectangle.portrait.and.arrow.right", "logout");
+
+  if (!barIconsReady(historyIcon, profileIcon, settingsIcon, forgetIcon, logoutIcon)) return null;
 
   return (
     <Stack.Toolbar placement="right">

@@ -143,13 +143,15 @@ export function ChatScreen() {
   return (
     <>
       <Stack.Screen options={chatHeaderOptions} />
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button
-          icon={newChatIcon}
-          accessibilityLabel="Нова розмова"
-          onPress={() => router.back()}
-        />
-      </Stack.Toolbar>
+      {newChatIcon ? (
+        <Stack.Toolbar placement="left">
+          <Stack.Toolbar.Button
+            icon={newChatIcon}
+            accessibilityLabel="Нова розмова"
+            onPress={() => router.back()}
+          />
+        </Stack.Toolbar>
+      ) : null}
       <AccountToolbar />
       <KeyboardChatScrollView
         ref={feedRef}

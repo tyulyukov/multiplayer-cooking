@@ -62,9 +62,11 @@ export function CompletionTicket() {
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button onPress={toInstructions}>До інструкцій</Stack.Toolbar.Button>
       </Stack.Toolbar>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon={shareIcon} accessibilityLabel="Поділитися" onPress={share} />
-      </Stack.Toolbar>
+      {shareIcon ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button icon={shareIcon} accessibilityLabel="Поділитися" onPress={share} />
+        </Stack.Toolbar>
+      ) : null}
       <ScrollView contentInsetAdjustmentBehavior="automatic">
         <CheckerBand />
         {online ? null : <OfflineBanner message="Немає зв’язку. Інструкції доступні." />}
