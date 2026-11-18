@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ScrollView, Share, StyleSheet, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
+import { useBarIcon } from "@/shared/hooks/use-bar-icon";
 import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
 import { haptics } from "@/shared/lib/haptics";
 import { Button } from "@/shared/ui/button";
@@ -36,6 +37,7 @@ export function CompletionTicket() {
   const title = read.room.source.title;
   const servings = read.room.plan?.servings ?? read.room.requestedServings;
   const { setCelebrated, setShowInstructions } = room;
+  const shareIcon = useBarIcon("square.and.arrow.up", "share");
 
   useEffect(() => {
     if (!confetti) return;
@@ -61,11 +63,7 @@ export function CompletionTicket() {
         <Stack.Toolbar.Button onPress={toInstructions}>До інструкцій</Stack.Toolbar.Button>
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          icon="square.and.arrow.up"
-          accessibilityLabel="Поділитися"
-          onPress={share}
-        />
+        <Stack.Toolbar.Button icon={shareIcon} accessibilityLabel="Поділитися" onPress={share} />
       </Stack.Toolbar>
       <ScrollView contentInsetAdjustmentBehavior="automatic">
         <CheckerBand />
