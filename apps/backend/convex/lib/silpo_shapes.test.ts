@@ -132,7 +132,7 @@ describe("cart readers", () => {
   });
 
   test("reads line ids and product ids from every shipment", () => {
-    const payload = {
+    const payload: JsonValue = {
       success: true,
       cart: {
         shipments: [
