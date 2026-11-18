@@ -55,6 +55,7 @@ export function HistorySheet() {
           </View>
         ) : (
           <FlatList
+            nestedScrollEnabled
             data={entries}
             keyExtractor={(entry) => entry.key}
             style={styles.list}

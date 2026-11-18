@@ -37,6 +37,7 @@ export function IdeaSheet({ threadId, ideaId }: IdeaSheetProps) {
       ) : (
         <View collapsable={false} style={styles.body}>
           <ScrollView
+            nestedScrollEnabled
             style={styles.scroll}
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"

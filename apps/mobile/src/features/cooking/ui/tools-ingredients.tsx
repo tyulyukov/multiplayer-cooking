@@ -15,7 +15,7 @@ export function ToolsIngredients() {
   return (
     <>
       <SheetHeader title="Інгредієнти" />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView nestedScrollEnabled contentContainerStyle={styles.content}>
         {error && !error.scope ? <InlineAlert message={error.message} /> : null}
         {ingredients ? (
           <View accessibilityLabel="Інгредієнти">
