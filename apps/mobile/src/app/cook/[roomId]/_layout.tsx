@@ -5,10 +5,10 @@ import { Stack, useLocalSearchParams, type NativeStackNavigationOptions } from "
 import { isRoomId } from "@/features/cooking/lib/credential";
 import { RoomNotice } from "@/features/cooking/ui/room-notice";
 import { RoomProvider } from "@/features/cooking/ui/room-provider";
+import { formSheet, transparentHeader } from "@/shared/lib/screen-options";
 
 const sheet = {
-  presentation: "formSheet",
-  sheetGrabberVisible: true,
+  ...formSheet,
   headerShown: false,
   contentStyle: { backgroundColor: colors.background },
 } satisfies NativeStackNavigationOptions;
@@ -25,7 +25,7 @@ const fitSheet = {
 
 const roomHeader = {
   headerShown: true,
-  headerTransparent: true,
+  ...transparentHeader,
   headerTitle: "",
   headerBackVisible: false,
 } satisfies NativeStackNavigationOptions;

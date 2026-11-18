@@ -13,6 +13,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { fontAssets } from "@/shared/fonts";
 import { convexUrl } from "@/shared/lib/convex-url";
+import { formSheet } from "@/shared/lib/screen-options";
 import { useSecureSessionStorage } from "@/shared/lib/storage";
 
 SplashScreen.preventAutoHideAsync();
@@ -20,8 +21,6 @@ SplashScreen.preventAutoHideAsync();
 const convex = new ConvexReactClient(convexUrl);
 
 const splashTimeoutMs = 2500;
-
-const sheet = { presentation: "formSheet", sheetGrabberVisible: true } as const;
 
 export default function RootLayout() {
   const [loaded, error] = useFonts(fontAssets);
@@ -75,12 +74,12 @@ function RootStack() {
         />
         <Stack.Screen
           name="history"
-          options={{ ...sheet, title: "Історія розмов", sheetAllowedDetents: [0.6, 1] }}
+          options={{ ...formSheet, title: "Історія розмов", sheetAllowedDetents: [0.6, 1] }}
         />
         <Stack.Screen
           name="idea"
           options={{
-            ...sheet,
+            ...formSheet,
             title: "Страва і товари",
             sheetAllowedDetents: [0.6, 1],
             sheetInitialDetentIndex: "last",
@@ -89,7 +88,7 @@ function RootStack() {
         />
         <Stack.Screen
           name="settings"
-          options={{ ...sheet, title: "Налаштування", sheetAllowedDetents: [1] }}
+          options={{ ...formSheet, title: "Налаштування", sheetAllowedDetents: [1] }}
         />
       </Stack.Protected>
       <Stack.Protected guard={!connection}>
@@ -98,7 +97,11 @@ function RootStack() {
       <Stack.Screen name="cook/[roomId]" />
       <Stack.Screen
         name="cook-together"
-        options={{ ...sheet, title: "Скільки вас готує?", sheetAllowedDetents: "fitToContents" }}
+        options={{
+          ...formSheet,
+          title: "Скільки вас готує?",
+          sheetAllowedDetents: "fitToContents",
+        }}
       />
     </Stack>
   );

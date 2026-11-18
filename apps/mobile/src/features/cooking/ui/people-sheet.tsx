@@ -84,7 +84,7 @@ export function PeopleSheet() {
   return (
     <>
       <SheetHeader title="Кухарі" />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView nestedScrollEnabled contentContainerStyle={styles.content}>
         {error && !error.scope ? <InlineAlert message={error.message} /> : null}
         <View accessibilityLabel="Учасники кухні" style={styles.list}>
           {read.members.map((item) => {

@@ -6,6 +6,7 @@ import {
   chooseTimeslot,
   findObjectArray,
   readCartId,
+  readCartLines,
   readCartSummary,
   readCheckoutLink,
   readAddress,
@@ -128,6 +129,34 @@ describe("cart readers", () => {
     expect(
       readCartSummary({ cart: { calculation: { productsTotal: 709.65 } } }).total,
     ).toBeUndefined();
+  });
+
+  test("reads line ids and product ids from every shipment", () => {
+    const payload: JsonValue = {
+      success: true,
+      cart: {
+        shipments: [
+          {
+            id: "shipment-1",
+            products: [
+              { id: "line-1", productId: "tomato", companyId: "silpo", quantity: 2 },
+              { id: "line-2", productId: "basil", quantity: "0.5" },
+              { productId: "no-line-id" },
+            ],
+          },
+          { id: "shipment-2", products: [{ id: "line-3", productId: "milk" }] },
+          { id: "shipment-3" },
+        ],
+      },
+    };
+
+    expect(readCartLines(payload)).toEqual([
+      { id: "line-1", productId: "tomato", quantity: 2 },
+      { id: "line-2", productId: "basil", quantity: 0.5 },
+      { id: "line-3", productId: "milk", quantity: undefined },
+    ]);
+    expect(readCartLines({ cart: { shipments: [] } })).toEqual([]);
+    expect(readCartLines({})).toEqual([]);
   });
 
   test("reads the cart id and the checkout link", () => {

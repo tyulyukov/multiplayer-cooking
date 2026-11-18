@@ -263,6 +263,28 @@ export function readCartSummary(payload: JsonValue) {
   } satisfies CartSummary;
 }
 
+export type CartLine = Readonly<{ id: string; productId: string; quantity?: number }>;
+
+// Line items from silpo_get_shopping_cart_by_id: `id` is the cart's own line id, which
+// silpo_update_cart_products needs; `productId` is what product search returns.
+export function readCartLines(payload: JsonValue): CartLine[] {
+  const cart = isRecord(payload) && isRecord(payload.cart) ? payload.cart : undefined;
+  const shipments = cart && Array.isArray(cart.shipments) ? cart.shipments.filter(isRecord) : [];
+
+  return shipments.flatMap((shipment) => {
+    const products = Array.isArray(shipment.products) ? shipment.products.filter(isRecord) : [];
+
+    return products.flatMap((product) => {
+      const id = pickString(product, ["id"]);
+      const productId = pickString(product, ["productId"]);
+
+      return id && productId
+        ? [{ id, productId, quantity: pickNumber(product, ["quantity"]) }]
+        : [];
+    });
+  });
+}
+
 export function readCheckoutLink(payload: JsonValue) {
   if (!isRecord(payload)) {
     return undefined;

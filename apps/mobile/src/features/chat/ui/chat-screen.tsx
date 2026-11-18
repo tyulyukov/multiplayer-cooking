@@ -20,6 +20,7 @@ import { useThreadIdeas } from "@/features/chat/api/use-thread-ideas";
 import { glassHeaderOptions } from "@/features/chat/lib/header-options";
 import { useChatComposer } from "@/features/chat/model/use-chat-composer";
 import { useChatHaptics } from "@/features/chat/model/use-chat-haptics";
+import { useBarIcon } from "@/shared/hooks/use-bar-icon";
 import { useOffline } from "@/shared/hooks/use-offline";
 import { AccountToolbar } from "@/features/silpo/ui/account-toolbar";
 import { AddressPrompt } from "@/features/silpo/ui/address-prompt";
@@ -41,6 +42,7 @@ const chatHeaderOptions = { ...glassHeaderOptions, headerBackVisible: false };
 
 export function ChatScreen() {
   const insets = useSafeAreaInsets();
+  const newChatIcon = useBarIcon("square.and.pencil", "edit_square");
   const focused = useIsFocused();
   const offline = useOffline();
   const [sessionId] = useSessionId();
@@ -141,13 +143,15 @@ export function ChatScreen() {
   return (
     <>
       <Stack.Screen options={chatHeaderOptions} />
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button
-          icon="square.and.pencil"
-          accessibilityLabel="Нова розмова"
-          onPress={() => router.back()}
-        />
-      </Stack.Toolbar>
+      {newChatIcon ? (
+        <Stack.Toolbar placement="left">
+          <Stack.Toolbar.Button
+            icon={newChatIcon}
+            accessibilityLabel="Нова розмова"
+            onPress={() => router.back()}
+          />
+        </Stack.Toolbar>
+      ) : null}
       <AccountToolbar />
       <KeyboardChatScrollView
         ref={feedRef}

@@ -79,6 +79,7 @@ export function SettingsSheet({ initialTab }: { initialTab: SettingsTab }) {
         />
       </SheetHeader>
       <KeyboardAwareScrollView
+        nestedScrollEnabled
         bottomOffset={24}
         keyboardShouldPersistTaps="handled"
         style={styles.scroll}

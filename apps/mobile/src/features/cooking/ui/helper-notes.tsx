@@ -23,6 +23,7 @@ export function HelperNotes({ model }: HelperNotesProps) {
   return (
     <View style={styles.notes}>
       <ScrollView
+        nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         automaticallyAdjustKeyboardInsets

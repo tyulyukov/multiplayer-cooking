@@ -72,6 +72,7 @@ export function HelperChat({ model }: HelperChatProps) {
   return (
     <View style={styles.chat}>
       <KeyboardChatScrollView
+        nestedScrollEnabled
         ref={feedRef}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"

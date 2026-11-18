@@ -3,31 +3,40 @@ import { useSessionId } from "convex-helpers/react/sessions";
 import { useMutation, useQuery } from "convex/react";
 import { router, Stack } from "expo-router";
 
+import { barIconsReady, useBarIcon } from "@/shared/hooks/use-bar-icon";
+
 // Header items shared by Home and Chat: History and the Profile menu. Glyphs stay system ink.
 export function AccountToolbar() {
   const [sessionId] = useSessionId();
   const connection = useQuery(api.silpo.connection, sessionId ? { sessionId } : "skip");
   const forgetAddress = useMutation(api.silpo.forgetAddress);
   const disconnect = useMutation(api.silpo.disconnect);
+  const historyIcon = useBarIcon("clock.arrow.circlepath", "history");
+  const profileIcon = useBarIcon("person.crop.circle", "account_circle");
+  const settingsIcon = useBarIcon("gearshape", "settings");
+  const forgetIcon = useBarIcon("mappin.slash", "location_off");
+  const logoutIcon = useBarIcon("rectangle.portrait.and.arrow.right", "logout");
+
+  if (!barIconsReady(historyIcon, profileIcon, settingsIcon, forgetIcon, logoutIcon)) return null;
 
   return (
     <Stack.Toolbar placement="right">
       <Stack.Toolbar.Button
-        icon="clock.arrow.circlepath"
+        icon={historyIcon}
         accessibilityLabel="Історія розмов"
         onPress={() => router.push("/history")}
       />
       <Stack.Toolbar.Menu
-        icon="person.crop.circle"
+        icon={profileIcon}
         accessibilityLabel="Профіль"
         title={connection?.name ?? "Акаунт Сільпо"}
       >
         <Stack.Toolbar.Menu inline>
-          <Stack.Toolbar.MenuAction icon="gearshape" onPress={() => router.push("/settings")}>
+          <Stack.Toolbar.MenuAction icon={settingsIcon} onPress={() => router.push("/settings")}>
             Налаштування
           </Stack.Toolbar.MenuAction>
           <Stack.Toolbar.MenuAction
-            icon="mappin.slash"
+            icon={forgetIcon}
             disabled={!connection?.hasAddress}
             onPress={() => {
               if (sessionId) void forgetAddress({ sessionId }).catch(() => undefined);
@@ -38,7 +47,7 @@ export function AccountToolbar() {
         </Stack.Toolbar.Menu>
         <Stack.Toolbar.Menu inline>
           <Stack.Toolbar.MenuAction
-            icon="rectangle.portrait.and.arrow.right"
+            icon={logoutIcon}
             destructive
             onPress={() => {
               if (sessionId) void disconnect({ sessionId }).catch(() => undefined);
