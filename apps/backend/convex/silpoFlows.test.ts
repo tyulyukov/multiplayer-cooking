@@ -1,6 +1,7 @@
 import { expect, mock, test } from "bun:test";
 import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
 import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
+import { z } from "zod";
 
 import type { Doc, Id } from "./_generated/dataModel";
 import type { ActionCtx } from "./_generated/server";
@@ -13,6 +14,16 @@ const authCalls: unknown[] = [];
 const profileCalls: unknown[] = [];
 
 const toolCalls: Array<{ name: string; args: JsonInputRecord }> = [];
+
+// Line items of the fake Сільпо cart; silpo_add_cart_products appends to it.
+const cartLines: Array<{ id: string; productId: string; quantity: number }> = [];
+
+const addedProductsSchema = z.object({
+  products: z.array(z.object({ productId: z.string(), quantity: z.number() })),
+});
+
+// Product ids the fake Сільпо accepts but never adds, like an unknown product.
+const droppedProducts = new Set(["gone"]);
 
 const { parseVerifiedSilpoProfile } = await import("./lib/silpo_client");
 
@@ -56,9 +67,20 @@ mock.module("./lib/silpo_client", () => ({
 
         toolCalls.push({ name, args });
 
+        if (name === "silpo_add_cart_products") {
+          const { products } = addedProductsSchema.parse(args);
+
+          for (const product of products) {
+            if (!droppedProducts.has(product.productId)) {
+              cartLines.push({ id: `line-${product.productId}`, ...product });
+            }
+          }
+        }
+
         if (name === "silpo_get_shopping_cart_by_id") {
           return {
             cart: {
+              shipments: [{ id: "shipment-1", products: cartLines.map((line) => ({ ...line })) }],
               checkoutWebLink: "https://silpo.ua/checkout/cart-1",
               calculation: {
                 productsTotal: 120,
@@ -239,24 +261,18 @@ test("does not create a cart before an address has been saved", async () => {
 
 test("adds matched products to the saved cart and persists its returned totals", async () => {
   toolCalls.length = 0;
+  cartLines.length = 0;
   const { ctx, mutations } = cartContext(idea(), connectedCart);
 
   await actionHandler(addIdeaToCart)(ctx, { ideaId, userId, refreshOnly: false });
 
   expect(toolCalls).toEqual([
+    { name: "silpo_get_shopping_cart_by_id", args: { shoppingCartId: "cart-1" } },
     {
-      name: "silpo_add_or_update_cart_products",
+      name: "silpo_add_cart_products",
       args: {
         shoppingCartId: "cart-1",
-        products: [
-          {
-            productId: "tomato",
-            companyId: "silpo",
-            branchId: "branch-1",
-            quantity: 2,
-            addQuantity: false,
-          },
-        ],
+        products: [{ productId: "tomato", companyId: "silpo", branchId: "branch-1", quantity: 2 }],
       },
     },
     { name: "silpo_get_shopping_cart_by_id", args: { shoppingCartId: "cart-1" } },
@@ -276,6 +292,56 @@ test("adds matched products to the saved cart and persists its returned totals",
       addedAt: expect.any(Number),
     },
   });
+});
+
+test("sets the quantity of products already in the cart by their line id", async () => {
+  toolCalls.length = 0;
+  cartLines.length = 0;
+  cartLines.push({ id: "line-tomato", productId: "tomato", quantity: 5 });
+
+  const { ctx, mutations } = cartContext(
+    idea({
+      products: [
+        { ingredient: "Помідор", quantity: 2, productId: "tomato", companyId: "silpo" },
+        { ingredient: "Соус", quantity: 1, productId: "tomato", companyId: "silpo" },
+        { ingredient: "Базилік", quantity: 1, productId: "basil", companyId: "silpo" },
+      ],
+    }),
+    connectedCart,
+  );
+
+  await actionHandler(addIdeaToCart)(ctx, { ideaId, userId, refreshOnly: false });
+
+  expect(toolCalls.map((call) => call.name)).toEqual([
+    "silpo_get_shopping_cart_by_id",
+    "silpo_add_cart_products",
+    "silpo_update_cart_products",
+    "silpo_get_shopping_cart_by_id",
+  ]);
+  expect(toolCalls[1]?.args.products).toEqual([
+    { productId: "basil", companyId: "silpo", branchId: "branch-1", quantity: 1 },
+  ]);
+  expect(toolCalls[2]?.args).toEqual({
+    shoppingCartId: "cart-1",
+    products: [{ id: "line-tomato", quantity: 3 }],
+  });
+  expect(mutations[0]?.args).toMatchObject({ cart: { itemCount: 3, warnings: undefined } });
+});
+
+test("warns when Сільпо silently drops a product, but not on a refresh", async () => {
+  const products = [{ ingredient: "Помідор", quantity: 2, productId: "gone", companyId: "silpo" }];
+
+  for (const [refreshOnly, warnings] of [
+    [false, ["Частини товарів Сільпо не додало до кошика. Перевір його перед оплатою."]],
+    [true, undefined],
+  ] as const) {
+    cartLines.length = 0;
+    const { ctx, mutations } = cartContext(idea({ products }), connectedCart);
+
+    await actionHandler(addIdeaToCart)(ctx, { ideaId, userId, refreshOnly });
+
+    expect(mutations[0]?.args).toMatchObject({ cart: { warnings } });
+  }
 });
 
 test("does not call Silpo when the idea belongs to another account", async () => {

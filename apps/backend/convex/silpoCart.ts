@@ -4,12 +4,15 @@ import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
 import { internalAction } from "./_generated/server";
-import { describeSilpoError, withSilpoClient } from "./lib/silpo_client";
+import type { Doc } from "./_generated/dataModel";
+import { describeSilpoError, type SilpoClient, withSilpoClient } from "./lib/silpo_client";
 import {
   chooseDelivery,
   chooseTimeslot,
   readCartId,
+  readCartLines,
   readCartSummary,
+  type CartLine,
   readCheckoutLink,
   readAddress,
 } from "./lib/silpo_shapes";
@@ -112,6 +115,67 @@ export const setupCart = internalAction({
   },
 });
 
+type CartContext = NonNullable<Doc<"silpoConnections">["cart"]>;
+
+type CartProduct = NonNullable<Doc<"ideas">["products"]>[number] & { productId: string };
+
+// Сільпо split its cart write: new products go through silpo_add_cart_products, products
+// already in the cart get an absolute quantity by line id through silpo_update_cart_products.
+async function writeProducts(
+  client: Pick<SilpoClient, "callTool">,
+  context: CartContext,
+  products: readonly CartProduct[],
+  lines: readonly CartLine[],
+) {
+  const quantities = new Map<string, CartProduct>();
+
+  for (const product of products) {
+    const previous = quantities.get(product.productId);
+
+    quantities.set(
+      product.productId,
+      previous ? { ...previous, quantity: previous.quantity + product.quantity } : product,
+    );
+  }
+
+  const lineIds = new Map(lines.map((line) => [line.productId, line.id]));
+  const merged = [...quantities.values()];
+  const added = merged.filter((product) => !lineIds.has(product.productId));
+
+  const updated = merged.flatMap((product) => {
+    const id = lineIds.get(product.productId);
+
+    return id ? [{ id, quantity: product.quantity }] : [];
+  });
+
+  if (added.length > 0) {
+    await client.callTool("silpo_add_cart_products", {
+      shoppingCartId: context.shoppingCartId,
+      products: added.map((product) => ({
+        productId: product.productId,
+        companyId: product.companyId,
+        branchId: product.branchId ?? context.branchId,
+        quantity: product.quantity,
+      })),
+    });
+  }
+
+  if (updated.length > 0) {
+    await client.callTool("silpo_update_cart_products", {
+      shoppingCartId: context.shoppingCartId,
+      products: updated,
+    });
+  }
+}
+
+const missingWarning = "Частини товарів Сільпо не додало до кошика. Перевір його перед оплатою.";
+
+function withMissingWarning(warnings: readonly string[], missing: number) {
+  const all = missing > 0 ? [missingWarning, ...warnings] : [...warnings];
+
+  return all.length > 0 ? all : undefined;
+}
+
 export const addIdeaToCart = internalAction({
   args: { ideaId: v.id("ideas"), userId: v.id("users"), refreshOnly: v.optional(v.boolean()) },
   returns: v.null(),
@@ -124,7 +188,9 @@ export const addIdeaToCart = internalAction({
     ]);
 
     const context = connection?.cart;
-    const products = idea?.products?.filter((product) => product.productId) ?? [];
+
+    const products =
+      idea?.products?.filter((product): product is CartProduct => Boolean(product.productId)) ?? [];
 
     if (!idea || idea.userId !== connection?.userId || !context || products.length === 0) {
       await ctx.runMutation(internal.ideas.saveCartError, {
@@ -137,21 +203,21 @@ export const addIdeaToCart = internalAction({
 
     try {
       const cart = await withSilpoClient(ctx, userId, async (client) => {
-        if (!refreshOnly)
-          await client.callTool("silpo_add_or_update_cart_products", {
+        const readCart = () =>
+          client.callTool("silpo_get_shopping_cart_by_id", {
             shoppingCartId: context.shoppingCartId,
-            products: products.map((product) => ({
-              productId: product.productId,
-              companyId: product.companyId,
-              branchId: product.branchId ?? context.branchId,
-              quantity: product.quantity,
-              addQuantity: false,
-            })),
           });
 
-        const details = await client.callTool("silpo_get_shopping_cart_by_id", {
-          shoppingCartId: context.shoppingCartId,
-        });
+        if (!refreshOnly) {
+          await writeProducts(client, context, products, readCartLines(await readCart()));
+        }
+
+        const details = await readCart();
+        const inCart = new Set(readCartLines(details).map((line) => line.productId));
+
+        const missing = refreshOnly
+          ? 0
+          : products.filter((product) => !inCart.has(product.productId)).length;
 
         const summary = readCartSummary(details);
 
@@ -163,7 +229,7 @@ export const addIdeaToCart = internalAction({
           discount: summary.discount,
           deliveryTotal: summary.deliveryTotal,
           total: summary.total,
-          warnings: summary.warnings.length > 0 ? summary.warnings : undefined,
+          warnings: withMissingWarning(summary.warnings, missing),
           addedAt: Date.now(),
         };
       });
